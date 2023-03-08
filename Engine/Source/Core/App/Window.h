@@ -6,9 +6,8 @@
 
 #include "nlpch.h"
 
-#include "Core/Misc/PtrWrapper.h"
-
 #include "Events/Event.h"
+#include "Renderer/GraphicsContext.h"
 
 namespace NL
 {
@@ -53,6 +52,8 @@ namespace NL
 		virtual bool IsVSync() const = 0;
 
 		virtual void* GetNativeWindow() const = 0;
+
+		virtual Ref<GraphicsContext> GetGraphicsContext() const = 0;
 
 		static Scope<Window> Create(const WindowProps& props = WindowProps());
 	};

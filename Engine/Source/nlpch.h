@@ -16,6 +16,10 @@ Nameless Engine's pre-compile headers
 #include <unordered_map>
 #include <unordered_set>
 
+#include "Core/Log/Log.h"
+#include "Core/Misc/Directives.h"
+#include "Core/Misc/PtrWrapper.h"
+
 #ifdef NL_PLATFORM_WINDOWS
 #include <Windows.h>
 #endif 

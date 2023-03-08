@@ -28,6 +28,10 @@ namespace NL
 		Application(const Application&) = delete;
 		Application& operator = (const Application&) = delete;
 
+		/// <summary>
+		/// 处理事件回调函数
+		/// </summary>
+		/// <param name="e"></param>
 		void OnEvent(Event& e);
 
 		void PushLayer(Layer* layer);
@@ -53,7 +57,7 @@ namespace NL
 		/// </summary>
 		void Run();
 
-		void Clean();
+		void Clear();
 
 		bool OnWindowClose(WindowCloseEvent& e);
 

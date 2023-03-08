@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Core/App/Window.h"
+#include "Core/Misc/PtrWrapper.h"
+
+#include "Renderer/GraphicsContext.h"
 
 #include <GLFW/glfw3.h>
 
@@ -21,7 +24,8 @@ namespace NL
 		void SetVSync(bool enabled) override;
 		bool IsVSync() const override;
 
-		inline virtual void* GetNativeWindow() const { return m_Window; }
+		inline virtual void* GetNativeWindow() const override { return m_Window; }
+		inline virtual Ref<GraphicsContext> GetGraphicsContext() const override { return m_Context; }
 
 	private:
 		virtual void Init(const WindowProps& props);
@@ -29,6 +33,7 @@ namespace NL
 
 	private:
 		GLFWwindow* m_Window;
+		Ref<GraphicsContext> m_Context;
 
 		struct WindowData
 		{
@@ -38,6 +43,5 @@ namespace NL
 			bool VSync;
 		} m_Data;
 
-		// GraphicsContext* m_Context;
 	};
 }

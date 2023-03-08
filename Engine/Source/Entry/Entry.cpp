@@ -11,5 +11,5 @@ int main(int argc, char** argv)
 {
 	NL::AppInitialize(NL::Application::GetInstance());
 	NL::Application::GetInstance().Run();
-	NL::Application::GetInstance().Clean();
+	NL::Application::GetInstance().Clear();
 }

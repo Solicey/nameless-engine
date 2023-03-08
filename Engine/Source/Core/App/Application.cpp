@@ -10,7 +10,33 @@ namespace NL
 
 // 适用于非静态成员函数绑定
 #define NL_BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
-	
+
+	void Application::OnEvent(Event& e)
+	{
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<WindowCloseEvent>(NL_BIND_EVENT_FN(Application::OnWindowClose));
+		dispatcher.Dispatch<WindowResizeEvent>(NL_BIND_EVENT_FN(Application::OnWindowResize));
+
+		NL_ENGINE_TRACE("{0}", e);
+	}
+
+	void Application::PushLayer(Layer* layer)
+	{
+	}
+
+	void Application::PushOverlay(Layer* overlay)
+	{
+	}
+
+	void Application::PopLayer(Layer* layer)
+	{
+	}
+
+	void Application::Close()
+	{
+
+	}
+
 	void Application::Init(const std::string& name)
 	{
 		Log::Init();
@@ -35,43 +61,24 @@ namespace NL
 			{
 				// Update Layers
 			}
-			
+
 			m_Window->OnUpdate();
 		}
 	}
 
-	void Application::Clean()
+	void Application::Clear()
 	{
 	}
 
 	bool Application::OnWindowClose(WindowCloseEvent& e)
 	{
-		return false;
+		m_IsRunning = false;
+		return true;
 	}
 
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
 		return false;
-	}
-
-	void Application::OnEvent(Event& e)
-	{
-	}
-
-	void Application::PushLayer(Layer* layer)
-	{
-	}
-
-	void Application::PushOverlay(Layer* overlay)
-	{
-	}
-
-	void Application::PopLayer(Layer* layer)
-	{
-	}
-
-	void Application::Close()
-	{
 	}
 
 }
