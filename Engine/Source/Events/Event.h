@@ -42,14 +42,14 @@ namespace NL
 		virtual const char* GetName() const = 0;
 		virtual int GetCategoryFlags() const = 0;
 		virtual std::string ToString() const { return GetName(); }
-		virtual bool Handled() const { return m_Handle; }
 
 		inline bool IsInCategory(EventCategory category)
 		{
 			return GetCategoryFlags() & (int)category;
 		}
-	protected:
-		bool m_Handle = false;
+
+	public:
+		bool Handled = false;
 	};
 
 	/// <summary>
@@ -69,7 +69,7 @@ namespace NL
 		{
 			if (m_Event.GetEventType() == T::GetStaticType())
 			{
-				m_Event.m_Handle = func(*(T*)&m_Event);
+				m_Event.Handled = func(*(T*)&m_Event);
 				return true;
 			}
 			return false;

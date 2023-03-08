@@ -18,7 +18,7 @@ IncludeDir["spdlog"] = "3rdParty/spdlog/include"
 -- Need to compile
 IncludeDir["Glad"] = "3rdParty/Glad/include"
 IncludeDir["GLFW"] = "3rdParty/GLFW/include"
-IncludeDir["ImGui"] = "3rdParty/imgui"
+IncludeDir["imgui"] = "3rdParty/imgui"
 
 include "3rdParty/Glad"
 include "3rdParty/GLFW"
@@ -34,8 +34,8 @@ project "Engine"
     pchheader "nlpch.h"
     pchsource "%{prj.name}/Source/nlpch.cpp"
 
-    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+    targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
     files
     {
@@ -57,7 +57,7 @@ project "Engine"
     {
         "Glad",
         "GLFW",
-        "ImGui",
+        "imgui",
         "opengl32.lib"
     }
 
@@ -65,7 +65,8 @@ project "Engine"
         systemversion "latest"
         defines
         {
-            "NL_PLATFORM_WINDOWS"
+            "NL_PLATFORM_WINDOWS",
+            "GLFW_INCLUDE_NONE"
         }
 
     filter "configurations:Debug"
@@ -86,8 +87,8 @@ project "Editor"
     cppdialect "C++17"
     staticruntime "on"
 
-    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+    targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
+    objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
 
     files
     {
@@ -97,9 +98,10 @@ project "Editor"
 
     includedirs
     {
-        "%{prj.name}/Source",
+        "%{IncludeDir.spdlog}",
+        "%{IncludeDir.imgui}",
         "Engine/Source",
-        "%{IncludeDir.spdlog}"
+        "%{prj.name}/Source"
     }
 
     links

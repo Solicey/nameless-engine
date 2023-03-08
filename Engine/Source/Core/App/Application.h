@@ -16,6 +16,8 @@
 #include "Events/Event.h"
 #include "Events/ApplicationEvent.h"
 
+#include "ImGui/ImGuiLayer.h"
+
 int main(int argc, char** argv);
 
 namespace NL
@@ -34,11 +36,11 @@ namespace NL
 		/// <param name="e"></param>
 		void OnEvent(Event& e);
 
-		void PushLayer(Layer* layer);
+		void PushLayer(Ref<Layer> layer);
 
-		void PushOverlay(Layer* overlay);
+		void PushOverlay(Ref<Layer> overlay);
 
-		void PopLayer(Layer* layer);
+		void PopLayer(Ref<Layer> layer);
 
 		Window& GetWindow() { return *m_Window; }
 
@@ -70,6 +72,8 @@ namespace NL
 	private:
 		Scope<Window> m_Window;
 		LayerStack m_LayerStack;
+		Ref<ImGuiLayer> m_ImGuiLayer;
+		float m_LastFrameTime = 0.0f;
 
 		bool m_IsRunning = true;
 		bool m_IsMinimize = false;

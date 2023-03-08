@@ -12,7 +12,6 @@ namespace NL
 	template<typename T, typename ... Args>
 	constexpr Scope<T> CreateScope(Args&& ... args)
 	{
-		// 完美转发
 		return std::make_unique<T>(std::forward<Args>(args)...);
 	}
 

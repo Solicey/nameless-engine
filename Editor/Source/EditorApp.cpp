@@ -6,6 +6,8 @@ Implement AppInitialize here.
 
 #include <Engine.h>
 
+#include <imgui.h>
+
 namespace NL
 {
 	void AppInitialize(Application& app)
