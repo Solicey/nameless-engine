@@ -1,6 +1,11 @@
 #include "nlpch.h"
 
 #include "GraphicsContext.h"
+
+#include "Core/Log/Log.h"
+#include "Core/Misc/Directives.h"
+#include "Core/Misc/PtrWrapper.h"
+
 #include "Renderer/RendererAPI.h"
 
 #include "Platform/OpenGL/OpenGLContext.h"

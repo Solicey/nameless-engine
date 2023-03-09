@@ -10,10 +10,5 @@
 	#define NL_ENABLE_ASSERTS
 #endif
 
-#ifdef NL_ENABLE_ASSERTS
-	#define NL_ASSERT(x, ...) { if(!(x)) {NL_ERROR("Assertion Failed: {0}", __VA_ARGS__);__debugbreak(); }}
-	#define NL_ENGINE_ASSERT(x, ...) { if(!(x)) {NL_ENGINE_ERROR("Assertion Failed: {0}", __VA_ARGS__);__debugbreak(); }}
-#else
-	#define NL_ASSERT(x, ...)
-	#define NL_ENGINE_ASSERT(x, ...)
-#endif
+// 适用于非静态成员函数绑定
+#define NL_BIND_EVENT_FN(fn) std::bind(&fn, this, std::placeholders::_1)

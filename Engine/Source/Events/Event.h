@@ -4,8 +4,12 @@
 事件基类
 */
 
-#include "nlpch.h"
+#include "Core/Log/Log.h"
 #include "Core/Misc/Directives.h"
+#include "Core/Misc/PtrWrapper.h"
+
+#include <sstream>
+#include <string>
 
 namespace NL
 {

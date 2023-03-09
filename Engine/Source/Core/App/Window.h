@@ -4,8 +4,6 @@
 ´°¿ÚÀà
 */
 
-#include "nlpch.h"
-
 #include "Events/Event.h"
 #include "Renderer/GraphicsContext.h"
 

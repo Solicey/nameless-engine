@@ -10,7 +10,6 @@
 
 namespace NL
 {
-
 // 适用于非静态成员函数绑定
 #define NL_BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
 
@@ -62,7 +61,7 @@ namespace NL
 		m_ImGuiLayer = ImGuiLayer::Create();
 		PushOverlay(m_ImGuiLayer);
 
-		// Render Init
+		// Renderer Init
 	}
 
 	void Application::Run()

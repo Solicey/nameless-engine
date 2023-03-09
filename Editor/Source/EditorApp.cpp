@@ -13,6 +13,6 @@ namespace NL
 	void AppInitialize(Application& app)
 	{
 		app.Init("Nameless Editor");
-		// app.PushLayer();
+		app.PushLayer(CreateRef<EditorLayer>());
 	}
 }

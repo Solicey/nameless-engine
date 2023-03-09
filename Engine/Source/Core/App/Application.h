@@ -4,10 +4,7 @@
 ”¶”√¿‡
 */
 
-#include "nlpch.h"
-
-#include "Window.h"
-
+#include "Core/App/Window.h"
 #include "Core/Misc/Singleton.h"
 #include "Core/Layer/Layer.h"
 #include "Core/Layer/LayerStack.h"

@@ -100,6 +100,7 @@ project "Editor"
     {
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.imgui}",
+        "%{IncludeDir.glm}",
         "Engine/Source",
         "%{prj.name}/Source"
     }

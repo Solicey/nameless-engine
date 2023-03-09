@@ -2,8 +2,9 @@
 
 /*
 智能指针包装类
-Credit to HEngine
 */
+
+#include <memory>
 
 namespace NL
 {

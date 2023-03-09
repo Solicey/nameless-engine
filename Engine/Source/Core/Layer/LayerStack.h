@@ -1,6 +1,7 @@
 #pragma once
 
-#include "nlpch.h"
+#include "Core/Log/Log.h"
+#include "Core/Misc/PtrWrapper.h"
 
 #include "Layer.h"
 

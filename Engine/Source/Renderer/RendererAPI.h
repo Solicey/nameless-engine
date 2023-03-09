@@ -2,6 +2,7 @@
 
 #include "Core/Math/Math.h"
 #include "Core/Misc/PtrWrapper.h"
+#include "Renderer/Runtime/VertexArray.h"
 
 namespace NL
 {
@@ -17,11 +18,14 @@ namespace NL
 
 	public:
 		virtual void SetClearColor(const nlm::vec4& color) = 0;
+		
 		virtual void Clear() = 0;
 		
-		// virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) = 0;
+		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) = 0;
 
 		inline static API GetCurrent() { return s_API; }
+
+		static Scope<RendererAPI> Create();
 
 	private:
 		inline static API s_API = API::OpenGL;

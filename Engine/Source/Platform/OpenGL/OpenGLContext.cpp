@@ -2,6 +2,10 @@
 
 #include "OpenGLContext.h"
 
+#include "Core/Log/Log.h"
+#include "Core/Misc/Directives.h"
+#include "Core/Misc/PtrWrapper.h"
+
 #include <glad/glad.h>
 #include <gl/GL.h>
 #include <GLFW/glfw3.h>

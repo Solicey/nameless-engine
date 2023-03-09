@@ -38,3 +38,11 @@ namespace NL
 #define NL_INFO(...)				::NL::Log::GetAppLogger()->info(__VA_ARGS__)
 #define NL_TRACE(...)				::NL::Log::GetAppLogger()->trace(__VA_ARGS__)
 #define NL_WARN(...)				::NL::Log::GetAppLogger()->warn(__VA_ARGS__)
+
+#ifdef NL_ENABLE_ASSERTS
+	#define NL_ASSERT(x, ...) { if(!(x)) {NL_ERROR("Assertion Failed: {0}", __VA_ARGS__);__debugbreak(); }}
+	#define NL_ENGINE_ASSERT(x, ...) { if(!(x)) {NL_ENGINE_ERROR("Assertion Failed: {0}", __VA_ARGS__);__debugbreak(); }}
+#else
+	#define NL_ASSERT(x, ...)
+	#define NL_ENGINE_ASSERT(x, ...)
+#endif
