@@ -129,6 +129,12 @@ namespace NL
 		)";
 
 		m_BlueShader = CreateRef<Shader>(blueShaderVertexSrc, blueShaderFragmentSrc);
+
+
+		// Test Load Model
+
+		ModelLoader::Create("E:/dev/nameless-engine/Engine/Resources/Models/Box.obj",
+			ModelLoaderFlags::Triangulate);
 	}
 
 	void EditorLayer::OnDetach()

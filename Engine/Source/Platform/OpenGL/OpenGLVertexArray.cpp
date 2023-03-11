@@ -1,7 +1,7 @@
 #include "nlpch.h"
 
 #include "OpenGLVertexArray.h"
-#include "Renderer/Persistent/ShaderDataType.h"
+#include "Resources/ShaderDataType.h"
 
 #include <glad/glad.h>
 

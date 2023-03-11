@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Renderer/Runtime/VertexArray.h"
+#include "Renderer/VertexArray.h"
 
 namespace NL
 {

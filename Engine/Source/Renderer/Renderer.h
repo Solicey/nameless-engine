@@ -4,8 +4,8 @@
 #include "Camera/OrthographicCamera.h"
 
 #include "Core/Misc/PtrWrapper.h"
-#include "Renderer/Persistent/Shader.h"
-#include "Renderer/Runtime/VertexArray.h"
+#include "Resources/Shader.h"
+#include "Renderer/VertexArray.h"
 #include "Renderer/RendererAPI.h"
 
 namespace NL

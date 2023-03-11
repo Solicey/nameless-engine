@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Renderer/Runtime/Buffers.h"
+#include "Renderer/Buffers.h"
 
 namespace NL
 {
@@ -8,6 +8,8 @@ namespace NL
 	{
 	public:
 		OpenGLVertexBuffer(float* vertices, uint32_t size);
+		OpenGLVertexBuffer(std::vector<float>& vertices);
+
 		virtual ~OpenGLVertexBuffer();
 
 		virtual void Bind() const override;
@@ -25,6 +27,8 @@ namespace NL
 	{
 	public:
 		OpenGLIndexBuffer(uint32_t* indices, uint32_t count);
+		OpenGLIndexBuffer(std::vector<uint32_t>& indices);
+
 		virtual ~OpenGLIndexBuffer();
 
 		virtual void Bind() const override;

@@ -15,6 +15,11 @@ namespace NL
 		glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 	}
 
+	OpenGLVertexBuffer::OpenGLVertexBuffer(std::vector<float>& vertices)
+		: OpenGLVertexBuffer(vertices.data(), vertices.size())
+	{
+	}
+
 	OpenGLVertexBuffer::~OpenGLVertexBuffer()
 	{
 		glDeleteBuffers(1, &m_RendererID);
@@ -39,6 +44,11 @@ namespace NL
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID);
 		// Tmp
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+	}
+
+	OpenGLIndexBuffer::OpenGLIndexBuffer(std::vector<uint32_t>& indices)
+		: OpenGLIndexBuffer(indices.data(), indices.size() / sizeof(uint32_t))
+	{
 	}
 
 	OpenGLIndexBuffer::~OpenGLIndexBuffer()

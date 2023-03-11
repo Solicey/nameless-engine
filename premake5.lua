@@ -16,10 +16,12 @@ IncludeDir["glm"] = "3rdParty/glm"
 IncludeDir["spdlog"] = "3rdParty/spdlog/include"
 
 -- Need to compile
+IncludeDir["assimp"] = "3rdParty/assimp/include"
 IncludeDir["Glad"] = "3rdParty/Glad/include"
 IncludeDir["GLFW"] = "3rdParty/GLFW/include"
 IncludeDir["imgui"] = "3rdParty/imgui"
 
+include "3rdParty/assimp"
 include "3rdParty/Glad"
 include "3rdParty/GLFW"
 include "3rdParty/imgui"
@@ -46,6 +48,7 @@ project "Engine"
     includedirs
     {
         "%{prj.name}/Source",
+        "%{IncludeDir.assimp}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.Glad}",
@@ -55,6 +58,7 @@ project "Engine"
 
     links
     {
+        "assimp",
         "Glad",
         "GLFW",
         "imgui",
@@ -98,6 +102,7 @@ project "Editor"
 
     includedirs
     {
+        "%{IncludeDir.assimp}",
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.imgui}",
         "%{IncludeDir.glm}",

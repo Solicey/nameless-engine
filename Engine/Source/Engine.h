@@ -16,6 +16,8 @@
 
 #include "ImGui/ImGuiLayer.h"
 
+#include "Resources/Shader.h"
+#include "Resources/Loaders/ModelLoader.h"
+
 #include "Renderer/Renderer.h"
-#include "Renderer/Persistent/Shader.h"
-#include "Renderer/Runtime/VertexArray.h"
+#include "Renderer/VertexArray.h"

@@ -19,8 +19,8 @@ namespace NL
 	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const nlm::mat4& transform)
 	{
 		shader->Bind();
-		shader->UploadUniformMat4("u_ViewProjection", s_SceneData->ViewPositionMatrix);
-		shader->UploadUniformMat4("u_Transform", transform);
+		shader->SetUniformMat4("u_ViewProjection", s_SceneData->ViewPositionMatrix);
+		shader->SetUniformMat4("u_Transform", transform);
 
 		vertexArray->Bind();
 		

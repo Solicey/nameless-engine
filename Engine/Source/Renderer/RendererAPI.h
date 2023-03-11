@@ -2,7 +2,7 @@
 
 #include "Core/Math/Math.h"
 #include "Core/Misc/PtrWrapper.h"
-#include "Renderer/Runtime/VertexArray.h"
+#include "Renderer/VertexArray.h"
 
 namespace NL
 {
