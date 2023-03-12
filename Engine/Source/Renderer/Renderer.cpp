@@ -16,7 +16,7 @@ namespace NL
 	{
 	}
 
-	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const nlm::mat4& transform)
+	void Renderer::Submit(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader, const nlm::mat4& transform)
 	{
 		shader->Bind();
 		shader->SetUniformMat4("u_ViewProjection", s_SceneData->ViewPositionMatrix);
@@ -24,6 +24,19 @@ namespace NL
 
 		vertexArray->Bind();
 		
-		s_RendererAPI->DrawIndexed(vertexArray);
+		DrawIndices(vertexArray);
+
+		shader->Unbind();
+		vertexArray->Unbind();
+	}
+
+	void Renderer::DrawModel(const Ref<Model>& model, const Ref<Shader>& shader, const nlm::mat4& transform)
+	{
+		const auto& meshes = model->GetMeshes();
+
+		for (const auto& mesh : meshes)
+		{
+			Submit(mesh->GetVertexArray(), shader, transform);
+		}
 	}
 }

@@ -7,13 +7,13 @@
 namespace NL
 {
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_Camera(-1.6f, 1.6f, -0.9f, 0.9f), m_CameraPosition(0.0f), m_SquarePosition(0.0f)
+		: Layer("EditorLayer"), m_Camera(-16.0f, 16.0f, -9.0f, 9.0f), m_CameraPosition(0.0f, 0.0f, 100.0f), m_SquarePosition(0.0f)
 	{
 	}
 
 	void EditorLayer::OnAttach()
 	{
-		m_VertexArray = VertexArray::Create();
+		/*m_VertexArray = VertexArray::Create();
 
 		// Vertex Buffer
 
@@ -96,45 +96,49 @@ namespace NL
 			}
 		)";
 
-		m_Shader = CreateRef<Shader>(vertexSrc, fragmentSrc);
+		m_Shader = CreateRef<Shader>(vertexSrc, fragmentSrc);*/
 
-		std::string blueShaderVertexSrc = R"(
+		std::string normalShaderVertexSrc = R"(
 			#version 330 core
 
 			layout(location = 0) in vec3 a_Position;
+			layout(location = 2) in vec3 a_Normal;
 
 			uniform mat4 u_ViewProjection;
 			uniform mat4 u_Transform;
 			
 			out vec3 v_Position;
+			out vec3 v_Normal;
 			
 			void main()
 			{
 				v_Position = a_Position;
+				v_Normal = a_Normal;
 				gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);
 			}
 		)";
 
-		std::string blueShaderFragmentSrc = R"(
+		std::string normalShaderFragmentSrc = R"(
 			#version 330 core
 
 			layout(location = 0) out vec4 color;
 
 			in vec3 v_Position;
+			in vec3 v_Normal;
 			
 			void main()
 			{
-				color = vec4(0.2, 0.3, 0.8, 1.0);
+				color = vec4(v_Normal.x * 0.5 + 0.5, v_Normal.y * 0.5 + 0.5, v_Normal.z * 0.5 + 0.5, 1.0);
 			}
 		)";
 
-		m_BlueShader = CreateRef<Shader>(blueShaderVertexSrc, blueShaderFragmentSrc);
-
+		m_NormalShader = CreateRef<Shader>(normalShaderVertexSrc, normalShaderFragmentSrc);
 
 		// Test Load Model
 
-		ModelLoader::Create("E:/dev/nameless-engine/Engine/Resources/Models/Box.obj",
-			ModelLoaderFlags::Triangulate);
+		m_Box = ModelLoader::Create("../Assets/Models/Box.obj", ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
+		m_Sphere = ModelLoader::Create("../Assets/Models/Sphere.obj", ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
+		m_CameraModel = ModelLoader::Create("../Assets/Models/Camera.obj", ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
 	}
 
 	void EditorLayer::OnDetach()
@@ -153,10 +157,15 @@ namespace NL
 
 		Renderer::BeginScene(m_Camera);
 
-		nlm::mat4 transform = nlm::translate(nlm::mat4(1.0f), m_SquarePosition);
+		nlm::mat4 transform = nlm::mat4(1.0f);
+		transform = nlm::translate(transform, nlm::vec3(1.0f, 1.0f, 0.0f));
+		transform = nlm::rotate(transform, nlm::radians(90.0f), nlm::vec3(0.0f, 1.0f, 0.0f));
 
-		Renderer::Submit(m_BlueShader, m_SquareVA, transform);
-		Renderer::Submit(m_Shader, m_VertexArray);
+		// Renderer::Submit(m_SquareVA, m_BlueShader, transform);
+		// Renderer::Submit(m_VertexArray, m_Shader);
+		// Renderer::DrawModel(m_Box, m_NormalShader);
+		Renderer::DrawModel(m_Sphere, m_NormalShader);
+		Renderer::DrawModel(m_CameraModel, m_NormalShader, transform);
 
 		Renderer::EndScene();
 	}

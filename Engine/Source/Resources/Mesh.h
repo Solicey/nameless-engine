@@ -24,6 +24,8 @@ namespace NL
 		
 		uint32_t GetMaterialIndex() const;
 
+		inline const Ref<VertexArray>& GetVertexArray() const { return m_VertexArray; }
+
 	private:
 		void CreateBuffers(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 

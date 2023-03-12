@@ -5,6 +5,7 @@ Nameless日志系统，调用第三方单文件库spdlog，只需在premake中includedir即可
 */
 
 #include "Core/Misc/PtrWrapper.h"
+#include "Core/Misc/Directives.h"
 
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>

@@ -21,7 +21,7 @@ namespace NL
 		
 		virtual void Clear() = 0;
 		
-		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) = 0;
+		virtual void DrawIndices(const Ref<VertexArray>& vertexArray) = 0;
 
 		inline static API GetCurrent() { return s_API; }
 

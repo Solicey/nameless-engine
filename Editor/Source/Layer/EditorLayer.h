@@ -23,8 +23,12 @@ namespace NL
 		Ref<Shader> m_Shader;
 		Ref<VertexArray> m_VertexArray;
 
-		Ref<Shader> m_BlueShader;
+		Ref<Shader> m_NormalShader;
 		Ref<VertexArray> m_SquareVA;
+
+		Ref<Model> m_Box;
+		Ref<Model> m_Sphere;
+		Ref<Model> m_CameraModel;
 
 		OrthographicCamera m_Camera;
 		nlm::vec3 m_CameraPosition;

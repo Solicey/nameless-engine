@@ -23,7 +23,7 @@ namespace NL
 			for (const auto& mesh : m_Meshes)
 			{
 				NL_ENGINE_INFO("  Mesh {0}: {1} vertices, {2} faces", 
-					cnt++, mesh->GetVertexCount(), mesh->GetIndexCount());
+					cnt++, mesh->GetVertexCount(), mesh->GetIndexCount() / 3);
 			}
 
 			cnt = 0;
@@ -33,6 +33,9 @@ namespace NL
 					cnt++, mat);
 			}
 		}
+
+		inline const std::vector<Ref<Mesh>>& GetMeshes() const { return m_Meshes; }
+		inline const std::vector<std::string>& GetMaterials() const { return m_materialNames; }
 
 	private:
 		Model() = delete;

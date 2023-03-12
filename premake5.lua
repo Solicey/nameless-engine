@@ -65,6 +65,13 @@ project "Engine"
         "opengl32.lib"
     }
 
+    -- wks_abspath = os.getcwd("%{wks.location}")
+
+    defines 
+    {  
+        "NL_ASSETS_PATH=%{wks.location}/Assets"
+    }
+
     filter "system:windows"
         systemversion "latest"
         defines

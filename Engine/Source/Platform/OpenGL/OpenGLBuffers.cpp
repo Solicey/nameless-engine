@@ -47,7 +47,7 @@ namespace NL
 	}
 
 	OpenGLIndexBuffer::OpenGLIndexBuffer(std::vector<uint32_t>& indices)
-		: OpenGLIndexBuffer(indices.data(), indices.size() / sizeof(uint32_t))
+		: OpenGLIndexBuffer(indices.data(), indices.size())
 	{
 	}
 

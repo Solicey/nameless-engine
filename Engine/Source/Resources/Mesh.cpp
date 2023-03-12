@@ -64,6 +64,8 @@ namespace NL
 			rawVertices.push_back(vertex.Bitangent.x);
 			rawVertices.push_back(vertex.Bitangent.y);
 			rawVertices.push_back(vertex.Bitangent.z);
+
+			// NL_ENGINE_TRACE("    vertex pos: ({0}, {1}, {2})", vertex.Position.x, vertex.Position.y, vertex.Position.z);
 		}
 
 		BufferLayout layout = {
@@ -76,12 +78,19 @@ namespace NL
 
 		m_VertexArray = VertexArray::Create();
 
-		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(rawVertices.data(), rawVertices.size());
+		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(rawVertices.data(), vertices.size() * layout.GetStride());
 		vertexBuffer->SetLayout(layout);
 		m_VertexArray->AddVertexBuffer(vertexBuffer);
 
-		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(const_cast<uint32_t*>(indices.data()), indices.size() / sizeof(uint32_t));
+		/*for (int i = 0; i < indices.size(); i += 3)
+		{
+			NL_ENGINE_TRACE("    index: ({0}, {1}, {2})", indices[i], indices[i + 1], indices[i + 2]);
+		}*/
+
+		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(const_cast<uint32_t*>(indices.data()), indices.size());
 		m_VertexArray->SetIndexBuffer(indexBuffer);
+
+		// NL_ENGINE_TRACE("    indices counts: {0}", indexBuffer->GetCount());
 
 	}
 }
