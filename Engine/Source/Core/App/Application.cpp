@@ -63,6 +63,7 @@ namespace NL
 		PushOverlay(m_ImGuiLayer);
 
 		// Renderer Init
+		Renderer::Init();
 	}
 
 	void Application::Run()

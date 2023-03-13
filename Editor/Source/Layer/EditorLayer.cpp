@@ -98,7 +98,8 @@ namespace NL
 
 		m_Shader = CreateRef<Shader>(vertexSrc, fragmentSrc);*/
 
-		m_EditorCamera = EditorCamera(45.0f, 1280, 720, 0.1f, 1000.0f);
+		// m_EditorCamera = EditorCamera(Camera::ProjectionType::Orthographic, 10.0f, 1280, 720, 0.1f, 1000.0f);
+		m_EditorCamera = EditorCamera(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
 
 		std::string normalShaderVertexSrc = R"(
 			#version 330 core

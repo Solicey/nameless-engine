@@ -11,7 +11,7 @@ namespace NL
 	{
 	public:
 		EditorCamera();
-		EditorCamera(float fov, unsigned int width, unsigned int height, float nearClip, float farClip);
+		EditorCamera(ProjectionType type, float fovOrSize, unsigned int width, unsigned int height, float nearClip, float farClip);
 
 		void OnUpdate(TimeStep ts);
 		void OnEvent(Event& e);

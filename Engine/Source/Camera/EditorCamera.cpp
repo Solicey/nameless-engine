@@ -13,10 +13,17 @@ namespace NL
 		RecalculateViewMatrix();
 	}
 
-	EditorCamera::EditorCamera(float fov, unsigned int width, unsigned int height, float nearClip, float farClip) : m_ViewportWidth(width), m_ViewportHeight(height)
+	EditorCamera::EditorCamera(ProjectionType type, float fovOrSize, unsigned int width, unsigned int height, float nearClip, float farClip) : m_ViewportWidth(width), m_ViewportHeight(height)
 	{
 		SetAspectRatio(m_ViewportWidth, m_ViewportHeight);
-		SetPerspective(fov, nearClip, farClip);
+		if (type == ProjectionType::Orthographic)
+		{
+			SetOrthographic(fovOrSize, nearClip, farClip);
+		}
+		else
+		{
+			SetPerspective(fovOrSize, nearClip, farClip);
+		}
 		RecalculateViewMatrix();
 	}
 
@@ -78,8 +85,10 @@ namespace NL
 	void EditorCamera::Rotate(const nlm::vec2& delta)
 	{
 		float yawSign = GetUpDirection().y < 0 ? -1.0f : 1.0f;
+		// NL_ENGINE_TRACE("Rotate: ({0}, {1})", delta.x, delta.y);
 		m_Yaw += yawSign * delta.x * RotateSpeed();
 		m_Pitch += delta.y * RotateSpeed();
+		// NL_ENGINE_TRACE("Pitch: {0}", m_Pitch);
 	}
 
 	void EditorCamera::Zoom(float delta)
