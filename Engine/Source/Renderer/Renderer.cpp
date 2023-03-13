@@ -12,6 +12,11 @@ namespace NL
 		s_SceneData->ViewPositionMatrix = camera.GetViewProjectionMatrix();
 	}
 
+	void Renderer::BeginScene(EditorCamera& camera)
+	{
+		s_SceneData->ViewPositionMatrix = camera.GetViewProjectionMatrix();
+	}
+
 	void Renderer::EndScene()
 	{
 	}
@@ -38,5 +43,10 @@ namespace NL
 		{
 			Submit(mesh->GetVertexArray(), shader, transform);
 		}
+	}
+
+	void Renderer::OnWindowResize(unsigned int width, unsigned int height)
+	{
+		SetViewPort(0, 0, width, height);
 	}
 }

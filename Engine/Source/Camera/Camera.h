@@ -7,15 +7,36 @@ namespace NL
 	class Camera
 	{
 	public:
-		Camera() = default;
-		Camera(const nlm::mat4& projection) 
-			: m_Projection(projection) {}
+		enum class ProjectionType
+		{
+			Orthographic,
+			Perspective
+		};
 
+	public:
+		Camera() { RecalculateProjectionMatrix(); }
 		virtual ~Camera() = default;
 
-		const nlm::mat4& GetProjection() const { return m_Projection; }
+		void SetOrthographic(float size, float nearClip, float farClip);
+		void SetPerspective(float verticalFOV, float nearClip, float farClip);
+		virtual void SetAspectRatio(uint32_t width, uint32_t height);
+
+		const nlm::mat4& GetProjection() const { return m_ProjectionMatrix; }
 
 	private:
-		nlm::mat4 m_Projection = nlm::mat4(1.0f);
+		void RecalculateProjectionMatrix();
+
+	protected:
+		nlm::mat4 m_ProjectionMatrix = nlm::mat4(1.0f);
+
+		ProjectionType m_ProjectionType = ProjectionType::Orthographic;
+
+		float m_OrthographicSize = 10.0f;
+		float m_OrthographicNear = -1.0f, m_OrthographicFar = 1.0f;
+
+		float m_PerspectiveFOV = nlm::radians(45.0f);
+		float m_PerspectiveNear = 0.01f, m_PerspectiveFar = 1000.0f;
+
+		float m_AspectRatio = 0.0f;
 	};
 }

@@ -4,6 +4,7 @@
 
 #include "Core/Misc/PtrWrapper.h"
 #include "Core/Log/Log.h"
+#include "Renderer/Renderer.h"
 
 // temp
 #include <GLFW/glfw3.h>
@@ -11,7 +12,7 @@
 namespace NL
 {
 // 适用于非静态成员函数绑定
-#define NL_BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
+// #define NL_BIND_EVENT_FN(x) std::bind(&Application::x, this, std::placeholders::_1)
 
 	void Application::OnEvent(Event& e)
 	{
@@ -103,6 +104,15 @@ namespace NL
 
 	bool Application::OnWindowResize(WindowResizeEvent& e)
 	{
+		if (e.GetWidth() == 0 || e.GetHeight() == 0)
+		{
+			m_IsMinimize = true;
+			return false;
+		}
+
+		m_IsMinimize = false;
+		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+
 		return false;
 	}
 

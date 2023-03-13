@@ -18,6 +18,7 @@ namespace NL
 
 	private:
 		bool OnKeyPressedEvent(KeyPressedEvent& event);
+		bool OnWindowResizeEvent(WindowResizeEvent& event);
 
 	private:
 		Ref<Shader> m_Shader;
@@ -30,13 +31,7 @@ namespace NL
 		Ref<Model> m_Sphere;
 		Ref<Model> m_CameraModel;
 
-		OrthographicCamera m_Camera;
-		nlm::vec3 m_CameraPosition;
-		float m_CameraTranslateSpeed = 5.0f;
-		float m_CameraRotation = 0.0f;
-		float m_CameraRotateSpeed = 180.0f;
+		EditorCamera m_EditorCamera;
 
-		nlm::vec3 m_SquarePosition;
-		float m_SquareTranslateSpeed = 2.0f;
 	};
 }

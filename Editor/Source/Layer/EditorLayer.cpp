@@ -7,7 +7,7 @@
 namespace NL
 {
 	EditorLayer::EditorLayer()
-		: Layer("EditorLayer"), m_Camera(-16.0f, 16.0f, -9.0f, 9.0f), m_CameraPosition(0.0f, 0.0f, 100.0f), m_SquarePosition(0.0f)
+		: Layer("EditorLayer")
 	{
 	}
 
@@ -98,6 +98,8 @@ namespace NL
 
 		m_Shader = CreateRef<Shader>(vertexSrc, fragmentSrc);*/
 
+		m_EditorCamera = EditorCamera(45.0f, 1280, 720, 0.1f, 1000.0f);
+
 		std::string normalShaderVertexSrc = R"(
 			#version 330 core
 
@@ -149,13 +151,15 @@ namespace NL
 	{
 		//NL_TRACE("Delta Time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
 
+		m_EditorCamera.OnUpdate(ts);
+
 		Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		Renderer::Clear();
 
-		m_Camera.SetPosition(m_CameraPosition);
-		m_Camera.SetRotation(m_CameraRotation);
+		// m_Camera.SetPosition(m_CameraPosition);
+		// m_Camera.SetRotation(m_CameraRotation);
 
-		Renderer::BeginScene(m_Camera);
+		Renderer::BeginScene(m_EditorCamera);
 
 		nlm::mat4 transform = nlm::mat4(1.0f);
 		transform = nlm::translate(transform, nlm::vec3(1.0f, 1.0f, 0.0f));
@@ -176,12 +180,22 @@ namespace NL
 
 	void EditorLayer::OnEvent(Event& event)
 	{
+		m_EditorCamera.OnEvent(event);
+
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<KeyPressedEvent>(NL_BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
+		dispatcher.Dispatch<WindowResizeEvent>(NL_BIND_EVENT_FN(EditorLayer::OnWindowResizeEvent));
 	}
 
 	bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& event)
 	{
+		return false;
+	}
+
+	bool EditorLayer::OnWindowResizeEvent(WindowResizeEvent& event)
+	{
+		m_EditorCamera.SetAspectRatio(event.GetWidth(), event.GetHeight());
+
 		return false;
 	}
 }

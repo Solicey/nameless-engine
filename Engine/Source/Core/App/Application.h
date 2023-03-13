@@ -59,7 +59,6 @@ namespace NL
 		void Clear();
 
 		bool OnWindowClose(WindowCloseEvent& e);
-
 		bool OnWindowResize(WindowResizeEvent& e);
 
 	private:

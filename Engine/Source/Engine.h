@@ -9,6 +9,9 @@
 #include "Core/Misc/PtrWrapper.h"
 #include "Core/Misc/Directives.h"
 
+#include "Camera/Camera.h"
+#include "Camera/EditorCamera.h"
+
 #include "Events/Event.h"
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"

@@ -2,6 +2,7 @@
 
 // Tmp
 #include "Camera/OrthographicCamera.h"
+#include "Camera/EditorCamera.h"
 
 #include "Core/Misc/PtrWrapper.h"
 #include "Resources/Shader.h"
@@ -15,6 +16,7 @@ namespace NL
 	{
 	public:
 		static void BeginScene(OrthographicCamera& camera);
+		static void BeginScene(EditorCamera& camera);
 		static void EndScene();
 
 		static void Submit(
@@ -25,6 +27,8 @@ namespace NL
 		static void DrawModel(const Ref<Model>& model, 
 			const Ref<Shader>& shader,
 			const nlm::mat4& transform = nlm::mat4(1.0f));
+
+		static void OnWindowResize(unsigned int width, unsigned int height);
 
 		struct SceneData
 		{
@@ -46,6 +50,11 @@ namespace NL
 		inline static void DrawIndices(const Ref<VertexArray>& vertexArray)
 		{
 			s_RendererAPI->DrawIndices(vertexArray);
+		}
+
+		inline static void SetViewPort(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+		{
+			s_RendererAPI->SetViewport(x, y, width, height);
 		}
 
 #pragma endregion
