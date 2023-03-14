@@ -32,6 +32,7 @@ namespace NL
 		Ref<Model> m_CameraModel;
 
 		EditorCamera m_EditorCamera;
+		Ref<Scene> m_EditorScene;
 
 	};
 }

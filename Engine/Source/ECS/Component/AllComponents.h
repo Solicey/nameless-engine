@@ -1,9 +1,20 @@
 #pragma once
 
-#include "ECS/Component/Components.h"
-#include "ECS/Component/Transform/TransformComponent.h"
+#include "ECS/Component/Component.h"
+
+#include "ECS/Component/Basic/TransformComponent.h"
+#include "ECS/Component/Basic/IdentityComponent.h"
+#include "ECS/Component/Render/ModelRendererComponent.h"
 
 namespace NL
 {
-	using AllComponents = Components<TransformComponent>;
+    template<Component... C>
+    struct Components
+    {
+
+    };
+
+    // Component to be copied
+    using AllComponents = Components<TransformComponent, IdentityComponent, 
+        ModelRendererComponent>;
 }

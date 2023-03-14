@@ -12,6 +12,11 @@
 #include "Camera/Camera.h"
 #include "Camera/EditorCamera.h"
 
+#include "ECS/Component/AllComponents.h"
+#include "ECS/System/AllSystems.h"
+#include "ECS/Entity/Entity.h"
+#include "ECS/Scene/Scene.h"
+
 #include "Events/Event.h"
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
@@ -21,6 +26,7 @@
 
 #include "Resources/Shader.h"
 #include "Resources/Loaders/ModelLoader.h"
+#include "Resources/Loaders/ModelLoaderFlags.h"
 
 #include "Renderer/Renderer.h"
 #include "Renderer/VertexArray.h"

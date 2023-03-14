@@ -14,6 +14,7 @@ IncludeDir = {}
 -- Headers only
 IncludeDir["glm"] = "3rdParty/glm"
 IncludeDir["spdlog"] = "3rdParty/spdlog/include"
+IncludeDir["entt"] = "3rdParty/entt/src"
 
 -- Need to compile
 IncludeDir["assimp"] = "3rdParty/assimp/include"
@@ -53,7 +54,8 @@ project "Engine"
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.Glad}",
         "%{IncludeDir.GLFW}",
-        "%{IncludeDir.imgui}"
+        "%{IncludeDir.imgui}",
+        "%{IncludeDir.entt}"
     }
 
     links
@@ -113,6 +115,7 @@ project "Editor"
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.imgui}",
         "%{IncludeDir.glm}",
+        "%{IncludeDir.entt}",
         "Engine/Source",
         "%{prj.name}/Source"
     }

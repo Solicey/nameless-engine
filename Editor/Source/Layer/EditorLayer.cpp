@@ -100,8 +100,12 @@ namespace NL
 
 		// m_EditorCamera = EditorCamera(Camera::ProjectionType::Orthographic, 10.0f, 1280, 720, 0.1f, 1000.0f);
 		m_EditorCamera = EditorCamera(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
+		m_EditorScene = CreateRef<Scene>();
 
-		std::string normalShaderVertexSrc = R"(
+		Entity eBox = m_EditorScene->CreateEntity("Box");
+		eBox.AddComponent<ModelRendererComponent>("../Assets/Models/Box.obj", ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
+
+		/*std::string normalShaderVertexSrc = R"(
 			#version 330 core
 
 			layout(location = 0) in vec3 a_Position;
@@ -141,7 +145,7 @@ namespace NL
 
 		m_Box = ModelLoader::Create("../Assets/Models/Box.obj", ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
 		m_Sphere = ModelLoader::Create("../Assets/Models/Sphere.obj", ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
-		m_CameraModel = ModelLoader::Create("../Assets/Models/Camera.obj", ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
+		m_CameraModel = ModelLoader::Create("../Assets/Models/Camera.obj", ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);*/
 	}
 
 	void EditorLayer::OnDetach()
@@ -154,7 +158,9 @@ namespace NL
 
 		m_EditorCamera.OnUpdate(ts);
 
-		Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+		m_EditorScene->OnUpdateEditor(ts, m_EditorCamera);
+
+		/*Renderer::SetClearColor({0.1f, 0.1f, 0.1f, 1});
 		Renderer::Clear();
 
 		// m_Camera.SetPosition(m_CameraPosition);
@@ -172,7 +178,7 @@ namespace NL
 		Renderer::DrawModel(m_Sphere, m_NormalShader);
 		Renderer::DrawModel(m_CameraModel, m_NormalShader, transform);
 
-		Renderer::EndScene();
+		Renderer::EndScene();*/
 	}
 
 	void EditorLayer::OnImGuiRender()
