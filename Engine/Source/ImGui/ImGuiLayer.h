@@ -23,6 +23,11 @@ namespace NL
 
 		static Ref<ImGuiLayer> Create();
 
+		/*
+		* 当Viewport窗口不处于Focused或Hovered状态时，阻塞事件
+		*/
+		void BlockEvents(bool block) { m_BlockEvents = block; }
+
 	private:
 		bool m_BlockEvents = true;
 	};

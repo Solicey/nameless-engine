@@ -21,18 +21,19 @@ namespace NL
 		bool OnWindowResizeEvent(WindowResizeEvent& event);
 
 	private:
-		Ref<Shader> m_Shader;
-		Ref<VertexArray> m_VertexArray;
-
-		Ref<Shader> m_NormalShader;
-		Ref<VertexArray> m_SquareVA;
-
-		Ref<Model> m_Box;
-		Ref<Model> m_Sphere;
-		Ref<Model> m_CameraModel;
 
 		EditorCamera m_EditorCamera;
 		Ref<Scene> m_EditorScene;
+
+		// Viewport framebuffer
+		Ref<Framebuffer> m_Framebuffer;
+
+		// Viewport variables
+		bool m_ShowViewport;
+		nlm::vec2 m_ViewportSize = { 0.0f, 0.0f };
+		nlm::vec2 m_ViewportBounds[2];
+		bool m_ViewportFocused = false;
+		bool m_ViewportHovered = false;
 
 	};
 }

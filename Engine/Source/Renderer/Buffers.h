@@ -1,5 +1,10 @@
 #pragma once
 
+/*
+该文件声明VBO与IBO(EBO)
+FBO在Framebuffer.h
+*/
+
 #include "Resources/ShaderDataType.h"
 
 #include "Core/Log/Log.h"

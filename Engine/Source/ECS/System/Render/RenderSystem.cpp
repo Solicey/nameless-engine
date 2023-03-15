@@ -62,8 +62,8 @@ namespace NL
 
 	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera)
 	{
-		Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-		Renderer::Clear();
+		// Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+		// Renderer::Clear();
 
 		Renderer::BeginScene(camera);
 

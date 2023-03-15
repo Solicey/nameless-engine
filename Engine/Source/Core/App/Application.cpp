@@ -47,7 +47,7 @@ namespace NL
 
 	void Application::Close()
 	{
-
+		m_IsRunning = false;
 	}
 
 	void Application::Init(const std::string& name)

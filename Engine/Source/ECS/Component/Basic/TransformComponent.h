@@ -26,8 +26,12 @@ namespace NL
         }
 
         nlm::vec3 GetTranslation() const { return Translation; }
+        nlm::vec3 GetRotation() const { return Rotation; }
+        nlm::vec3 GetScale() const { return Scale; }
 
         void SetTranslation(float x, float y, float z) { Translation = { x, y, z }; }
+        void SetRotation(float x, float y, float z) { Rotation = { x, y, z }; }
+        void SetScale(float x, float y, float z) { Scale = { x, y, z }; }
 
         nlm::vec3 Translation = { 0.0f, 0.0f, 0.0f };
         nlm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };  // Euler angles

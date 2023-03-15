@@ -43,6 +43,8 @@ namespace NL
 
 		void Close();
 
+		Ref<ImGuiLayer> GetImGuiLayer() { return m_ImGuiLayer; }
+
 	private:
 
 		/// <summary>
