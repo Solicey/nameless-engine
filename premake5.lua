@@ -71,7 +71,8 @@ project "Engine"
 
     defines 
     {  
-        "NL_ASSETS_PATH=%{wks.location}/Assets"
+        'NL_ASSETS_PATH="%{wks.location}/Assets"',
+        'NL_ENGINE_PATH="%{prj.abspath}"'
     }
 
     filter "system:windows"
@@ -136,9 +137,17 @@ project "Editor"
         defines "NL_DEBUG"
         runtime "Debug"
         symbols "on"
+        postbuildcommands 
+        { 
+            "copy %{wks.location}bin\\" .. outputdir .. "\\%{prj.name}\\*.exe %{wks.location}Debug\\"
+        }
     
     filter "configurations:Release"
         defines "NL_RELEASE"
         runtime "Release"
         optimize "on"
+        postbuildcommands 
+        { 
+            "copy %{wks.location}bin\\" .. outputdir .. "\\%{prj.name}\\*.exe %{wks.location}Release\\"
+        }
 

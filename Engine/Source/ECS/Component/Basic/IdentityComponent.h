@@ -14,6 +14,6 @@ namespace NL
 			: ID(id), Name(name) {}
 
 		ID				ID;
-		std::string		Name;
+		std::string		Name = "Nameless Entity";
 	};
 }

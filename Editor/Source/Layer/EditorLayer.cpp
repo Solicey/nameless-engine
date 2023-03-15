@@ -26,12 +26,14 @@ namespace NL
 		m_EditorScene = CreateRef<Scene>();
 
 		Entity eBox = m_EditorScene->CreateEntity("Box");
-		eBox.AddComponent<ModelRendererComponent>("../Assets/Models/Box.obj", ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
+		eBox.AddComponent<ModelRendererComponent>("../Assets/Models/Sphere.obj", ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
 
 		Entity eCam = m_EditorScene->CreateEntity("Camera");
 		eCam.AddComponent<ModelRendererComponent>("../Assets/Models/Camera.obj", ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
 		eCam.GetComponent<TransformComponent>().SetTranslation(0, 1, 0);
 
+        // Hierarchy
+        m_HierarchyPanel = HierarchyPanel(m_EditorScene);
 	}
 
 	void EditorLayer::OnDetach()
@@ -141,6 +143,7 @@ namespace NL
             if (ImGui::BeginMenu("Window"))
             {
                 ImGui::MenuItem("Viewport", NULL, &m_ShowViewport);
+                ImGui::MenuItem("Hierarchy", NULL, &m_ShowHierarchy);
 
                 ImGui::EndMenu();
             }
@@ -151,6 +154,12 @@ namespace NL
 #pragma endregion
 
 #pragma region Windows
+
+        // Hierarchy
+        if (m_ShowHierarchy)
+        {
+            m_HierarchyPanel.OnImGuiRender(m_ShowHierarchy, true);
+        }
 
         // Viewport
         if (m_ShowViewport)

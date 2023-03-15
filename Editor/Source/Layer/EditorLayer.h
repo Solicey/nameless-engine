@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Panels/HierarchyPanel.h"
+
 #include <Engine.h>
 
 namespace NL
@@ -34,6 +36,10 @@ namespace NL
 		nlm::vec2 m_ViewportBounds[2];
 		bool m_ViewportFocused = false;
 		bool m_ViewportHovered = false;
+
+		// Hierarchy variables
+		bool m_ShowHierarchy;
+		HierarchyPanel m_HierarchyPanel;
 
 	};
 }

@@ -28,6 +28,8 @@ namespace NL
 		*/
 		void BlockEvents(bool block) { m_BlockEvents = block; }
 
+		void SetNamelessStyle();
+
 	private:
 		bool m_BlockEvents = true;
 	};

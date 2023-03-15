@@ -38,6 +38,9 @@ namespace NL
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
 
+        // Custom Style
+        SetNamelessStyle();
+
         Application& app = Application::GetInstance();
         GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 
