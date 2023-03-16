@@ -20,6 +20,7 @@ namespace NL
 
 	private:
 		bool OnKeyPressedEvent(KeyPressedEvent& event);
+		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
 		bool OnWindowResizeEvent(WindowResizeEvent& event);
 
 	private:

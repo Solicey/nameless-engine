@@ -20,7 +20,15 @@ namespace NL
 
 	private:
 		void DrawEntityNode(Entity entity);
+		void DrawComponents(Entity entity);
 		
+		template<Component C>
+		void InspectorAddComponent(const char* componentName);
+
+		template<Component C, typename UIFunction>
+		void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction);
+
+		static void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f);
 
 	private:
 		Ref<Scene> m_Scene;

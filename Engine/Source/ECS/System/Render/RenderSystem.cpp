@@ -81,7 +81,10 @@ namespace NL
 			auto& transform = entity.GetComponent<TransformComponent>();
 			auto& model = entity.GetComponent<ModelRendererComponent>();
 
-			Renderer::DrawModel(model.mModel, m_TestShader, transform.GetTransform());
+			if (model.mModel != nullptr)
+			{
+				Renderer::DrawModel(model.mModel, m_TestShader, transform.GetTransform());
+			}
 		}
 
 		Renderer::EndScene();

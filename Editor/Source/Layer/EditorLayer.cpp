@@ -65,7 +65,11 @@ namespace NL
 
 		//NL_TRACE("Delta Time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
 
-		m_EditorCamera.OnUpdate(ts);
+        if (m_ViewportHovered)
+        {
+            m_EditorCamera.OnUpdate(ts);
+        }
+		
 		m_EditorScene->OnUpdateEditor(ts, m_EditorCamera);
 
         // Check Hovered Entity
@@ -81,6 +85,12 @@ namespace NL
         {
             int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
             m_EntityHovered = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
+            m_ViewportHovered = true;
+            // NL_ENGINE_TRACE("Viewport Hovered!");
+        }
+        else
+        {
+            m_ViewportHovered = false;
         }
 
         m_Framebuffer->Unbind();
@@ -193,8 +203,8 @@ namespace NL
             m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
 
             m_ViewportFocused = ImGui::IsWindowFocused();
-            m_ViewportHovered = ImGui::IsWindowHovered();
-            Application::GetInstance().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
+            // m_ViewportHovered = ImGui::IsWindowHovered();
+            Application::GetInstance().GetImGuiLayer()->BlockEvents(!m_ViewportHovered && !m_ViewportFocused);
 
             ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
             // Update Viewport Size
@@ -219,17 +229,26 @@ namespace NL
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-		m_EditorCamera.OnEvent(event);
+        if (m_ViewportHovered)
+        {
+            m_EditorCamera.OnEvent(event);
+        }
 
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<KeyPressedEvent>(NL_BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
 		dispatcher.Dispatch<WindowResizeEvent>(NL_BIND_EVENT_FN(EditorLayer::OnWindowResizeEvent));
+        dispatcher.Dispatch<MouseButtonPressedEvent>(NL_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressedEvent));
 	}
 
 	bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& event)
 	{
 		return false;
 	}
+
+    bool EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& event)
+    {
+        return false;
+    }
 
 	bool EditorLayer::OnWindowResizeEvent(WindowResizeEvent& event)
 	{
