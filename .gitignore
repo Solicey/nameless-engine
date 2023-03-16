@@ -1,7 +1,8 @@
 # Binaries
 **/bin/
 **/bin-int/
-**.exe
+Debug/*.exe
+Release/*.exe
 
 # Visual Studio files and folder
 .vs/
