@@ -37,8 +37,8 @@ project "Engine"
     pchheader "nlpch.h"
     pchsource "%{prj.name}/Source/nlpch.cpp"
 
-    targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
+    targetdir ("%{prj.location}/bin/" .. outputdir )
+    objdir ("%{prj.location}/bin-int/" .. outputdir )
 
     files
     {
@@ -101,8 +101,8 @@ project "Editor"
     cppdialect "C++20"
     staticruntime "on"
 
-    targetdir ("%{wks.location}/bin/" .. outputdir .. "/%{prj.name}")
-    objdir ("%{wks.location}/bin-int/" .. outputdir .. "/%{prj.name}")
+    targetdir ("%{prj.location}/bin/" .. outputdir )
+    objdir ("%{prj.location}/bin-int/" .. outputdir )
 
     files
     {
@@ -139,7 +139,7 @@ project "Editor"
         symbols "on"
         postbuildcommands 
         { 
-            "copy %{wks.location}bin\\" .. outputdir .. "\\%{prj.name}\\*.exe %{wks.location}Debug\\"
+            "copy %{prj.location}\\bin\\" .. outputdir .. "\\*.exe %{wks.location}Debug\\"
         }
     
     filter "configurations:Release"
@@ -148,6 +148,6 @@ project "Editor"
         optimize "on"
         postbuildcommands 
         { 
-            "copy %{wks.location}bin\\" .. outputdir .. "\\%{prj.name}\\*.exe %{wks.location}Release\\"
+            "copy %{prj.location}\\bin\\" .. outputdir .. "\\*.exe %{wks.location}Release\\"
         }
 

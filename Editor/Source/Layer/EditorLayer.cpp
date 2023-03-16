@@ -26,10 +26,14 @@ namespace NL
 		m_EditorScene = CreateRef<Scene>();
 
 		Entity eBox = m_EditorScene->CreateEntity("Box");
-		eBox.AddComponent<ModelRendererComponent>("../Assets/Models/Sphere.obj", ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
+		eBox.AddComponent<ModelRendererComponent>("../Assets/Models/Sphere.obj", 
+            (uint32_t)eBox,
+            ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
 
 		Entity eCam = m_EditorScene->CreateEntity("Camera");
-		eCam.AddComponent<ModelRendererComponent>("../Assets/Models/Camera.obj", ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
+		eCam.AddComponent<ModelRendererComponent>("../Assets/Models/Camera.obj", 
+            (uint32_t)eCam, 
+            ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
 		eCam.GetComponent<TransformComponent>().SetTranslation(0, 1, 0);
 
         // Hierarchy
@@ -63,6 +67,21 @@ namespace NL
 
 		m_EditorCamera.OnUpdate(ts);
 		m_EditorScene->OnUpdateEditor(ts, m_EditorCamera);
+
+        // Check Hovered Entity
+
+        auto [mx, my] = ImGui::GetMousePos();
+        mx -= m_ViewportBounds[0].x;
+        my -= m_ViewportBounds[0].y;
+        glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+        my = viewportSize.y - my;
+        int mouseX = (int)mx;
+        int mouseY = (int)my;
+        if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+        {
+            int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
+            m_EntityHovered = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
+        }
 
         m_Framebuffer->Unbind();
 
@@ -178,9 +197,10 @@ namespace NL
             Application::GetInstance().GetImGuiLayer()->BlockEvents(!m_ViewportFocused && !m_ViewportHovered);
 
             ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-            // Update viewport size
+            // Update Viewport Size
             m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
+            // Update Viewport Image
             uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
             ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 

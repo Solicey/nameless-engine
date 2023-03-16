@@ -15,6 +15,6 @@ namespace NL
 	Library<Model>::Library()
 	{
 		// ?
-		Add("Box", ModelLoader::Create("E:/dev/nameless-engine/Engine/Resources/Models/Box.obj", ModelLoaderFlags::Triangulate));
+		// Add("Box", ModelLoader::Create("E:/dev/nameless-engine/Engine/Resources/Models/Box.obj", ModelLoaderFlags::Triangulate));
 	}
 }

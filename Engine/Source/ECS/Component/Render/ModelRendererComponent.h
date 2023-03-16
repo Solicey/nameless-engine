@@ -10,8 +10,8 @@ namespace NL
 	{
 	public:
 		ModelRendererComponent() = default;
-		ModelRendererComponent(const std::string& path, ModelLoaderFlags flags)
-			: Path(path), mModel(ModelLoader::Create(path, flags)) {}
+		ModelRendererComponent(const std::string& path, uint32_t entityID, ModelLoaderFlags flags)
+			: Path(path), mModel(ModelLoader::Create(path, entityID, flags)) {}
 
 
 	public:

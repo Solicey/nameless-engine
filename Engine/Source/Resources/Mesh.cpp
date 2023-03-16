@@ -41,10 +41,10 @@ namespace NL
 
 	void Mesh::CreateBuffers(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)
 	{
-		std::vector<float> rawVertices;
+		// std::vector<float> rawVertices;
 		// std::vector<unsigned int> rawIndices;
 
-		for (const auto& vertex : vertices)
+		/*for (const auto& vertex : vertices)
 		{
 			rawVertices.push_back(vertex.Position.x);
 			rawVertices.push_back(vertex.Position.y);
@@ -66,19 +66,20 @@ namespace NL
 			rawVertices.push_back(vertex.Bitangent.z);
 
 			// NL_ENGINE_TRACE("    vertex pos: ({0}, {1}, {2})", vertex.Position.x, vertex.Position.y, vertex.Position.z);
-		}
+		}*/
 
 		BufferLayout layout = {
 			{ShaderDataType::Float3, "a_Position"},
 			{ShaderDataType::Float2, "a_TexCoord"},
 			{ShaderDataType::Float3, "a_Normal"},
 			{ShaderDataType::Float3, "a_Tangent"},
-			{ShaderDataType::Float3, "a_Bitangent"}
+			{ShaderDataType::Float3, "a_Bitangent"},
+			{ShaderDataType::Int, "a_EntityID"}
 		};
 
 		m_VertexArray = VertexArray::Create();
 
-		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create(rawVertices.data(), vertices.size() * layout.GetStride());
+		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create((void*)const_cast<Vertex*>(vertices.data()), vertices.size() * layout.GetStride());
 		vertexBuffer->SetLayout(layout);
 		m_VertexArray->AddVertexBuffer(vertexBuffer);
 

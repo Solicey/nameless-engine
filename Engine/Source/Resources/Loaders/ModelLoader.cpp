@@ -11,11 +11,11 @@
 
 namespace NL
 {
-	Ref<Model> ModelLoader::Create(const std::string& path, ModelLoaderFlags flags)
+	Ref<Model> ModelLoader::Create(const std::string& path, uint32_t entityID, ModelLoaderFlags flags)
 	{
 		Ref<Model> model = CreateRef<Model>(Model(path));
 
-		if (!AssimpLoadModel(path, model->m_Meshes, model->m_materialNames, flags))
+		if (!AssimpLoadModel(path, model->m_Meshes, model->m_materialNames, entityID, flags))
 		{
 			NL_ENGINE_WARN("Failed to load model path: {0}", path);
 			return nullptr;
@@ -31,6 +31,7 @@ namespace NL
 	bool ModelLoader::AssimpLoadModel(const std::string& path,
 		std::vector<Ref<Mesh>>& meshes,
 		std::vector<std::string>& materials,
+		uint32_t entityID,
 		ModelLoaderFlags flags)
 	{
 
@@ -44,7 +45,7 @@ namespace NL
 
 		aiMatrix4x4 identity;
 
-		ProcessNode(scene, &identity, scene->mRootNode, meshes);
+		ProcessNode(scene, &identity, scene->mRootNode, meshes, entityID);
 
 		return true;
 	}
@@ -63,7 +64,7 @@ namespace NL
 		}
 	}
 
-	void ModelLoader::ProcessNode(const struct aiScene* scene, void* transform, aiNode* node, std::vector<Ref<Mesh>>& meshes)
+	void ModelLoader::ProcessNode(const struct aiScene* scene, void* transform, aiNode* node, std::vector<Ref<Mesh>>& meshes, uint32_t entityID)
 	{
 		aiMatrix4x4 nodeTransformation = *reinterpret_cast<aiMatrix4x4*>(transform) * node->mTransformation;
 
@@ -73,18 +74,18 @@ namespace NL
 			std::vector<Vertex> vertices;
 			std::vector<uint32_t> indices;
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-			ProcessMesh(scene, &nodeTransformation, mesh, vertices, indices);
+			ProcessMesh(scene, &nodeTransformation, mesh, vertices, indices, entityID);
 			meshes.push_back(CreateRef<Mesh>(vertices, indices, mesh->mMaterialIndex)); // The model will handle mesh destruction
 		}
 
 		// Then do the same for each of its children
 		for (uint32_t i = 0; i < node->mNumChildren; ++i)
 		{
-			ProcessNode(scene, &nodeTransformation, node->mChildren[i], meshes);
+			ProcessNode(scene, &nodeTransformation, node->mChildren[i], meshes, entityID);
 		}
 	}
 
-	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, uint32_t entityID)
 	{
 		aiMatrix4x4 meshTransformation = *reinterpret_cast<aiMatrix4x4*>(transform);
 
@@ -103,7 +104,8 @@ namespace NL
 					nlm::vec2(texCoords.x, texCoords.y),
 					nlm::vec3(normal.x, normal.y, normal.z),
 					nlm::vec3(tangent.x, tangent.y, tangent.z),
-					nlm::vec3(bitangent.x, bitangent.y, bitangent.z)
+					nlm::vec3(bitangent.x, bitangent.y, bitangent.z),
+					entityID
 				}
 			);
 		}

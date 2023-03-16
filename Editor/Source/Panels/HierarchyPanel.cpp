@@ -87,8 +87,8 @@ namespace NL
 			ImGui::EndPopup();
 		}
 
-		if ((m_EntitySelected == entity && ImGui::IsKeyPressed(ImGuiKey_Delete)))
-			entityDeleted = true;
+		/*if ((m_EntitySelected == entity && ImGui::IsKeyPressed(ImGuiKey_Delete)))
+			entityDeleted = true;*/
 
 		if (isOpened)
 		{

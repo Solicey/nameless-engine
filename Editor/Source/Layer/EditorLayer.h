@@ -36,6 +36,7 @@ namespace NL
 		nlm::vec2 m_ViewportBounds[2];
 		bool m_ViewportFocused = false;
 		bool m_ViewportHovered = false;
+		Entity m_EntityHovered = {};
 
 		// Hierarchy variables
 		bool m_ShowHierarchy;
