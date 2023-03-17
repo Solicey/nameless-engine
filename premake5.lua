@@ -15,6 +15,7 @@ IncludeDir = {}
 IncludeDir["glm"] = "3rdParty/glm"
 IncludeDir["spdlog"] = "3rdParty/spdlog/include"
 IncludeDir["entt"] = "3rdParty/entt/src"
+IncludeDir["stb"] = "3rdParty/stb"
 
 -- Need to compile
 IncludeDir["assimp"] = "3rdParty/assimp/include"
@@ -55,7 +56,8 @@ project "Engine"
         "%{IncludeDir.Glad}",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.imgui}",
-        "%{IncludeDir.entt}"
+        "%{IncludeDir.entt}",
+        "%{IncludeDir.stb}"
     }
 
     links
@@ -71,8 +73,8 @@ project "Engine"
 
     defines 
     {  
-        'NL_ASSETS_PATH="%{wks.location}/Assets"',
-        'NL_ENGINE_PATH="%{prj.abspath}"'
+        "NL_ASSETS_PATH=%{wks.location}/Assets",
+        "NL_ENGINE_PATH=%{prj.abspath}"
     }
 
     filter "system:windows"
@@ -117,6 +119,7 @@ project "Editor"
         "%{IncludeDir.imgui}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
+        "%{IncludeDir.stb}",
         "Engine/Source",
         "%{prj.name}/Source"
     }

@@ -9,8 +9,10 @@ namespace NL
 	class Mesh
 	{
 	public:
-		Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices,
-			uint32_t matIndex);
+		Mesh(const std::vector<Vertex>& vertices, 
+			const std::vector<uint32_t>& indices,
+			uint32_t matIndex, 
+			const std::string& name);
 
 		// VAO actually
 		void Bind();
@@ -26,6 +28,8 @@ namespace NL
 
 		inline const Ref<VertexArray>& GetVertexArray() const { return m_VertexArray; }
 
+		const std::string& GetMaterialName() const { return m_MaterialName; }
+
 	private:
 		void CreateBuffers(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
 
@@ -36,6 +40,8 @@ namespace NL
 
 		// includes buffers already
 		Ref<VertexArray> m_VertexArray;
+
+		std::string m_MaterialName;
 
 		// bounding sphere
 	};

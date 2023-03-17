@@ -2,6 +2,7 @@
 
 #include "Core/Log/Log.h"
 #include "Resources/Mesh.h"
+#include "Resources/Material.h"
 
 #include <vector>
 
@@ -17,7 +18,7 @@ namespace NL
 			NL_ENGINE_INFO("Model Info:");
 			NL_ENGINE_INFO("  Path: {0}", m_Path);
 			NL_ENGINE_INFO("  Mesh Count: {0}", m_Meshes.size());
-			NL_ENGINE_INFO("  Material Count: {0}", m_materialNames.size());
+			// NL_ENGINE_INFO("  Material Count: {0}", m_materialNames.size());
 
 			int cnt = 0;
 			for (const auto& mesh : m_Meshes)
@@ -26,16 +27,21 @@ namespace NL
 					cnt++, mesh->GetVertexCount(), mesh->GetIndexCount() / 3);
 			}
 
-			cnt = 0;
+			/*cnt = 0;
 			for (const auto& mat : m_materialNames)
 			{
 				NL_ENGINE_INFO("  Material {0} name: {1}",
 					cnt++, mat);
-			}
+			}*/
 		}
 
-		inline const std::vector<Ref<Mesh>>& GetMeshes() const { return m_Meshes; }
-		inline const std::vector<std::string>& GetMaterials() const { return m_materialNames; }
+		const std::vector<Ref<Mesh>>& GetMeshes() const { return m_Meshes; }
+		const Ref<Shader>& GetShader(const Ref<Mesh>& mesh) const
+		{
+			const std::string& name = mesh->GetMaterialName();
+			NL_ENGINE_ASSERT(m_Materials.contains(name), "Model get shader failed!");
+			return m_Materials.at(name)->GetShader();
+		}
 
 	private:
 		Model() = delete;
@@ -44,6 +50,6 @@ namespace NL
 	private:
 		std::string					m_Path;
 		std::vector<Ref<Mesh>>		m_Meshes;
-		std::vector<std::string>	m_materialNames;
+		std::unordered_map<std::string, Ref<Material>> m_Materials;
 	};
 }

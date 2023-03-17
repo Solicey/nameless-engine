@@ -4,6 +4,7 @@
 
 #include <Engine.h>
 #include <imgui.h>
+#include <filesystem>
 
 namespace NL
 {
@@ -25,16 +26,22 @@ namespace NL
 		m_EditorCamera = EditorCamera(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
 		m_EditorScene = CreateRef<Scene>();
 
+        Entity eCam = m_EditorScene->CreateEntity("Camera");
+        eCam.AddComponent<ModelRendererComponent>("../Assets/Models/Camera.obj",
+            (int)(uint32_t)(eCam),
+            ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
+        eCam.GetComponent<TransformComponent>().SetTranslation(0, 1, 0);
+
 		Entity eBox = m_EditorScene->CreateEntity("Box");
-		eBox.AddComponent<ModelRendererComponent>("../Assets/Models/Sphere.obj", 
-            (uint32_t)eBox,
+		eBox.AddComponent<ModelRendererComponent>("../Assets/Models/Box.obj", 
+            (int)(uint32_t)(eBox),
             ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
 
-		Entity eCam = m_EditorScene->CreateEntity("Camera");
-		eCam.AddComponent<ModelRendererComponent>("../Assets/Models/Camera.obj", 
-            (uint32_t)eCam, 
+        Entity eSphere = m_EditorScene->CreateEntity("Sphere");
+        eSphere.AddComponent<ModelRendererComponent>("../Assets/Models/Sphere.obj",
+            (int)(uint32_t)(eSphere),
             ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
-		eCam.GetComponent<TransformComponent>().SetTranslation(0, 1, 0);
+        eSphere.GetComponent<TransformComponent>().SetTranslation(0, -1, 0);
 
         // Hierarchy
         m_HierarchyPanel = HierarchyPanel(m_EditorScene);
@@ -58,14 +65,14 @@ namespace NL
 
         // Framebuffer preparation
         m_Framebuffer->Bind();
-        Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+        Renderer::SetClearColor({ 0.2f, 0.2f, 0.2f, 1 });
         Renderer::Clear();
         // Clear entity ID attachment to -1
-        m_Framebuffer->ClearAttachment(1, -1);
+        // m_Framebuffer->ClearAttachment(1, -1);
 
 		//NL_TRACE("Delta Time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
 
-        if (m_ViewportHovered)
+        if (m_ViewportHovered || m_EditorCamera.IsMouseButtonHolding())
         {
             m_EditorCamera.OnUpdate(ts);
         }
@@ -86,12 +93,23 @@ namespace NL
             int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
             m_EntityHovered = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
             m_ViewportHovered = true;
-            // NL_ENGINE_TRACE("Viewport Hovered!");
         }
         else
         {
             m_ViewportHovered = false;
         }
+
+        // Set Editor Camera Focus
+        if (Input::IsKeyPressed(KeyCode::F))
+        {
+            Entity selectedEntity = m_HierarchyPanel.GetSelectedEntity();
+            if (selectedEntity)
+            {
+                // Ought to have transform...
+                m_EditorCamera.SetCenter(selectedEntity.GetComponent<TransformComponent>().Translation);
+            }
+        }
+        
 
         m_Framebuffer->Unbind();
 
@@ -229,7 +247,7 @@ namespace NL
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-        if (m_ViewportHovered)
+        if (m_ViewportHovered || m_EditorCamera.IsMouseButtonHolding())
         {
             m_EditorCamera.OnEvent(event);
         }
@@ -247,6 +265,19 @@ namespace NL
 
     bool EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& event)
     {
+        if (event.GetMouseButton() == Mouse::ButtonLeft)
+        {
+            // !ImGuizmo::IsOver()
+            if (m_ViewportHovered)
+            {
+                m_HierarchyPanel.SetSelectedEntity(m_EntityHovered);
+                // Click a viewport entity
+                if (m_EntityHovered)
+                {
+                    NL_ENGINE_TRACE("Viewport select entity: {0}", m_EntityHovered.GetName());
+                }
+            }
+        }
         return false;
     }
 

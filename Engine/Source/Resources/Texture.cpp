@@ -1,14 +1,12 @@
 #include "nlpch.h"
 
-#include "Shader.h"
-#include "Resources/Libraries/ShaderLibrary.h"
-#include "Core/Misc/PtrWrapper.h"
+#include "Texture.h"
 #include "Renderer/RendererAPI.h"
-#include "Platform/OpenGL/OpenGLShader.h"
+#include "Platform/OpenGL/OpenGLTexture.h"
 
 namespace NL
 {
-	Ref<Shader> Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
+	Ref<Texture2D> Texture2D::Create(uint32_t width, uint32_t height)
 	{
 		switch (RendererAPI::GetCurrent())
 		{
@@ -16,14 +14,14 @@ namespace NL
 			NL_ENGINE_ASSERT(false, "RendererAPI::None not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLShader>(name, vertexSrc, fragmentSrc);
+			return CreateRef<OpenGLTexture2D>(width, height);
 		}
 
 		NL_ENGINE_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
 
-	Ref<Shader> Shader::Create(const std::string& name, const std::filesystem::path& path)
+	Ref<Texture2D> Texture2D::Create(const std::filesystem::path& path)
 	{
 		switch (RendererAPI::GetCurrent())
 		{
@@ -31,7 +29,7 @@ namespace NL
 			NL_ENGINE_ASSERT(false, "RendererAPI::None not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLShader>(name, path.string());
+			return CreateRef<OpenGLTexture2D>(path);
 		}
 
 		NL_ENGINE_ASSERT(false, "Unknown RendererAPI!");

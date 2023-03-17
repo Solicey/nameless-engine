@@ -16,6 +16,8 @@ Nameless Engine's pre-compile headers
 #include <unordered_map>
 #include <unordered_set>
 
+#include <filesystem>
+
 #ifdef NL_PLATFORM_WINDOWS
 #include <Windows.h>
 #endif 

@@ -18,11 +18,11 @@ namespace NL
 	public:
 		void Clear();
 
-		inline const std::filesystem::path& GetAssetsFolder() const;
-		inline const std::filesystem::path& GetModelsFolder() const;
-		inline const std::filesystem::path& GetShadersFolder() const;
-		inline const std::filesystem::path& GetMaterialsFolder() const;
-		inline const std::filesystem::path& GetScriptsFolder() const;
+		const std::filesystem::path& GetAssetsFolder() const;
+		const std::filesystem::path& GetModelsFolder() const;
+		const std::filesystem::path& GetShadersFolder() const;
+		const std::filesystem::path& GetMaterialsFolder() const;
+		const std::filesystem::path& GetScriptsFolder() const;
 
 	private:
 		std::filesystem::path m_AssetsFolder;

@@ -3,6 +3,7 @@
 #include "ModelLoader.h"
 
 #include "Core/Math/Math.h"
+#include "Core/Log/Log.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -11,11 +12,11 @@
 
 namespace NL
 {
-	Ref<Model> ModelLoader::Create(const std::string& path, uint32_t entityID, ModelLoaderFlags flags)
+	Ref<Model> ModelLoader::Create(const std::string& path, int entityID, ModelLoaderFlags flags)
 	{
 		Ref<Model> model = CreateRef<Model>(Model(path));
 
-		if (!AssimpLoadModel(path, model->m_Meshes, model->m_materialNames, entityID, flags))
+		if (!AssimpLoadModel(path, model->m_Meshes, model->m_Materials, entityID, flags))
 		{
 			NL_ENGINE_WARN("Failed to load model path: {0}", path);
 			return nullptr;
@@ -30,8 +31,8 @@ namespace NL
 
 	bool ModelLoader::AssimpLoadModel(const std::string& path,
 		std::vector<Ref<Mesh>>& meshes,
-		std::vector<std::string>& materials,
-		uint32_t entityID,
+		std::unordered_map<std::string, Ref<Material>>& materials,
+		int entityID,
 		ModelLoaderFlags flags)
 	{
 
@@ -50,7 +51,7 @@ namespace NL
 		return true;
 	}
 
-	void ModelLoader::ProcessMaterials(const struct aiScene* scene, std::vector<std::string>& materials)
+	void ModelLoader::ProcessMaterials(const struct aiScene* scene, std::unordered_map<std::string, Ref<Material>>& materials)
 	{
 		for (uint32_t i = 0; i < scene->mNumMaterials; i++)
 		{
@@ -59,12 +60,12 @@ namespace NL
 			{
 				aiString name;
 				aiGetMaterialString(material, AI_MATKEY_NAME, &name);
-				materials.push_back(name.C_Str());
+				materials[std::string(name.C_Str())] = CreateRef<Material>();
 			}
 		}
 	}
 
-	void ModelLoader::ProcessNode(const struct aiScene* scene, void* transform, aiNode* node, std::vector<Ref<Mesh>>& meshes, uint32_t entityID)
+	void ModelLoader::ProcessNode(const struct aiScene* scene, void* transform, aiNode* node, std::vector<Ref<Mesh>>& meshes, int entityID)
 	{
 		aiMatrix4x4 nodeTransformation = *reinterpret_cast<aiMatrix4x4*>(transform) * node->mTransformation;
 
@@ -75,7 +76,7 @@ namespace NL
 			std::vector<uint32_t> indices;
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 			ProcessMesh(scene, &nodeTransformation, mesh, vertices, indices, entityID);
-			meshes.push_back(CreateRef<Mesh>(vertices, indices, mesh->mMaterialIndex)); // The model will handle mesh destruction
+			meshes.push_back(CreateRef<Mesh>(vertices, indices, mesh->mMaterialIndex, std::string(scene->mMaterials[mesh->mMaterialIndex]->GetName().C_Str()))); // The model will handle mesh destruction
 		}
 
 		// Then do the same for each of its children
@@ -85,7 +86,7 @@ namespace NL
 		}
 	}
 
-	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, uint32_t entityID)
+	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, int entityID)
 	{
 		aiMatrix4x4 meshTransformation = *reinterpret_cast<aiMatrix4x4*>(transform);
 
@@ -108,6 +109,8 @@ namespace NL
 					entityID
 				}
 			);
+
+			// NL_ENGINE_TRACE("entity entt id: {0} at ProcessMesh", entityID);
 		}
 
 		for (uint32_t faceID = 0; faceID < mesh->mNumFaces; ++faceID)
@@ -117,5 +120,6 @@ namespace NL
 			for (size_t indexID = 0; indexID < 3; ++indexID)
 				indices.push_back(face.mIndices[indexID]);
 		}
+
 	}
 }

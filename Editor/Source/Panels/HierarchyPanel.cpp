@@ -141,14 +141,24 @@ namespace NL
 			ImGui::EndPopup();
 		}
 
-		DrawComponent<TransformComponent>("Transform", entity, [](auto& component)
-		{
-			DrawVec3Control("Translation", component.Translation);
-			nlm::vec3 rotation = nlm::degrees(component.Rotation);
-			DrawVec3Control("Rotation", rotation);
-			component.Rotation = nlm::radians(rotation);
-			DrawVec3Control("Scale", component.Scale, 1.0f);
+		DrawComponent<TransformComponent>("Transform", entity, [](auto& component) {
+			
+		DrawVec3Control("Translation", component.Translation);
+		nlm::vec3 rotation = nlm::degrees(component.Rotation);
+		DrawVec3Control("Rotation", rotation);
+		component.Rotation = nlm::radians(rotation);
+		DrawVec3Control("Scale", component.Scale, 1.0f);
+		
 		});	
+
+		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [](auto& component) {
+			
+		const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
+		// NL_ENGINE_TRACE("Default shader name: {0}", Library<Shader>::GetInstance().GetDefaultShader());
+		
+
+
+		});
 
 	}
 

@@ -16,6 +16,6 @@ namespace NL
 		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera);
 
 	private:
-		Ref<Shader> m_TestShader;
+		// Ref<Shader> m_TestShader;
 	};
 }

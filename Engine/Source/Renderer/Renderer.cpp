@@ -45,6 +45,16 @@ namespace NL
 		}
 	}
 
+	void Renderer::DrawModel(const Ref<Model>& model, const nlm::mat4& transform)
+	{
+		const auto& meshes = model->GetMeshes();
+
+		for (const auto& mesh : meshes)
+		{
+			Submit(mesh->GetVertexArray(), model->GetShader(mesh), transform);
+		}
+	}
+
 	void Renderer::OnWindowResize(unsigned int width, unsigned int height)
 	{
 		SetViewPort(0, 0, width, height);

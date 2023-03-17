@@ -11,6 +11,6 @@ namespace NL
 		nlm::vec3	Normal;
 		nlm::vec3	Tangent;
 		nlm::vec3	Bitangent;
-		uint32_t	EntityID;
+		int			EntityID;
 	};
 }

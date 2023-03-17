@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Misc/PtrWrapper.h"
+#include "Core/Log/Log.h"
 #include "Resources/Model.h"
 #include "Resources/Loaders/ModelLoader.h"
 
@@ -10,8 +11,11 @@ namespace NL
 	{
 	public:
 		ModelRendererComponent() : Path("") {}
-		ModelRendererComponent(const std::string& path, uint32_t entityID, ModelLoaderFlags flags)
-			: Path(path), mModel(ModelLoader::Create(path, entityID, flags)) {}
+		ModelRendererComponent(const std::string& path, int entityID, ModelLoaderFlags flags)
+			: Path(path), mModel(ModelLoader::Create(path, entityID, flags))
+		{
+			// NL_ENGINE_TRACE("Entity entt id: {0}", entityID);
+		}
 
 
 	public:

@@ -34,9 +34,19 @@ namespace NL
 		m_MousePositionLastFrame = currMousePosition;
 
 		if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle))
+		{
 			Pan(delta);
+			m_IsMouseButtonHolding = true;
+		}
 		else if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
+		{
 			Rotate(delta);
+			m_IsMouseButtonHolding = true;
+		}
+		else
+		{
+			m_IsMouseButtonHolding = false;
+		}
 
 		RecalculateViewMatrix();
 	}
@@ -72,6 +82,14 @@ namespace NL
 		Camera::SetAspectRatio(width, height);
 		m_ViewportWidth = width;
 		m_ViewportHeight = height;
+	}
+
+	void EditorCamera::SetCenter(const nlm::vec3& center)
+	{
+		m_FocalPoint = center;
+		// Tmp
+		m_Distance = 10.0f;
+		RecalculateViewMatrix();
 	}
 
 	void EditorCamera::Pan(const nlm::vec2& delta)
@@ -121,10 +139,10 @@ namespace NL
 	std::pair<float, float> EditorCamera::PanSpeed() const
 	{
 		// magic number...
-		float x = std::min(m_ViewportWidth / 1000.0f, 2.4f); // max = 2.4f
+		float x = std::min(m_ViewportWidth / 900.0f, 3.0f); // max = 2.4f
 		float xFactor = 0.0366f * (x * x) - 0.1778f * x + 0.3021f;
 
-		float y = std::min(m_ViewportHeight / 1000.0f, 2.4f); // max = 2.4f
+		float y = std::min(m_ViewportHeight / 900.0f, 3.0f); // max = 2.4f
 		float yFactor = 0.0366f * (y * y) - 0.1778f * y + 0.3021f;
 
 		return { xFactor, yFactor };
@@ -132,7 +150,7 @@ namespace NL
 
 	float EditorCamera::ZoomSpeed() const
 	{
-		float distance = m_Distance * 0.2f;
+		float distance = m_Distance * 0.4f;
 		distance = std::max(distance, 0.0f);
 		float speed = distance * distance;
 		speed = std::min(speed, 100.0f); // max speed = 100

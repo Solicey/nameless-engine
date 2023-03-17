@@ -2,9 +2,11 @@
 
 #include "RenderSystem.h"
 
+#include "Core/Misc/PathConfig.h"
 #include "ECS/Entity/Entity.h"
 #include "ECS/Component/AllComponents.h"
 #include "Renderer/Renderer.h"
+#include "Resources/Libraries/ShaderLibrary.h"
 
 namespace NL
 {
@@ -51,7 +53,9 @@ namespace NL
 			}
 		)";
 
-		m_TestShader = CreateRef<Shader>(normalShaderVertexSrc, normalShaderFragmentSrc);
+		// m_TestShader = Shader::Create("Test Shader", PathConfig::GetInstance().GetShadersFolder() / "Debug/NormalTest.glsl");
+
+		Library<Shader>::GetInstance();
 	}
 
 	void RenderSystem::OnStartRuntime()
@@ -83,7 +87,7 @@ namespace NL
 
 			if (model.mModel != nullptr)
 			{
-				Renderer::DrawModel(model.mModel, m_TestShader, transform.GetTransform());
+				Renderer::DrawModel(model.mModel, transform.GetTransform());
 			}
 		}
 

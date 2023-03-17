@@ -28,6 +28,9 @@ namespace NL
 			const Ref<Shader>& shader,
 			const nlm::mat4& transform = nlm::mat4(1.0f));
 
+		static void DrawModel(const Ref<Model>& model,
+			const nlm::mat4& transform = nlm::mat4(1.0f));
+
 		static void OnWindowResize(unsigned int width, unsigned int height);
 
 		struct SceneData

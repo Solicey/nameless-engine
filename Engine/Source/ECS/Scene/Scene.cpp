@@ -21,6 +21,7 @@ namespace NL
     Entity Scene::CreateEntityWithID(ID id, const std::string& name)
     {
         Entity entity = Entity(m_Registry.create(), this);
+        NL_ENGINE_TRACE("Entity entt id: {0}, nl id: {1}", (uint32_t)entity, id.GetID());
         entity.AddComponent<IdentityComponent>(id, name);
         entity.AddComponent<TransformComponent>();
         return entity;

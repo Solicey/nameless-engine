@@ -31,6 +31,11 @@ namespace NL
 			return m_Library[name];
 		}
 
+		bool Contains(const std::string& name)
+		{
+			return m_Library.find(name) != m_Library.end();
+		}
+
 	protected:
 		std::unordered_map<std::string, Ref<LibType>> m_Library;
 	};
@@ -38,7 +43,6 @@ namespace NL
 	template <typename LibType>
 	class Library : public LibraryBase<Library, LibType>
 	{
-	public:
-		Library();
+
 	};
 }

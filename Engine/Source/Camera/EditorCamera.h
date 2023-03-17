@@ -27,6 +27,11 @@ namespace NL
 
 		virtual void SetAspectRatio(uint32_t width, uint32_t height) override;
 
+		// For Viewport Interactions
+		bool IsMouseButtonHolding() const { return m_IsMouseButtonHolding; }
+
+		void SetCenter(const nlm::vec3& center);
+
 	private:
 		void Pan(const nlm::vec2& delta);
 		void Rotate(const nlm::vec2& delta);
@@ -37,7 +42,7 @@ namespace NL
 		void RecalculateViewMatrix();
 
 		std::pair<float, float> PanSpeed() const;
-		float RotateSpeed() const { return 0.8f; }
+		float RotateSpeed() const { return 1.0f; }
 		float ZoomSpeed() const;
 
 	private:
@@ -56,5 +61,7 @@ namespace NL
 		nlm::vec2 m_MousePositionLastFrame = { 0.0f, 0.0f };
 
 		nlm::mat4 m_ViewMatrix;
+
+		bool m_IsMouseButtonHolding = false;
 	};
 }

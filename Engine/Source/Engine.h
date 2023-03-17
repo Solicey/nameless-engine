@@ -8,6 +8,7 @@
 #include "Core/Misc/TimeStep.h"
 #include "Core/Misc/PtrWrapper.h"
 #include "Core/Misc/Directives.h"
+#include "Core/Misc/PathConfig.h"
 
 #include "Camera/Camera.h"
 #include "Camera/EditorCamera.h"
@@ -22,9 +23,14 @@
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
 
+#include "Input/Input.h"
+#include "Input/KeyCodes.h"
+#include "Input/MouseCodes.h"
+
 #include "ImGui/ImGuiLayer.h"
 
 #include "Resources/Shader.h"
+#include "Resources/Libraries/ShaderLibrary.h"
 #include "Resources/Loaders/ModelLoader.h"
 #include "Resources/Loaders/ModelLoaderFlags.h"
 

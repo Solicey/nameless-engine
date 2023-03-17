@@ -4,10 +4,11 @@
 
 namespace NL
 {
-	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, uint32_t matIndex) :
+	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, uint32_t matIndex, const std::string& name) :
 		m_VertexCount(static_cast<uint32_t>(vertices.size())),
 		m_IndexCount(static_cast<uint32_t>(indices.size())),
-		m_MaterialIndex(matIndex)
+		m_MaterialIndex(matIndex),
+		m_MaterialName(name)
 	{
 		CreateBuffers(vertices, indices);
 
