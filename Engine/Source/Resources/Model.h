@@ -42,6 +42,7 @@ namespace NL
 			NL_ENGINE_ASSERT(m_Materials.contains(name), "Model get shader failed!");
 			return m_Materials.at(name)->GetShader();
 		}
+		const std::string& GetPath() const { return m_Path; }
 
 	private:
 		Model() = delete;

@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <regex>
 
 namespace NL
 {
@@ -141,24 +142,69 @@ namespace NL
 			ImGui::EndPopup();
 		}
 
-		DrawComponent<TransformComponent>("Transform", entity, [](auto& component) {
-			
+
+#pragma region Draw Transform
+
+		DrawComponent<TransformComponent>("Transform", entity, [](auto& entity, auto& component) {
+
 		DrawVec3Control("Translation", component.Translation);
 		nlm::vec3 rotation = nlm::degrees(component.Rotation);
 		DrawVec3Control("Rotation", rotation);
 		component.Rotation = nlm::radians(rotation);
 		DrawVec3Control("Scale", component.Scale, 1.0f);
-		
-		});	
 
-		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [](auto& component) {
+		});
+
+#pragma endregion
+
+		
+#pragma region Draw Mesh Renderer
+
+		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [](auto& entity, auto& component) {
 			
 		const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
 		// NL_ENGINE_TRACE("Default shader name: {0}", Library<Shader>::GetInstance().GetDefaultShader());
 		
+		Ref<Model> model = component.mModel;
 
+		ImGui::Columns(2);
+		ImGui::SetColumnWidth(0, 100.0f);
+		ImGui::Text("Model Path");
+		ImGui::NextColumn();
+
+		std::string modelPath = component.Path;
+		// NL_ENGINE_INFO("Draw Model Renderer Component modelPath: {0}", modelPath);
+		ImGui::Text(std::string_view(modelPath.c_str() + modelPath.find("Assets")).data());
+
+		ImGui::SameLine();
+		if (ImGui::Button("..."))
+		{
+			std::string filepath = Application::GetInstance().OpenFileDialogue(L"Model (*.obj *.fbx *.dae *.gltf)\0");
+			size_t pos = filepath.find("Models");
+			std::filesystem::path path;
+			if (pos != std::string::npos)
+			{
+				filepath = filepath.substr(pos);
+				path = PathConfig::GetInstance().GetAssetsFolder() / filepath.c_str();
+				NL_ENGINE_INFO("New model path: {0}", path);
+			}
+			else
+			{
+				NL_ENGINE_ASSERT(false, "Only support models from Models Folder!");
+			}
+
+			if (!filepath.empty())
+			{
+				component.Path = std::regex_replace(path.string(), std::regex("\\\\"), "/");
+				component.mModel = ModelLoader::Create(component.Path, (uint32_t)entity, component.Flags);
+			}
+		}
+
+		ImGui::Columns(1);
 
 		});
+
+#pragma endregion
 
 	}
 
@@ -274,7 +320,7 @@ namespace NL
 
 			if (isExpanded)
 			{
-				uiFunction(component);
+				uiFunction(entity, component);
 				ImGui::TreePop();
 			}
 

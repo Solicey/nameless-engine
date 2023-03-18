@@ -45,6 +45,11 @@ namespace NL
 
 		Ref<ImGuiLayer> GetImGuiLayer() { return m_ImGuiLayer; }
 
+		std::string OpenFileDialogue(const WCHAR* filter)
+		{
+			return m_Window->OpenFileDialogue(filter);
+		}
+
 	private:
 
 		/// <summary>

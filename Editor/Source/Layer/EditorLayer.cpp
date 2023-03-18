@@ -97,19 +97,7 @@ namespace NL
         else
         {
             m_ViewportHovered = false;
-        }
-
-        // Set Editor Camera Focus
-        if (Input::IsKeyPressed(KeyCode::F))
-        {
-            Entity selectedEntity = m_HierarchyPanel.GetSelectedEntity();
-            if (selectedEntity)
-            {
-                // Ought to have transform...
-                m_EditorCamera.SetCenter(selectedEntity.GetComponent<TransformComponent>().Translation);
-            }
-        }
-        
+        }        
 
         m_Framebuffer->Unbind();
 
@@ -260,6 +248,17 @@ namespace NL
 
 	bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& event)
 	{
+        // Set Editor Camera Focus
+        if (event.GetKeyCode() == Key::F)
+        {
+            Entity selectedEntity = m_HierarchyPanel.GetSelectedEntity();
+            if (selectedEntity)
+            {
+                // Ought to have transform...
+                m_EditorCamera.SetCenter(selectedEntity.GetComponent<TransformComponent>().Translation);
+            }
+        }
+
 		return false;
 	}
 

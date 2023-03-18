@@ -27,6 +27,8 @@ namespace NL
 		inline virtual void* GetNativeWindow() const override { return m_Window; }
 		inline virtual Ref<GraphicsContext> GetGraphicsContext() const override { return m_Context; }
 
+		virtual std::string OpenFileDialogue(const WCHAR* filter) override;
+
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();

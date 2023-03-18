@@ -8,6 +8,10 @@
 #include "Events/MouseEvent.h"
 #include "Renderer/GraphicsContext.h"
 
+#include <commdlg.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+
 namespace NL
 {
 	static bool s_GLFWInitialized = false;
@@ -15,6 +19,26 @@ namespace NL
 	static void GLFWErrorCallback(int error, const char* description)
 	{
 		NL_ENGINE_ERROR("GLFW Error ({0}): {1}", error, description);
+	}
+
+	namespace Utils
+	{
+		std::string static WCharToMByte(LPCWSTR lpcwszStr)
+		{
+			std::string str;
+			DWORD dwMinSize = 0;
+			LPSTR lpszStr = NULL;
+			dwMinSize = WideCharToMultiByte(CP_OEMCP, NULL, lpcwszStr, -1, NULL, 0, NULL, FALSE);
+			if (0 == dwMinSize)
+			{
+				return FALSE;
+			}
+			lpszStr = new char[dwMinSize];
+			WideCharToMultiByte(CP_OEMCP, NULL, lpcwszStr, -1, lpszStr, dwMinSize, NULL, FALSE);
+			str = lpszStr;
+			delete[] lpszStr;
+			return str;
+		}
 	}
 
 #ifdef NL_PLATFORM_WINDOWS
@@ -63,6 +87,25 @@ namespace NL
 	bool WindowsWindow::IsVSync() const
 	{
 		return m_Data.VSync;
+	}
+
+	std::string WindowsWindow::OpenFileDialogue(const WCHAR* filter)
+	{
+		OPENFILENAME ofn;
+		WCHAR szFile[260] = { 0 };
+		ZeroMemory(&ofn, sizeof(OPENFILENAME));
+		ofn.lStructSize = sizeof(OPENFILENAME);
+		ofn.hwndOwner = glfwGetWin32Window(m_Window);
+		ofn.lpstrFile = szFile;
+		ofn.nMaxFile = sizeof(szFile);
+		ofn.lpstrFilter = filter;
+		ofn.nFilterIndex = 1;
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+		if (GetOpenFileName(&ofn) == TRUE)
+		{
+			return Utils::WCharToMByte(ofn.lpstrFile);
+		}
+		return std::string();
 	}
 
 	void WindowsWindow::Init(const WindowProps& props)
@@ -116,19 +159,19 @@ namespace NL
 			{
 				case GLFW_PRESS:
 				{
-					KeyPressedEvent event(key, 0);
+					KeyPressedEvent event(static_cast<KeyCode>(key), 0);
 					data.EventCallback(event);
 					break;
 				}
 				case GLFW_RELEASE:
 				{
-					KeyReleasedEvent event(key);
+					KeyReleasedEvent event(static_cast<KeyCode>(key));
 					data.EventCallback(event);
 					break;
 				}
 				case GLFW_REPEAT:
 				{
-					KeyPressedEvent event(key, 1);
+					KeyPressedEvent event(static_cast<KeyCode>(key), 1);
 					data.EventCallback(event);
 					break;
 				}
@@ -138,7 +181,7 @@ namespace NL
 		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int character) {
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-			KeyTypedEvent event(character);
+			KeyTypedEvent event(static_cast<KeyCode>(character));
 			data.EventCallback(event);
 		});
 
