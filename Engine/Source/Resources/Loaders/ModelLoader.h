@@ -32,6 +32,7 @@ namespace NL
 			void* transform,
 			aiNode* node,
 			std::vector<Ref<Mesh>>& meshes, 
+			std::unordered_map<std::string, Ref<Material>>& materials,
 			int entityID);
 
 		static void ProcessMesh(const struct aiScene* scene,

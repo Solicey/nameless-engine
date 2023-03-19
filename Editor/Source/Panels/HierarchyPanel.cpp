@@ -6,6 +6,18 @@
 
 namespace NL
 {
+	namespace Utils
+	{
+		static bool TreeNodeExStyle1(const void* str_id, const std::string& name, ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding)
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 2.0f, 2.0f });
+			bool isExpanded = ImGui::TreeNodeEx((void*)str_id, flags, name.c_str());
+			ImGui::PopStyleVar();
+			return isExpanded;
+		}
+
+	}
+
 	HierarchyPanel::HierarchyPanel(const Ref<Scene>& scene)
 	{
 		SetCurrentScene(scene);
@@ -202,6 +214,32 @@ namespace NL
 
 		ImGui::Columns(1);
 
+		model = component.mModel;
+		if (model == nullptr)
+			return;
+
+		if (Utils::TreeNodeExStyle1((void*)"Materials", "Materials"))
+		{
+			for (auto& item : model->GetMaterials())
+			{
+				std::string matName = item.first;
+				Ref<Material> mat = item.second;
+
+				ImGui::PushID(matName.c_str());
+
+				if (ImGui::TreeNode((void*)matName.c_str(), matName.c_str()))
+				{
+					DrawShaderProperties(mat);
+
+					ImGui::TreePop();
+				}
+
+				ImGui::PopID();
+			}
+
+			ImGui::TreePop();
+		}
+
 		});
 
 #pragma endregion
@@ -272,6 +310,26 @@ namespace NL
 		ImGui::Columns(1);
 
 		ImGui::PopID();
+	}
+
+	void HierarchyPanel::DrawShaderProperties(Ref<Material> mat)
+	{
+		for (ShaderProperty& prop : mat->GetShaderPropertiesNotConst())
+		{
+			switch (prop.Type)
+			{
+			case ShaderUniformType::Color3:
+				nlm::vec3 color = std::any_cast<nlm::vec3>(prop.Value);
+				if (ImGui::ColorEdit3(prop.Name.c_str(), nlm::value_ptr(color)))
+				{
+					prop.Value = color;
+				}
+				break;
+
+			default:
+				break;
+			}
+		}
 	}
 
 	template<Component C>

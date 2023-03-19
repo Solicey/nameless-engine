@@ -31,6 +31,7 @@ namespace NL
 
         const Ref<Texture2D>& GetTexture(TextureType type) { return m_TextureMap[type]; }
         const Ref<Shader>& GetShader() { return m_Shader; }
+        std::vector<ShaderProperty>& GetShaderPropertiesNotConst() { return m_Properties; }
 
     private:
         void Init();

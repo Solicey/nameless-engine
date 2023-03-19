@@ -21,6 +21,38 @@ namespace NL
 	{
 	}
 
+	void Renderer::Submit(const Ref<VertexArray>& vertexArray, const Ref<Material>& material, const nlm::mat4& transform)
+	{
+		const auto& shader = material->GetShader();
+
+		shader->Bind();
+
+		// Typical
+		shader->SetUniformMat4("u_ViewProjection", s_SceneData->ViewPositionMatrix);
+		shader->SetUniformMat4("u_Transform", transform);
+
+		// Custom
+		for (const auto& prop : material->GetShaderPropertiesNotConst())
+		{
+			switch (prop.Type)
+			{
+			case ShaderUniformType::Color3:
+				shader->SetUniformFloat3(prop.Name.c_str(), std::any_cast<nlm::vec3>(prop.Value));
+				break;
+
+			default:
+				break;
+			}
+		}
+
+		vertexArray->Bind();
+
+		DrawIndices(vertexArray);
+
+		shader->Unbind();
+		vertexArray->Unbind();
+	}
+
 	void Renderer::Submit(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader, const nlm::mat4& transform)
 	{
 		shader->Bind();
@@ -51,7 +83,8 @@ namespace NL
 
 		for (const auto& mesh : meshes)
 		{
-			Submit(mesh->GetVertexArray(), model->GetShader(mesh), transform);
+			const auto& material = model->GetMaterial(mesh);
+			Submit(mesh->GetVertexArray(), material, transform);
 		}
 	}
 

@@ -36,13 +36,20 @@ namespace NL
 		}
 
 		const std::vector<Ref<Mesh>>& GetMeshes() const { return m_Meshes; }
-		const Ref<Shader>& GetShader(const Ref<Mesh>& mesh) const
+		// 获取当前mesh绑定的material
+		const Ref<Material>& GetMaterial(const Ref<Mesh>& mesh) const
 		{
 			const std::string& name = mesh->GetMaterialName();
 			NL_ENGINE_ASSERT(m_Materials.contains(name), "Model get shader failed!");
-			return m_Materials.at(name)->GetShader();
+			return m_Materials.at(name);
+		}
+		// 获取当前mesh绑定的material绑定的shader
+		const Ref<Shader>& GetShader(const Ref<Mesh>& mesh) const
+		{
+			return GetMaterial(mesh)->GetShader();
 		}
 		const std::string& GetPath() const { return m_Path; }
+		const std::unordered_map<std::string, Ref<Material>>& GetMaterials() const { return m_Materials; }
 
 	private:
 		Model() = delete;

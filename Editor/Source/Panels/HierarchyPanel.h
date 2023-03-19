@@ -30,6 +30,8 @@ namespace NL
 
 		static void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f);
 
+		static void DrawShaderProperties(Ref<Material> mat);
+
 	private:
 		Ref<Scene> m_Scene;
 		Entity m_EntitySelected;

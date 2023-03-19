@@ -21,6 +21,11 @@ namespace NL
 
 		static void Submit(
 			const Ref<VertexArray>& vertexArray,
+			const Ref<Material>& mat,
+			const nlm::mat4& transform = nlm::mat4(1.0f));
+
+		static void Submit(
+			const Ref<VertexArray>& vertexArray,
 			const Ref<Shader>& shader, 
 			const nlm::mat4& transform = nlm::mat4(1.0f));
 

@@ -42,11 +42,11 @@ namespace NL
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 			return false;
 
-		ProcessMaterials(scene, materials);
-
 		aiMatrix4x4 identity;
 
-		ProcessNode(scene, &identity, scene->mRootNode, meshes, entityID);
+		ProcessNode(scene, &identity, scene->mRootNode, meshes, materials, entityID);
+
+		ProcessMaterials(scene, materials);
 
 		return true;
 	}
@@ -60,12 +60,16 @@ namespace NL
 			{
 				aiString name;
 				aiGetMaterialString(material, AI_MATKEY_NAME, &name);
-				materials[std::string(name.C_Str())] = CreateRef<Material>();
+				std::string matName = std::string(name.C_Str());
+				if (materials.contains(matName))
+				{
+					materials[matName] = CreateRef<Material>();
+				}
 			}
 		}
 	}
 
-	void ModelLoader::ProcessNode(const struct aiScene* scene, void* transform, aiNode* node, std::vector<Ref<Mesh>>& meshes, int entityID)
+	void ModelLoader::ProcessNode(const struct aiScene* scene, void* transform, aiNode* node, std::vector<Ref<Mesh>>& meshes, std::unordered_map<std::string, Ref<Material>>& materials, int entityID)
 	{
 		aiMatrix4x4 nodeTransformation = *reinterpret_cast<aiMatrix4x4*>(transform) * node->mTransformation;
 
@@ -76,13 +80,15 @@ namespace NL
 			std::vector<uint32_t> indices;
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 			ProcessMesh(scene, &nodeTransformation, mesh, vertices, indices, entityID);
-			meshes.push_back(CreateRef<Mesh>(vertices, indices, mesh->mMaterialIndex, std::string(scene->mMaterials[mesh->mMaterialIndex]->GetName().C_Str()))); // The model will handle mesh destruction
+			std::string matName = std::string(scene->mMaterials[mesh->mMaterialIndex]->GetName().C_Str());
+			materials[matName] = nullptr;
+			meshes.push_back(CreateRef<Mesh>(vertices, indices, mesh->mMaterialIndex, matName)); // The model will handle mesh destruction
 		}
 
 		// Then do the same for each of its children
 		for (uint32_t i = 0; i < node->mNumChildren; ++i)
 		{
-			ProcessNode(scene, &nodeTransformation, node->mChildren[i], meshes, entityID);
+			ProcessNode(scene, &nodeTransformation, node->mChildren[i], meshes, materials, entityID);
 		}
 	}
 
