@@ -175,7 +175,7 @@ namespace NL
 		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [](auto& entity, auto& component) {
 			
 		const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
-		// NL_ENGINE_TRACE("Default shader name: {0}", Library<Shader>::GetInstance().GetDefaultShader());
+		// NL_ENGINE_TRACE("Default shader name: {0}", Library<Shader>::GetInstance().GetDefaultShaderName());
 		
 		Ref<Model> model = component.mModel;
 
@@ -227,8 +227,37 @@ namespace NL
 
 				ImGui::PushID(matName.c_str());
 
+				std::string shaderName = mat->GetShaderName();				
+
 				if (ImGui::TreeNode((void*)matName.c_str(), matName.c_str()))
 				{
+					// Select Shaders
+					if (ImGui::BeginCombo("Shader", shaderName.c_str()))
+					{
+						Library<Shader>::GetInstance().TraverseShadersFolder();
+						const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
+
+						if (!shaderNameMap.contains(shaderName))
+							shaderName = Library<Shader>::GetInstance().GetDefaultShaderName();
+
+						for (const auto& pair : shaderNameMap)
+						{
+							std::string name = pair.first;
+							bool isSelected = name == shaderName;
+							if (ImGui::Selectable(name.c_str(), isSelected))
+							{
+								if (!isSelected)
+								{
+									shaderName = name;
+									mat->LoadShader(shaderName);
+								}
+							}
+						}
+
+						ImGui::EndCombo();
+					}
+
+					// Exposed Shader Properties
 					DrawShaderProperties(mat);
 
 					ImGui::TreePop();

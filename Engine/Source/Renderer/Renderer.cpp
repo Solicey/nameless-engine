@@ -23,7 +23,11 @@ namespace NL
 
 	void Renderer::Submit(const Ref<VertexArray>& vertexArray, const Ref<Material>& material, const nlm::mat4& transform)
 	{
+		NL_ENGINE_ASSERT(material, "Material is nullptr!");
+
 		const auto& shader = material->GetShader();
+
+		NL_ENGINE_ASSERT(shader, "Shader is nullptr!");
 
 		shader->Bind();
 

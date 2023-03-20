@@ -2,6 +2,7 @@
 
 #include "Core/Log/Log.h"
 #include "Resources/Shader.h"
+#include "Resources/Libraries/ShaderLibrary.h"
 #include "Resources/Texture.h"
 
 #include <unordered_map>
@@ -21,7 +22,7 @@ namespace NL
 	class Material
 	{
     public:
-        Material() { Init(); }
+        Material() { LoadShader(Library<Shader>::GetInstance().GetDefaultShaderName()); }
 
         void AddTexture(TextureType type, Ref<Texture2D> texture)
         {
@@ -30,14 +31,14 @@ namespace NL
         }
 
         const Ref<Texture2D>& GetTexture(TextureType type) { return m_TextureMap[type]; }
-        const Ref<Shader>& GetShader() { return m_Shader; }
+        const std::string& GetShaderName() const { return m_ShaderName; }
+        const Ref<Shader>& GetShader() const { return m_Shader; }
         std::vector<ShaderProperty>& GetShaderPropertiesNotConst() { return m_Properties; }
-
-    private:
-        void Init();
+        void LoadShader(const std::string name);
 
 	private:
         std::string m_Name;
+        std::string m_ShaderName;
 		Ref<Shader>	m_Shader;
         std::vector<ShaderProperty> m_Properties;
         std::unordered_map<TextureType, Ref<Texture2D>, EnumClassHash> m_TextureMap;

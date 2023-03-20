@@ -6,11 +6,12 @@
 
 namespace NL
 {
-	void Material::Init()
+	void Material::LoadShader(const std::string name)
 	{
 		// Load default shader
-		NL_ENGINE_TRACE("Material init: {0}", Library<Shader>::GetInstance().GetDefaultShader());
-		m_Shader = Library<Shader>::GetInstance().LoadShader(Library<Shader>::GetInstance().GetDefaultShader());
+		// NL_ENGINE_TRACE("Material init: {0}", Library<Shader>::GetInstance().GetDefaultShaderName());
+		m_ShaderName = name;
+		m_Shader = Library<Shader>::GetInstance().LoadShader(m_ShaderName);
 		// Load properties
 		m_Properties = m_Shader->GetShaderProperties();
 
@@ -27,4 +28,5 @@ namespace NL
 			}
 		}
 	}
+
 }

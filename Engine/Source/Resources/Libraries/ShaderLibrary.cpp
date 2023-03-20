@@ -10,7 +10,7 @@ namespace NL
 		: m_ShadersFolder(PathConfig::GetInstance().GetShadersFolder())
 	{
 		// Add("Unlit", Shader::Create());
-		TraverseShadersFolder(m_ShadersFolder);
+		TraverseShadersFolder();
 	}
 
 	void Library<Shader>::TraverseShadersFolder(const std::filesystem::path& path)
@@ -26,7 +26,7 @@ namespace NL
 				if (item.path().extension().string() == ".glsl")
 				{
 					std::string name = item.path().filename().string();
-					NL_ENGINE_TRACE("Traverse shaders file: {0}", name);
+					// NL_ENGINE_TRACE("Traverse shaders file: {0}", name);
 					// Add(name, Shader::Create(name, item.path().string()));
 					m_ShaderNameMap[name] = item.path();
 				}
@@ -42,7 +42,9 @@ namespace NL
 			if (Contains(name))
 			{
 				NL_ENGINE_TRACE("Shader library contains: {0}", name);
-				return Get(name);
+				Ref<Shader> shader = Shader::Create(name, m_ShaderNameMap[name]);
+				Set(name, shader);
+				return shader;
 			}
 			else
 			{

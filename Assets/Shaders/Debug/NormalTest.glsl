@@ -1,8 +1,4 @@
 #prop
-color3    u_Color;
-vec4 u_Wind;
-float u_Cloud;
-
 
 #end
 
