@@ -21,7 +21,7 @@ namespace NL
 		void SetPerspective(float verticalFOV, float nearClip, float farClip);
 		virtual void SetAspectRatio(uint32_t width, uint32_t height);
 
-		const nlm::mat4& GetProjection() const { return m_ProjectionMatrix; }
+		const nlm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 
 	private:
 		void RecalculateProjectionMatrix();

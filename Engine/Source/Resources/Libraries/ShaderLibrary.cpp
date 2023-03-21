@@ -10,11 +10,12 @@ namespace NL
 		: m_ShadersFolder(PathConfig::GetInstance().GetShadersFolder())
 	{
 		// Add("Unlit", Shader::Create());
-		TraverseShadersFolder();
+		TraverseShadersFolder(m_ShadersFolder);
 	}
 
 	void Library<Shader>::TraverseShadersFolder(const std::filesystem::path& path)
 	{
+		NL_ENGINE_TRACE("Traverse Shader Folder: {0}", path);
 		for (auto& item : std::filesystem::directory_iterator(path))
 		{
 			if (std::filesystem::is_directory(item.status()))

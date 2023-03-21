@@ -16,6 +16,7 @@ IncludeDir["glm"] = "3rdParty/glm"
 IncludeDir["spdlog"] = "3rdParty/spdlog/include"
 IncludeDir["entt"] = "3rdParty/entt/src"
 IncludeDir["stb"] = "3rdParty/stb"
+IncludeDir["ImGuizmo"] = "3rdParty/ImGuizmo"
 
 -- Need to compile
 IncludeDir["assimp"] = "3rdParty/assimp/include"
@@ -44,7 +45,15 @@ project "Engine"
     files
     {
         "%{prj.name}/Source/**.h",
-        "%{prj.name}/Source/**.cpp"
+        "%{prj.name}/Source/**.cpp",
+        "%{IncludeDir.ImGuizmo}/ImGuizmo.h",
+        "%{IncludeDir.ImGuizmo}/ImGuizmo.cpp",
+    }
+
+    defines 
+    {  
+        "NL_ASSETS_PATH=%{wks.location}/Assets",
+        "NL_ENGINE_PATH=%{prj.abspath}"
     }
 
     includedirs
@@ -56,6 +65,7 @@ project "Engine"
         "%{IncludeDir.Glad}",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.imgui}",
+        "%{IncludeDir.ImGuizmo}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.stb}"
     }
@@ -69,13 +79,10 @@ project "Engine"
         "opengl32.lib"
     }
 
-    -- wks_abspath = os.getcwd("%{wks.location}")
+    filter "files:3rdParty/ImGuizmo/**.cpp"
+	    flags { "NoPCH" }
 
-    defines 
-    {  
-        "NL_ASSETS_PATH=%{wks.location}/Assets",
-        "NL_ENGINE_PATH=%{prj.abspath}"
-    }
+    -- wks_abspath = os.getcwd("%{wks.location}")
 
     filter "system:windows"
         systemversion "latest"
@@ -117,6 +124,7 @@ project "Editor"
         "%{IncludeDir.assimp}",
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.imgui}",
+        "%{IncludeDir.ImGuizmo}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.stb}",
