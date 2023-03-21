@@ -149,6 +149,7 @@ namespace NL
 		{
 			// DisplayAddComponentEntry<>("Camera");
 
+			InspectorAddComponent<TransformComponent>("Transform");
 			InspectorAddComponent<ModelRendererComponent>("Model Renderer");
 
 			ImGui::EndPopup();

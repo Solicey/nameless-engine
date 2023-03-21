@@ -64,6 +64,7 @@ namespace NL
 		void RemoveComponent()
 		{
 			NL_ENGINE_ASSERT(HasComponent<C>(), "Entity does NOT have this component!");
+			m_Scene->OnComponentRemoved<C>(*this, this->GetComponent<C>());
 			m_Scene->m_Registry.remove<C>(m_EntityHandle);
 		}
 

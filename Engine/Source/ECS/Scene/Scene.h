@@ -30,6 +30,8 @@ namespace NL
 	private:
 		template<Component C>
 		void OnComponentAdded(Entity entity, C& component);
+		template<Component C>
+		void OnComponentRemoved(Entity entity, C& component);
 
 	public:
 		entt::registry m_Registry;

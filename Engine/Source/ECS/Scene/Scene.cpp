@@ -29,6 +29,11 @@ namespace NL
 
     void Scene::DestroyEntity(Entity entity)
     {
+        if (entity.HasComponent<ModelRendererComponent>())
+        {
+            entity.GetComponent<ModelRendererComponent>().mModel->DeleteMaterialTexturesReference();
+        }
+
         m_Registry.destroy(entity);
     }
 
@@ -84,5 +89,27 @@ namespace NL
     void Scene::OnComponentAdded<ModelRendererComponent>(Entity entity, ModelRendererComponent& component)
     {
         NL_ENGINE_TRACE("Entity {0}: Added ModelRendererComponent!", entity.GetName());
+    }
+
+    template<Component C>
+    void Scene::OnComponentRemoved(Entity entity, C& component)
+    {
+
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<TransformComponent>(Entity entity, TransformComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<IdentityComponent>(Entity entity, IdentityComponent& component)
+    {
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<ModelRendererComponent>(Entity entity, ModelRendererComponent& component)
+    {
+        component.mModel->DeleteMaterialTexturesReference();
     }
 }

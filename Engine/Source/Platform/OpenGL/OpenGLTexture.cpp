@@ -86,6 +86,7 @@ namespace NL
 
 	OpenGLTexture2D::~OpenGLTexture2D()
 	{
+		NL_ENGINE_TRACE("glDeleteTexture {0}", m_Path);
 		glDeleteTextures(1, &m_RendererID);
 	}
 

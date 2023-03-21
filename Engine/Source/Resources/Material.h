@@ -3,6 +3,7 @@
 #include "Core/Log/Log.h"
 #include "Resources/Shader.h"
 #include "Resources/Libraries/ShaderLibrary.h"
+#include "Resources/Libraries/TextureLibrary.h"
 #include "Resources/Texture.h"
 
 #include <unordered_map>
@@ -23,6 +24,17 @@ namespace NL
 	{
     public:
         Material() { LoadShader(Library<Shader>::GetInstance().GetDefaultShaderName()); }
+
+        void DeleteMaterialTexturesReference()
+        {
+            NL_ENGINE_INFO("Material {0} Deleted!", m_Name);
+            for (auto& item : m_TextureMap)
+            {
+                // std::string name = item.second->GetPath();
+                item.second.reset();
+                // Library<Texture2D>::GetInstance().Delete(name);
+            }
+        }
 
         void AddTexture(TextureType type, Ref<Texture2D> texture)
         {

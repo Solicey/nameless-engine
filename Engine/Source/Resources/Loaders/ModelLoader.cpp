@@ -84,7 +84,7 @@ namespace NL
 							NL_ENGINE_INFO("Model path: {0}", path);
 							texPath.replace(path.find_last_of("/") + 1, path.length(), texName);
 
-							NL_ENGINE_INFO("Load Texture: {0}", texPath);
+							NL_ENGINE_INFO("Load Texture: {0}, Type: {1}", texPath, type);
 
 							Ref<Texture2D> tex;
 
@@ -114,6 +114,7 @@ namespace NL
 							case aiTextureType_EMISSIVE:
 								break;
 							case aiTextureType_HEIGHT:
+								mat->AddTexture(TextureType::Height, tex);
 								break;
 							case aiTextureType_NORMALS:
 								mat->AddTexture(TextureType::Normals, tex);
@@ -129,8 +130,10 @@ namespace NL
 							case aiTextureType_REFLECTION:
 								break;
 							case aiTextureType_BASE_COLOR:
+								mat->AddTexture(TextureType::Diffuse, tex);
 								break;
 							case aiTextureType_NORMAL_CAMERA:
+								mat->AddTexture(TextureType::Normals, tex);
 								break;
 							case aiTextureType_EMISSION_COLOR:
 								break;

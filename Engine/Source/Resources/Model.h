@@ -51,6 +51,16 @@ namespace NL
 		const std::string& GetPath() const { return m_Path; }
 		const std::unordered_map<std::string, Ref<Material>>& GetMaterials() const { return m_Materials; }
 
+		void DeleteMaterialTexturesReference()
+		{
+			for (auto& item : m_Materials)
+			{
+				Ref<Material> mat = item.second;
+				mat->DeleteMaterialTexturesReference();
+			}
+			Library<Texture2D>::GetInstance().TraverseDelete();
+		}
+
 	private:
 		Model() = delete;
 		Model(const std::string& path) : m_Path(path) {}
