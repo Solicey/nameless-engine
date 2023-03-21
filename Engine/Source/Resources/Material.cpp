@@ -3,6 +3,7 @@
 #include "Material.h"
 
 #include "Resources/Libraries/ShaderLibrary.h"
+#include "Resources/Libraries/TextureLibrary.h"
 
 namespace NL
 {
@@ -25,6 +26,45 @@ namespace NL
 
 			default:
 				break;
+			}
+		}
+	}
+
+	void Material::UpdateSampler2DinProperties()
+	{
+		for (auto& prop : m_Properties)
+		{
+			if (prop.Type == ShaderUniformType::Sampler2D)
+			{
+				// ËÀÍöif else if else
+				if (prop.Name == "u_Diffuse")
+				{
+					if (m_TextureMap.contains(TextureType::Diffuse))
+					{
+						NL_ENGINE_TRACE("Diffuse texPath: {0}", m_TextureMap.at(TextureType::Diffuse)->GetPath());
+						prop.Value = std::string(m_TextureMap.at(TextureType::Diffuse)->GetPath());
+					}
+					else
+					{
+						prop.Value = std::string(Library<Texture2D>::GetInstance().GetDefaultTextureName());
+					}	
+				}
+				else if (prop.Name == "u_Specular")
+				{
+					if (m_TextureMap.contains(TextureType::Specular))
+					{
+						NL_ENGINE_TRACE("Specular texPath: {0}", m_TextureMap.at(TextureType::Specular)->GetPath());
+						prop.Value = std::string(m_TextureMap.at(TextureType::Specular)->GetPath());
+					}
+					else
+					{
+						prop.Value = std::string(Library<Texture2D>::GetInstance().GetDefaultTextureName());
+					}
+				}
+				else
+				{
+					prop.Value = std::string(Library<Texture2D>::GetInstance().GetDefaultTextureName());
+				}
 			}
 		}
 	}

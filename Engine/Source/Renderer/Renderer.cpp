@@ -1,6 +1,7 @@
 #include "nlpch.h"
 
 #include "Renderer.h"
+#include "Resources/Libraries/TextureLibrary.h"
 
 namespace NL
 {
@@ -36,12 +37,21 @@ namespace NL
 		shader->SetUniformMat4("u_Transform", transform);
 
 		// Custom
+		int cntSampler2D = 0;
 		for (const auto& prop : material->GetShaderPropertiesNotConst())
 		{
 			switch (prop.Type)
 			{
 			case ShaderUniformType::Color3:
-				shader->SetUniformFloat3(prop.Name.c_str(), std::any_cast<nlm::vec3>(prop.Value));
+				shader->SetUniformFloat3(prop.Name.c_str(), std::get<nlm::vec3>(prop.Value));
+				break;
+
+			case ShaderUniformType::Sampler2D:
+				// NL_ENGINE_TRACE("Sampler2D name: {0}", prop.Name);
+				// NL_ENGINE_TRACE("Sampler2D filepath: {0}", std::get<std::string>(prop.Value));
+				shader->SetUniformInt(prop.Name.c_str(), cntSampler2D);
+				Library<Texture2D>::GetInstance().Get(std::get<std::string>(prop.Value))->Bind(cntSampler2D);
+				cntSampler2D++;
 				break;
 
 			default:

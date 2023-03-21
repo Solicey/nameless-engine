@@ -26,7 +26,7 @@ namespace NL
 
         void AddTexture(TextureType type, Ref<Texture2D> texture)
         {
-            NL_ENGINE_ASSERT(m_TextureMap.find(type) == m_TextureMap.end(), "Texture of this type already exists!");
+            // NL_ENGINE_ASSERT(m_TextureMap.find(type) == m_TextureMap.end(), "Texture of this type already exists!");
             m_TextureMap[type] = texture;
         }
 
@@ -35,6 +35,9 @@ namespace NL
         const Ref<Shader>& GetShader() const { return m_Shader; }
         std::vector<ShaderProperty>& GetShaderPropertiesNotConst() { return m_Properties; }
         void LoadShader(const std::string name);
+
+        // called after all textures are sent to lib
+        void UpdateSampler2DinProperties();
 
 	private:
         std::string m_Name;

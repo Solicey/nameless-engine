@@ -8,6 +8,8 @@ namespace NL
 {
 	void OpenGLRendererAPI::Init()
 	{
+		glEnable(GL_TEXTURE_2D);
+
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 	}

@@ -25,7 +25,7 @@ namespace NL
 			int entityID,
 			ModelLoaderFlags flags = ModelLoaderFlags::None);
 
-		static void ProcessMaterials(const struct aiScene* scene,
+		static void ProcessMaterials(const std::string& path, const struct aiScene* scene,
 			std::unordered_map<std::string, Ref<Material>>& materials);
 
 		static void ProcessNode(const struct aiScene* scene,

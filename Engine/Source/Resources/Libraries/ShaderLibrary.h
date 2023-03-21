@@ -19,8 +19,8 @@ namespace NL
 		}
 		std::string GetDefaultShaderName()
 		{
-			if (m_ShaderNameMap.contains("Unlit.glsl"))
-				return "Unlit.glsl";
+			if (m_ShaderNameMap.contains("Default.glsl"))
+				return "Default.glsl";
 			return "";
 		}
 

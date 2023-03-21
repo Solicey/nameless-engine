@@ -4,25 +4,31 @@
 
 #include "Core/Math/Math.h"
 #include "Core/Log/Log.h"
+#include "Resources/Libraries/TextureLibrary.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/matrix4x4.h>
 #include <assimp/postprocess.h>
+#include <regex>
 
 namespace NL
 {
 	Ref<Model> ModelLoader::Create(const std::string& path, int entityID, ModelLoaderFlags flags)
 	{
-		Ref<Model> model = CreateRef<Model>(Model(path));
+		NL_ENGINE_INFO("Before regex: {0}", path);
+		std::string normPath = std::regex_replace(path, std::regex("\\\\"), "/");
+		NL_ENGINE_INFO("After regex: {0}", normPath);
 
-		if (!AssimpLoadModel(path, model->m_Meshes, model->m_Materials, entityID, flags))
+		Ref<Model> model = CreateRef<Model>(Model(normPath));
+
+		if (!AssimpLoadModel(normPath, model->m_Meshes, model->m_Materials, entityID, flags))
 		{
-			NL_ENGINE_WARN("Failed to load model path: {0}", path);
+			NL_ENGINE_WARN("Failed to load model path: {0}", normPath);
 			return nullptr;
 		}
 
-		NL_ENGINE_INFO("Model loaded successfully: {0}", path);
+		NL_ENGINE_INFO("Model loaded successfully: {0}", normPath);
 
 		model->DebugPrintModelInfo();
 
@@ -46,12 +52,12 @@ namespace NL
 
 		ProcessNode(scene, &identity, scene->mRootNode, meshes, materials, entityID);
 
-		ProcessMaterials(scene, materials);
+		ProcessMaterials(path, scene, materials);
 
 		return true;
 	}
 
-	void ModelLoader::ProcessMaterials(const struct aiScene* scene, std::unordered_map<std::string, Ref<Material>>& materials)
+	void ModelLoader::ProcessMaterials(const std::string& path, const struct aiScene* scene, std::unordered_map<std::string, Ref<Material>>& materials)
 	{
 		for (uint32_t i = 0; i < scene->mNumMaterials; i++)
 		{
@@ -63,7 +69,105 @@ namespace NL
 				std::string matName = std::string(name.C_Str());
 				if (materials.contains(matName))
 				{
-					materials[matName] = CreateRef<Material>();
+					Ref<Material> mat = CreateRef<Material>();
+					materials[matName] = mat;
+
+					const auto& loadTexture = [&](aiTextureType type)
+					{
+						for (unsigned int i = 0; i < material->GetTextureCount(type); i++)
+						{
+							aiString str;
+							material->GetTexture(type, i, &str);
+
+							std::string texName = std::string(str.C_Str());
+							std::string texPath = path;
+							NL_ENGINE_INFO("Model path: {0}", path);
+							texPath.replace(path.find_last_of("/") + 1, path.length(), texName);
+
+							NL_ENGINE_INFO("Load Texture: {0}", texPath);
+
+							Ref<Texture2D> tex;
+
+							if (Library<Texture2D>::GetInstance().Contains(texPath))
+							{
+								tex = Library<Texture2D>::GetInstance().Get(texPath);
+							}
+							else
+							{
+								tex = Texture2D::Create(texPath);
+								Library<Texture2D>::GetInstance().Add(texPath, tex);
+							}
+
+							switch (type)
+							{
+							case aiTextureType_NONE:
+								break;
+							case aiTextureType_DIFFUSE:
+								mat->AddTexture(TextureType::Diffuse, tex);
+								break;
+							case aiTextureType_SPECULAR:
+								mat->AddTexture(TextureType::Specular, tex);
+								break;
+							case aiTextureType_AMBIENT:
+								mat->AddTexture(TextureType::Ambient, tex);
+								break;
+							case aiTextureType_EMISSIVE:
+								break;
+							case aiTextureType_HEIGHT:
+								break;
+							case aiTextureType_NORMALS:
+								mat->AddTexture(TextureType::Normals, tex);
+								break;
+							case aiTextureType_SHININESS:
+								break;
+							case aiTextureType_OPACITY:
+								break;
+							case aiTextureType_DISPLACEMENT:
+								break;
+							case aiTextureType_LIGHTMAP:
+								break;
+							case aiTextureType_REFLECTION:
+								break;
+							case aiTextureType_BASE_COLOR:
+								break;
+							case aiTextureType_NORMAL_CAMERA:
+								break;
+							case aiTextureType_EMISSION_COLOR:
+								break;
+							case aiTextureType_METALNESS:
+								break;
+							case aiTextureType_DIFFUSE_ROUGHNESS:
+								break;
+							case aiTextureType_AMBIENT_OCCLUSION:
+								break;
+							case aiTextureType_SHEEN:
+								break;
+							case aiTextureType_CLEARCOAT:
+								break;
+							case aiTextureType_TRANSMISSION:
+								break;
+							case aiTextureType_UNKNOWN:
+								break;
+							case _aiTextureType_Force32Bit:
+								break;
+							default:
+								break;
+							}
+
+							// Hold One Only
+							if (tex)
+								break;
+						}
+					};
+
+					// Load Textures
+					for (uint32_t type = aiTextureType_NONE; type <= aiTextureType_AMBIENT_OCCLUSION; type++)
+					{
+						loadTexture(static_cast<aiTextureType>(type));
+					}
+
+					// After loading textures
+					mat->UpdateSampler2DinProperties();
 				}
 			}
 		}

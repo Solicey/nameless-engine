@@ -21,7 +21,7 @@ namespace NL
 		return nullptr;
 	}
 
-	Ref<Texture2D> Texture2D::Create(const std::filesystem::path& path)
+	Ref<Texture2D> Texture2D::Create(const std::string& path)
 	{
 		switch (RendererAPI::GetCurrent())
 		{

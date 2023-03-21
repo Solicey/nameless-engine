@@ -14,7 +14,7 @@ namespace NL
 	public:
 		ModelRendererComponent() {}
 		ModelRendererComponent(const std::string& path, int entityID, ModelLoaderFlags flags)
-			: Path(std::regex_replace(path, std::regex("\\\\"), "/")), Flags(flags), mModel(ModelLoader::Create(Path, entityID, flags))
+			: Path(std::regex_replace(path, std::regex("\\\\"), "/")), Flags(flags), mModel(ModelLoader::Create(path, entityID, flags))
 		{
 			// NL_ENGINE_TRACE("Entity entt id: {0}", entityID);
 		}

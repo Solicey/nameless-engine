@@ -42,9 +42,9 @@ namespace NL
 			if (Contains(name))
 			{
 				NL_ENGINE_TRACE("Shader library contains: {0}", name);
-				Ref<Shader> shader = Shader::Create(name, m_ShaderNameMap[name]);
-				Set(name, shader);
-				return shader;
+				// Ref<Shader> shader = Shader::Create(name, m_ShaderNameMap[name]);
+				// Set(name, shader);
+				return Get(name);
 			}
 			else
 			{

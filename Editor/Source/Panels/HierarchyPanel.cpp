@@ -200,14 +200,16 @@ namespace NL
 				path = PathConfig::GetInstance().GetAssetsFolder() / filepath.c_str();
 				NL_ENGINE_INFO("New model path: {0}", path);
 			}
-			else
+			else if (!filepath.empty())
 			{
 				NL_ENGINE_ASSERT(false, "Only support models from Models Folder!");
 			}
 
 			if (!filepath.empty())
 			{
-				component.Path = std::regex_replace(path.string(), std::regex("\\\\"), "/");
+				//NL_ENGINE_INFO("Before regex: {0}", path.string());
+				component.Path = path.string();
+				//NL_ENGINE_INFO("After regex: {0}", component.Path);
 				component.mModel = ModelLoader::Create(component.Path, (uint32_t)entity, component.Flags);
 			}
 		}
@@ -250,6 +252,7 @@ namespace NL
 								{
 									shaderName = name;
 									mat->LoadShader(shaderName);
+									mat->UpdateSampler2DinProperties();
 								}
 							}
 						}
@@ -348,7 +351,7 @@ namespace NL
 			switch (prop.Type)
 			{
 			case ShaderUniformType::Color3:
-				nlm::vec3 color = std::any_cast<nlm::vec3>(prop.Value);
+				nlm::vec3 color = std::get<nlm::vec3>(prop.Value);
 				if (ImGui::ColorEdit3(prop.Name.c_str(), nlm::value_ptr(color)))
 				{
 					prop.Value = color;

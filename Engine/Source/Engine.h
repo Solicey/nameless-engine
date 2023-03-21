@@ -30,7 +30,9 @@
 #include "ImGui/ImGuiLayer.h"
 
 #include "Resources/Shader.h"
+#include "Resources/Texture.h"
 #include "Resources/Libraries/ShaderLibrary.h"
+#include "Resources/Libraries/TextureLibrary.h"
 #include "Resources/Loaders/ModelLoader.h"
 #include "Resources/Loaders/ModelLoaderFlags.h"
 

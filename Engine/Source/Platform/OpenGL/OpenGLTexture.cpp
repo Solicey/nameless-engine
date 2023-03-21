@@ -23,13 +23,13 @@ namespace NL
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	}
 
-	OpenGLTexture2D::OpenGLTexture2D(const std::filesystem::path& path)
+	OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
 		: m_Path(path)
 	{
 		int width, height, channels;
 		// for OpenGL
 		stbi_set_flip_vertically_on_load(1);
-		stbi_uc* data = stbi_load(path.string().c_str(), &width, &height, &channels, 0);
+		stbi_uc* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
 
 		if (data)
 		{
@@ -59,6 +59,9 @@ namespace NL
 
 			NL_ENGINE_ASSERT(internalFormat & dataFormat, "Format not supported!");
 
+			glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+			glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
+
 			glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -72,6 +75,8 @@ namespace NL
 			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
 			stbi_image_free(data);
+
+			NL_ENGINE_TRACE("Load texture {0} successfully!", path);
 		}
 		else
 		{

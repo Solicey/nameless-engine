@@ -1,7 +1,10 @@
 #pragma once
 
+#include "Core/Math/Math.h"
+
 #include <string>
 #include <any>
+#include <variant>
 
 namespace NL
 {
@@ -18,9 +21,9 @@ namespace NL
 
 	struct ShaderProperty
 	{
-		ShaderUniformType	Type;
-		std::string			Name;
-		std::any			Value;
+		ShaderUniformType								Type;
+		std::string										Name;
+		std::variant<std::string, nlm::vec3>			Value;
 	};
 
 	static const std::unordered_map<std::string, ShaderUniformType> s_ShaderUniformTypeMap =
