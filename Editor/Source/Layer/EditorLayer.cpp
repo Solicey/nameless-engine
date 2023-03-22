@@ -4,11 +4,40 @@
 
 #include <Engine.h>
 #include <imgui.h>
+#include <imgui_internal.h>
 #include <filesystem>
 #include <ImGuizmo.h>
 
 namespace NL
 {
+    namespace Utils
+    {
+        // from https://github.com/Acmen-Team/Epoch/tree/dev
+        template<typename UIFunction>
+        static void SceneToolbar(ImGuiDockNode* node, const float DISTANCE, int* corner, UIFunction uiFunc)
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+
+            ImVec2 work_area_pos = node->Pos;
+            ImVec2 work_area_size = node->Size;
+
+            if (*corner != -1)
+            {
+                window_flags |= ImGuiWindowFlags_NoMove;
+                ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+                ImVec2 window_pos = ImVec2((*corner & 1) ? (work_area_pos.x + work_area_size.x - DISTANCE) : (work_area_pos.x + DISTANCE), (*corner & 2) ? (work_area_pos.y + work_area_size.y - DISTANCE) : (work_area_pos.y + DISTANCE));
+                ImVec2 window_pos_pivot = ImVec2((*corner & 1) ? 1.0f : 0.0f, (*corner & 2) ? 1.0f : 0.0f);
+                ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+                ImGui::SetNextWindowViewport(node->ID);
+            }
+            ImGui::SetNextWindowBgAlpha(0.0f); // Transparent background
+
+            uiFunc(corner, work_area_size, window_flags);
+        }
+    }
+
 	EditorLayer::EditorLayer()
 		: Layer("EditorLayer")
 	{
@@ -180,6 +209,7 @@ namespace NL
             {
                 ImGui::MenuItem("Viewport", NULL, &m_ShowViewport);
                 ImGui::MenuItem("Hierarchy", NULL, &m_ShowHierarchy);
+                ImGui::MenuItem("TRS", NULL, &m_ShowTRS);
 
                 ImGui::EndMenu();
             }
@@ -236,10 +266,72 @@ namespace NL
                 auto& component = entitySelected.GetComponent<TransformComponent>();
                 nlm::mat4 transform = component.GetTransform();
 
+                // Snap
+                bool snap = Input::IsKeyPressed(Key::LeftControl);
+                float snapValue = 0.5f; // Snap to 0.5m for translation/scale
+                // Snap to 45 degrees for rotation
+                if (m_GuizmoType == ImGuizmo::OPERATION::ROTATE)
+                    snapValue = 45.0f;
+
+                float snapValues[3] = { snapValue, snapValue, snapValue };
+
                 ImGuizmo::Manipulate(nlm::value_ptr(cameraView), nlm::value_ptr(cameraProjection),
                     (ImGuizmo::OPERATION)m_GuizmoType, ImGuizmo::LOCAL, nlm::value_ptr(transform),
-                    nullptr, nullptr);
+                    nullptr, snap ? snapValues : nullptr);
+
+                if (ImGuizmo::IsUsing())
+                {
+                    nlm::vec3 translation, rotation, scale, skew;
+                    nlm::vec4 persp;
+                    nlm::quat orien;
+                    nlm::decompose(transform, scale, orien, translation, skew, persp);
+
+                    rotation = nlm::eulerAngles(orien);
+                    nlm::vec3 deltaRotation = rotation - component.Rotation;
+
+                    component.Translation = translation;
+                    component.Rotation += deltaRotation;
+                    component.Scale = scale;
+                }
             }
+
+            static int transCorner = 1;
+            // ImGuiDockNode* node = ImGui::GetWindowDockNode();
+            // node->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
+
+            // from HEngine
+            /*Utils::SceneToolbar(node, 10.0f, &transCorner, [&](int* corner, const ImVec2& work_area_size, const ImGuiWindowFlags m_window_flags) {
+
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+
+            if (ImGui::Begin("TRS Toolbar", &m_ShowTRS, m_window_flags))
+            {
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f });
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.1f, 0.1f, 0.1f, 0.5f });
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f });
+
+                if (ImGui::Button("T", ImVec2(30.0f, 30.0f)))
+                {
+                    m_GuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("R", ImVec2(30.0f, 30.0f)))
+                {
+                    m_GuizmoType = ImGuizmo::OPERATION::ROTATE;
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("S", ImVec2(30.0f, 30.0f)))
+                {
+                    m_GuizmoType = ImGuizmo::OPERATION::SCALE;
+                }
+
+                ImGui::PopStyleColor(3);
+                ImGui::End();
+            }
+
+            ImGui::PopStyleVar();
+
+            });*/
 
             ImGui::End();
             ImGui::PopStyleVar();
@@ -287,7 +379,7 @@ namespace NL
         if (event.GetMouseButton() == Mouse::ButtonLeft)
         {
             // !ImGuizmo::IsOver()
-            if (m_ViewportHovered)
+            if (m_ViewportHovered && !ImGuizmo::IsOver())
             {
                 m_HierarchyPanel.SetSelectedEntity(m_EntityHovered);
                 // Click a viewport entity
