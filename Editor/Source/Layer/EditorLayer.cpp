@@ -95,7 +95,7 @@ namespace NL
 
         // Framebuffer preparation
         m_Framebuffer->Bind();
-        Renderer::SetClearColor({ 0.2f, 0.2f, 0.2f, 1 });
+        Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.75f });
         Renderer::Clear();
         // Clear entity ID attachment to -1
         // m_Framebuffer->ClearAttachment(1, -1);
@@ -209,7 +209,7 @@ namespace NL
             {
                 ImGui::MenuItem("Viewport", NULL, &m_ShowViewport);
                 ImGui::MenuItem("Hierarchy", NULL, &m_ShowHierarchy);
-                ImGui::MenuItem("TRS", NULL, &m_ShowTRS);
+                // ImGui::MenuItem("TRS Toolbar", NULL, &m_ShowTRS);
 
                 ImGui::EndMenu();
             }
@@ -221,17 +221,35 @@ namespace NL
 
 #pragma region Windows
 
-        // Hierarchy
-        if (m_ShowHierarchy)
-        {
-            m_HierarchyPanel.OnImGuiRender(m_ShowHierarchy, true);
-        }
-
         // Viewport
         if (m_ShowViewport)
         {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-            ImGui::Begin("Viewport");
+            ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_MenuBar);
+
+            // Toolbar
+            if (ImGui::BeginMenuBar())
+            {
+                ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+
+                if (ImGui::RadioButton("Translate", m_GuizmoType == ImGuizmo::OPERATION::TRANSLATE))
+                {
+                    m_GuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+                }
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Rotate", m_GuizmoType == ImGuizmo::OPERATION::ROTATE))
+                {
+                    m_GuizmoType = ImGuizmo::OPERATION::ROTATE;
+                }
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Scale", m_GuizmoType == ImGuizmo::OPERATION::SCALE))
+                {
+                    m_GuizmoType = ImGuizmo::OPERATION::SCALE;
+                }
+
+                ImGui::EndMenuBar();
+                ImGui::PopStyleVar();
+            }
 
             auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
             auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
@@ -239,6 +257,16 @@ namespace NL
             m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
             m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
 
+
+            // Grid
+            ImGuizmo::SetOrthographic(false);
+            ImGuizmo::SetDrawlist();
+            ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
+            const nlm::mat4& cameraProjection = m_EditorCamera.GetProjectionMatrix();
+            const nlm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
+            ImGuizmo::DrawGrid(nlm::value_ptr(cameraView), nlm::value_ptr(cameraProjection), nlm::value_ptr(nlm::mat4(1.0f)), 20.0f);
+            
+            
             m_ViewportFocused = ImGui::IsWindowFocused();
             // m_ViewportHovered = ImGui::IsWindowHovered();
             Application::GetInstance().GetImGuiLayer()->BlockEvents(!m_ViewportHovered && !m_ViewportFocused);
@@ -249,6 +277,7 @@ namespace NL
 
             // Update Viewport Image
             uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+            // uint64_t textureID = Library<Texture2D>::GetInstance().Get("../Assets/Models/nanosuit/arm_dif.png")->GetRendererID();
             ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
             // Gizmos
@@ -261,7 +290,7 @@ namespace NL
 
                 // Editor camera
                 const nlm::mat4& cameraProjection = m_EditorCamera.GetProjectionMatrix();
-                nlm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
+                const nlm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
 
                 auto& component = entitySelected.GetComponent<TransformComponent>();
                 nlm::mat4 transform = component.GetTransform();
@@ -279,6 +308,8 @@ namespace NL
                     (ImGuizmo::OPERATION)m_GuizmoType, ImGuizmo::LOCAL, nlm::value_ptr(transform),
                     nullptr, snap ? snapValues : nullptr);
 
+                m_TRSEntity = entitySelected;
+
                 if (ImGuizmo::IsUsing())
                 {
                     nlm::vec3 translation, rotation, scale, skew;
@@ -295,46 +326,14 @@ namespace NL
                 }
             }
 
-            static int transCorner = 1;
-            // ImGuiDockNode* node = ImGui::GetWindowDockNode();
-            // node->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
-
-            // from HEngine
-            /*Utils::SceneToolbar(node, 10.0f, &transCorner, [&](int* corner, const ImVec2& work_area_size, const ImGuiWindowFlags m_window_flags) {
-
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-
-            if (ImGui::Begin("TRS Toolbar", &m_ShowTRS, m_window_flags))
-            {
-                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f });
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.1f, 0.1f, 0.1f, 0.5f });
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f });
-
-                if (ImGui::Button("T", ImVec2(30.0f, 30.0f)))
-                {
-                    m_GuizmoType = ImGuizmo::OPERATION::TRANSLATE;
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("R", ImVec2(30.0f, 30.0f)))
-                {
-                    m_GuizmoType = ImGuizmo::OPERATION::ROTATE;
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("S", ImVec2(30.0f, 30.0f)))
-                {
-                    m_GuizmoType = ImGuizmo::OPERATION::SCALE;
-                }
-
-                ImGui::PopStyleColor(3);
-                ImGui::End();
-            }
-
-            ImGui::PopStyleVar();
-
-            });*/
-
             ImGui::End();
             ImGui::PopStyleVar();
+        }
+
+        // Hierarchy
+        if (m_ShowHierarchy)
+        {
+            m_HierarchyPanel.OnImGuiRender(m_ShowHierarchy, true);
         }
 
 #pragma endregion
@@ -379,7 +378,7 @@ namespace NL
         if (event.GetMouseButton() == Mouse::ButtonLeft)
         {
             // !ImGuizmo::IsOver()
-            if (m_ViewportHovered && !ImGuizmo::IsOver())
+            if (m_ViewportHovered && !(ImGuizmo::IsOver() && m_TRSEntity == m_HierarchyPanel.GetSelectedEntity()))
             {
                 m_HierarchyPanel.SetSelectedEntity(m_EntityHovered);
                 // Click a viewport entity

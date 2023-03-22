@@ -39,8 +39,9 @@ namespace NL
 		bool m_ViewportFocused = false;
 		bool m_ViewportHovered = false;
 		Entity m_EntityHovered = {};
-		ImGuizmo::OPERATION m_GuizmoType = ImGuizmo::OPERATION::ROTATE;
+		ImGuizmo::OPERATION m_GuizmoType = ImGuizmo::OPERATION::TRANSLATE;
 		bool m_ShowTRS;
+		Entity m_TRSEntity = {};
 
 		// Hierarchy variables
 		bool m_ShowHierarchy;

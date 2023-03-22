@@ -8,10 +8,22 @@ namespace NL
 {
 	void OpenGLRendererAPI::Init()
 	{
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		glEnable(GL_TEXTURE_2D);
 
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
+
+		glEnable(GL_STENCIL_TEST);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+		glStencilFunc(GL_ALWAYS, 0, 0xFF);
+		//glStencilMask(0xFF);
+		glStencilMask(0x00); // forbidden to write in stencil
+
+		glEnable(GL_LINE_SMOOTH);
+		glEnable(GL_MULTISAMPLE);
 	}
 
 	void OpenGLRendererAPI::SetClearColor(const nlm::vec4& color)
