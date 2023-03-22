@@ -2,6 +2,7 @@
 
 #include "ImGuiLayer.h"
 
+#include "Core/Misc/PathConfig.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
 #include "Renderer/RendererAPI.h"
@@ -41,7 +42,9 @@ namespace NL
     void ImGuiLayer::SetNamelessStyle()
     {
         ImGuiIO& io = ImGui::GetIO(); (void)io;
-        ImFont* font = io.Fonts->AddFontFromFileTTF("../Engine/Resources/Fonts/Karla-Regular.ttf", 20.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+        std::string fontsFolder = PathConfig::GetInstance().GetFontsFolder().string() + "/Karla-Regular.ttf";
+        NL_ENGINE_TRACE("Fonts folder: {0}", fontsFolder);
+        ImFont* font = io.Fonts->AddFontFromFileTTF(fontsFolder.c_str(), 20.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
 
         auto& colors = ImGui::GetStyle().Colors;
         colors[ImGuiCol_WindowBg] = ImVec4{ 0.1f, 0.105f, 0.11f, 1.0f };

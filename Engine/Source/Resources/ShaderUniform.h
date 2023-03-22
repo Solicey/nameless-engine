@@ -19,6 +19,7 @@ namespace NL
 		Sampler2D, SamplerCube
 	};
 
+	// variant TODO in SceneSerializer.cpp
 	struct ShaderProperty
 	{
 		ShaderUniformType								Type;

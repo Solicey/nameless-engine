@@ -51,6 +51,8 @@ namespace NL
         // called after all textures are sent to lib
         void UpdateSampler2DinProperties();
 
+        // void SetShaderName(const std::string& name) { m_ShaderName = name; }
+
 	private:
         std::string m_Name;
         std::string m_ShaderName;

@@ -192,7 +192,7 @@ namespace NL
 		ImGui::SameLine();
 		if (ImGui::Button("..."))
 		{
-			std::string filepath = Application::GetInstance().OpenFileDialogue(L"Model (*.obj *.fbx *.dae *.gltf)\0");
+			std::string filepath = Application::GetInstance().OpenFileDialogue(L"Model(*.obj;*.fbx;*.dae;*.gltf)\0*.obj;*.fbx;*.dae;*.gltf\0\0");
 			size_t pos = filepath.find("Models");
 			std::filesystem::path path;
 			if (pos != std::string::npos)
@@ -208,10 +208,7 @@ namespace NL
 
 			if (!filepath.empty())
 			{
-				//NL_ENGINE_INFO("Before regex: {0}", path.string());
-				component.Path = path.string();
-				//NL_ENGINE_INFO("After regex: {0}", component.Path);
-				component.mModel = ModelLoader::Create(component.Path, (uint32_t)entity, component.Flags);
+				component = ModelRendererComponent(path.string(), (uint32_t)entity, component.Flags);
 			}
 		}
 

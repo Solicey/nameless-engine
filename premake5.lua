@@ -23,11 +23,13 @@ IncludeDir["assimp"] = "3rdParty/assimp/include"
 IncludeDir["Glad"] = "3rdParty/Glad/include"
 IncludeDir["GLFW"] = "3rdParty/GLFW/include"
 IncludeDir["imgui"] = "3rdParty/imgui"
+IncludeDir["yamlcpp"] = "3rdParty/yamlcpp"
 
 include "3rdParty/assimp"
 include "3rdParty/Glad"
 include "3rdParty/GLFW"
 include "3rdParty/imgui"
+include "3rdParty/yamlcpp"
 
 project "Engine"
     location "Engine"
@@ -66,6 +68,7 @@ project "Engine"
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.imgui}",
         "%{IncludeDir.ImGuizmo}",
+        "%{IncludeDir.yamlcpp}/include",
         "%{IncludeDir.entt}",
         "%{IncludeDir.stb}"
     }
@@ -76,6 +79,7 @@ project "Engine"
         "Glad",
         "GLFW",
         "imgui",
+        "yamlcpp",
         "opengl32.lib"
     }
 
@@ -128,6 +132,7 @@ project "Editor"
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.stb}",
+        "%{IncludeDir.yamlcpp}/include",
         "Engine/Source",
         "%{prj.name}/Source"
     }

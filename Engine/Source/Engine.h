@@ -35,6 +35,7 @@
 #include "Resources/Libraries/TextureLibrary.h"
 #include "Resources/Loaders/ModelLoader.h"
 #include "Resources/Loaders/ModelLoaderFlags.h"
+#include "Resources/Serializer/SceneSerializer.h"
 
 #include "Renderer/Renderer.h"
 #include "Renderer/VertexArray.h"

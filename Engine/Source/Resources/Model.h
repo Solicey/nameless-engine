@@ -50,6 +50,7 @@ namespace NL
 		}
 		const std::string& GetPath() const { return m_Path; }
 		const std::unordered_map<std::string, Ref<Material>>& GetMaterials() const { return m_Materials; }
+		std::unordered_map<std::string, Ref<Material>>& GetMaterialsNotConst() { return m_Materials; }
 
 		void DeleteMaterialTexturesReference()
 		{

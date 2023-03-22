@@ -12,8 +12,9 @@ namespace NL
 	class ModelRendererComponent : public ComponentBase
 	{
 	public:
-		ModelRendererComponent() {}
-		ModelRendererComponent(const std::string& path, int entityID, ModelLoaderFlags flags)
+		ModelRendererComponent() : Flags(ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace) {}
+
+		ModelRendererComponent(const std::string& path, int entityID, ModelLoaderFlags flags = ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace)
 			: Path(std::regex_replace(path, std::regex("\\\\"), "/")), Flags(flags), mModel(ModelLoader::Create(path, entityID, flags))
 		{
 			// NL_ENGINE_TRACE("Entity entt id: {0}", entityID);
@@ -23,6 +24,7 @@ namespace NL
 		// turn all "\" into "/" with std::regex_replace(Path, std::regex("\\\\"), "/");
 		std::string Path = "";
 		Ref<Model> mModel = nullptr;
-		ModelLoaderFlags Flags = ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace;
+		
+		ModelLoaderFlags Flags;
 	};
 }

@@ -108,6 +108,30 @@ namespace NL
 		return std::string();
 	}
 
+	std::string WindowsWindow::SaveFileDialogue(const WCHAR* filter)
+	{
+		OPENFILENAME ofn;
+		WCHAR szFile[260] = { 0 };
+		ZeroMemory(&ofn, sizeof(OPENFILENAME));
+		ofn.lStructSize = sizeof(OPENFILENAME);
+		ofn.hwndOwner = glfwGetWin32Window(m_Window);
+		ofn.lpstrFile = szFile;
+		ofn.nMaxFile = sizeof(szFile);
+		ofn.lpstrFilter = filter;
+		ofn.nFilterIndex = 1;
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+		if (GetSaveFileName(&ofn) == TRUE)
+		{
+			return Utils::WCharToMByte(ofn.lpstrFile);
+		}
+		return std::string();
+	}
+
+	void WindowsWindow::SetWindowTitle(const std::string& name)
+	{
+		glfwSetWindowTitle(m_Window, name.c_str());
+	}
+
 	void WindowsWindow::Init(const WindowProps& props)
 	{
 		m_Data.Title = props.Title;

@@ -50,6 +50,16 @@ namespace NL
 			return m_Window->OpenFileDialogue(filter);
 		}
 
+		std::string SaveFileDialogue(const WCHAR* filter)
+		{
+			return m_Window->SaveFileDialogue(filter);
+		}
+
+		void SetWindowTitle(const std::string& title)
+		{
+			m_Window->SetWindowTitle(title);
+		}
+
 	private:
 
 		/// <summary>

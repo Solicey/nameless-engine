@@ -56,7 +56,7 @@ namespace NL
 		m_EditorCamera = EditorCamera(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
 		m_EditorScene = CreateRef<Scene>();
 
-        Entity eCam = m_EditorScene->CreateEntity("Camera");
+        /*Entity eCam = m_EditorScene->CreateEntity("Camera");
         eCam.AddComponent<ModelRendererComponent>("../Assets/Models/Camera.obj",
             (int)(uint32_t)(eCam),
             ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
@@ -71,7 +71,7 @@ namespace NL
         eSphere.AddComponent<ModelRendererComponent>("../Assets/Models/Sphere.obj",
             (int)(uint32_t)(eSphere),
             ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
-        eSphere.GetComponent<TransformComponent>().SetTranslation(0, -1, 0);
+        eSphere.GetComponent<TransformComponent>().SetTranslation(0, -1, 0);*/
 
         // Hierarchy
         m_HierarchyPanel = HierarchyPanel(m_EditorScene);
@@ -200,6 +200,18 @@ namespace NL
         {
             if (ImGui::BeginMenu("File"))
             {
+                if (ImGui::MenuItem("New", "Ctrl+N"))
+                    NewScene();
+
+                if (ImGui::MenuItem("Open", "Ctrl+O"))
+                    OpenScene();
+
+                if (ImGui::MenuItem("Save", "Ctrl+S"))
+                    SaveScene();
+
+                if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+                    SaveSceneAs();
+
                 if (ImGui::MenuItem("Exit", "Alt + F4", false))
                     Application::GetInstance().Close();
 
@@ -359,8 +371,41 @@ namespace NL
 
 	bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& event)
 	{
-        // Set Editor Camera Focus
-        if (event.GetKeyCode() == Key::F)
+        if (event.GetRepeatCount() > 0)
+            return false;
+
+        bool control = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+        bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift);
+        bool mouseRight = Input::IsMouseButtonPressed(Mouse::ButtonRight);
+        switch (event.GetKeyCode())
+        {
+        // Files
+        case Key::N:
+        {
+            if (control)
+                NewScene();
+            break;
+        }
+        case Key::O:
+        {
+            if (control)
+                OpenScene();
+            break;
+        }
+        case Key::S:
+        {
+            if (control)
+            {
+                if (shift)
+                    SaveSceneAs();
+                else
+                    SaveScene();
+            }
+            break;
+        }
+
+        // Focus
+        case Key::F:
         {
             Entity selectedEntity = m_HierarchyPanel.GetSelectedEntity();
             if (selectedEntity)
@@ -368,6 +413,8 @@ namespace NL
                 // Ought to have transform...
                 m_EditorCamera.SetCenter(selectedEntity.GetComponent<TransformComponent>().Translation);
             }
+            break;
+        }
         }
 
 		return false;
@@ -384,7 +431,7 @@ namespace NL
                 // Click a viewport entity
                 if (m_EntityHovered)
                 {
-                    NL_ENGINE_TRACE("Viewport select entity: {0}", m_EntityHovered.GetName());
+                    NL_TRACE("Viewport select entity: {0}", m_EntityHovered.GetName());
                 }
             }
         }
@@ -398,4 +445,83 @@ namespace NL
 
 		return false;
 	}
+
+    void EditorLayer::SerializeScene(Ref<Scene> scene, const std::string& path)
+    {
+        SceneSerializer serializer(scene);
+        serializer.Serialize(path);
+    }
+
+    void EditorLayer::NewScene()
+    {
+        if (m_EditorScene)
+            m_EditorScene->m_Registry.clear();
+        m_EditorScene = CreateRef<Scene>();
+        m_HierarchyPanel.SetCurrentScene(m_EditorScene);
+        m_EditorScenePath = "";
+
+        Library<Texture2D>::GetInstance().TraverseDelete();
+        Application::GetInstance().SetWindowTitle("Nameless Editor - New Scene");
+    }
+
+    void EditorLayer::OpenScene()
+    {
+        std::string path = Application::GetInstance().OpenFileDialogue(L"NL Scene(*.nl)\0*.nl\0\0");
+        if (!path.empty())
+            OpenScene(path);
+
+        Library<Texture2D>::GetInstance().TraverseDelete();
+    }
+
+    void EditorLayer::OpenScene(const std::string& path)
+    {
+        if (path.find(".nl") == path.npos)
+		{
+			NL_WARN("Could not load {0}, it's NOT a scene file", path);
+			return;
+		}
+
+        Ref<Scene> newScene = CreateRef<Scene>();
+        SceneSerializer serializer(newScene);
+        if (serializer.Deserialize(path))
+        {
+            if (m_EditorScene)
+                m_EditorScene->m_Registry.clear();
+
+            m_EditorScene = newScene;            
+            m_EditorScenePath = path;
+            m_HierarchyPanel.SetCurrentScene(m_EditorScene);
+
+            Application::GetInstance().SetWindowTitle("Nameless Editor - " + path.substr(path.find_last_of("/\\") + 1));
+        }
+    }
+
+    void EditorLayer::SaveScene()
+    {
+        if (!m_EditorScenePath.empty())
+            SerializeScene(m_EditorScene, m_EditorScenePath);
+        else
+            SaveSceneAs();
+        NL_TRACE("Scene saved!");
+    }
+
+    void EditorLayer::SaveSceneAs()
+    {
+        std::string path = Application::GetInstance().SaveFileDialogue(L"NL Scene(*.nl)\0*.nl\0\0");
+        if (!path.empty())
+        {
+            // force surffix
+            if (path.find(".nl") == path.npos)
+            {
+                std::filesystem::path filepath(path);
+                path = path + ".nl";
+                filepath.replace_filename(path);
+            }
+
+            SerializeScene(m_EditorScene, path);
+            m_EditorScenePath = path;
+
+            Application::GetInstance().SetWindowTitle("Nameless Editor - " + path.substr(path.find_last_of("/\\") + 1));
+        }
+    }
 }

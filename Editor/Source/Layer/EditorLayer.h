@@ -23,11 +23,21 @@ namespace NL
 		bool OnKeyPressedEvent(KeyPressedEvent& event);
 		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
 		bool OnWindowResizeEvent(WindowResizeEvent& event);
+		
+		void NewScene();
+		void OpenScene();
+		void OpenScene(const std::string& path);
+
+		void SaveScene();
+		void SaveSceneAs();
+		void SerializeScene(Ref<Scene> scene, const std::string& path);
 
 	private:
 
 		EditorCamera m_EditorCamera;
 		Ref<Scene> m_EditorScene;
+
+		std::string m_EditorScenePath = "";
 
 		// Viewport framebuffer
 		Ref<Framebuffer> m_Framebuffer;
