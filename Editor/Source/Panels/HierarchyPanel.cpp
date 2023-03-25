@@ -1,5 +1,7 @@
 #include "HierarchyPanel.h"
 
+#include "Layer/EditorLayer.h"
+
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <regex>
@@ -46,7 +48,7 @@ namespace NL
 				{
 					if (ImGui::MenuItem("Create Empty Entity"))
 					{
-						m_EntitySelected = m_Scene->CreateEntity("Empty Entity");
+						m_EntitySelected = m_Scene->CreateEntity("Entity");
 					}
 
 					ImGui::EndPopup();
@@ -126,6 +128,8 @@ namespace NL
 
 	void HierarchyPanel::DrawComponents(Entity entity)
 	{
+		//ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 4, 4 }); // ItemSpacing
+
 		if (entity.HasComponent<IdentityComponent>())
 		{
 			auto& name = entity.GetComponent<IdentityComponent>().Name;
@@ -157,7 +161,6 @@ namespace NL
 			ImGui::EndPopup();
 		}
 
-
 #pragma region Draw Transform
 
 		DrawComponent<TransformComponent>("Transform", entity, [](auto& entity, auto& component) {
@@ -167,6 +170,7 @@ namespace NL
 		DrawVec3Control("Rotation", rotation);
 		component.Rotation = nlm::radians(rotation);
 		DrawVec3Control("Scale", component.Scale, 1.0f);
+		ImGui::Dummy(ImVec2{ 0, 1 });
 
 		});
 
@@ -176,7 +180,78 @@ namespace NL
 
 		DrawComponent<CameraComponent>("Camera", entity, [](auto& entity, auto& component) {
 
-		
+		auto& camera = component.mCamera;
+
+		const char* projectionTypeStrings[] = { "Orthographic", "Perspective" };
+		const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];
+		if (ImGui::BeginCombo("Projection", currentProjectionTypeString))
+		{
+			for (int i = 0; i < 2; i++)
+			{
+				bool isSelected = (currentProjectionTypeString == projectionTypeStrings[i]);
+				if (ImGui::Selectable(projectionTypeStrings[i], isSelected))
+				{
+					currentProjectionTypeString = projectionTypeStrings[i];
+					camera.SetProjectionType((Camera::ProjectionType)i);
+				}
+
+				if (isSelected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
+		}
+
+		if (camera.GetProjectionType() == Camera::ProjectionType::Perspective)
+		{
+			float perspectiveVerticalFOV = nlm::degrees(camera.GetPerspectiveFOV());
+			if (ImGui::DragFloat("Vertical FOV", &perspectiveVerticalFOV))
+				camera.SetPerspectiveFOV(nlm::radians(perspectiveVerticalFOV));
+
+			float perspectiveNear = camera.GetPerspectiveNear();
+			if (ImGui::DragFloat("Near Clip", &perspectiveNear))
+				camera.SetPerspectiveNear(perspectiveNear);
+
+			float perspectiveFar = camera.GetPerspectiveFar();
+			if (ImGui::DragFloat("Far Clip", &perspectiveFar))
+				camera.SetPerspectiveFar(perspectiveFar);
+		}
+		else
+		{
+			float orthoSize = camera.GetOrthographicSize();
+			if (ImGui::DragFloat("Size", &orthoSize))
+				camera.SetOrthographicSize(orthoSize);
+
+			float orthoNear = camera.GetOrthographicNear();
+			if (ImGui::DragFloat("Near Clip", &orthoNear))
+				camera.SetOrthographicNear(orthoNear);
+
+			float orthoFar = camera.GetOrthographicFar();
+			if (ImGui::DragFloat("Far Clip", &orthoFar))
+				camera.SetOrthographicFar(orthoFar);
+		}
+
+		if (ImGui::Checkbox("Fixed Aspect Ratio", &component.FixedAspectRatio))
+		{
+			// m_RuntimeCameraUpdateCallback();
+		}
+
+		if (component.FixedAspectRatio)
+		{
+			float width = camera.GetViewportWidth();
+			float height = camera.GetViewportHeight();
+
+			if (ImGui::DragFloat("Width", &width))
+			{
+				camera.SetViewportWidth(width);
+				// m_RuntimeCameraUpdateCallback();
+			}
+
+			if (ImGui::DragFloat("Height", &height))
+			{
+				camera.SetViewportHeight(height);
+				// m_RuntimeCameraUpdateCallback();
+			}
+		}
 
 		});
 
@@ -192,7 +267,7 @@ namespace NL
 		Ref<Model> model = component.mModel;
 
 		ImGui::Columns(2);
-		ImGui::SetColumnWidth(0, 100.0f);
+		ImGui::SetColumnWidth(0, 120.0f);
 		ImGui::Text("Model Path");
 		ImGui::NextColumn();
 
@@ -294,6 +369,8 @@ namespace NL
 		});
 
 #pragma endregion
+
+		// ImGui::PopStyleVar(); // ItemSpacing
 
 	}
 
@@ -406,11 +483,12 @@ namespace NL
 			auto& component = entity.GetComponent<C>();
 			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 4, 4 });
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
 			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 			ImGui::Separator();
 			bool isExpanded = ImGui::TreeNodeEx((void*)typeid(C).hash_code(), treeNodeFlags, name.c_str());
-			ImGui::PopStyleVar();
+			ImGui::PopStyleVar(2);
 
 			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
 			if (ImGui::Button("+", ImVec2{ lineHeight, lineHeight }))
@@ -435,6 +513,7 @@ namespace NL
 
 			if (removeComponent)
 				entity.RemoveComponent<C>();
+
 		}
 	}
 

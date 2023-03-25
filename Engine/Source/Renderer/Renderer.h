@@ -17,7 +17,7 @@ namespace NL
 	public:
 		static void BeginScene(OrthographicCamera& camera);
 		static void BeginScene(EditorCamera& camera);
-		static void BeginScene(Camera* camera);
+		static void BeginScene(Camera& camera, const nlm::mat4& transform);
 		static void EndScene();
 
 		static void Submit(

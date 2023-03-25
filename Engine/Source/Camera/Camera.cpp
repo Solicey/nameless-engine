@@ -25,6 +25,8 @@ namespace NL
 	void Camera::SetAspectRatio(uint32_t width, uint32_t height)
 	{
 		m_AspectRatio = (float)width / (float)height;
+		m_ViewportWidth = width;
+		m_ViewportHeight = height;
 		RecalculateProjectionMatrix();
 	}
 

@@ -42,13 +42,19 @@ namespace NL
 
 		inline bool IsEditorMode() { return m_ViewportMode == ViewportMode::Editor; }
 
+		// TODO: Optimize
+		void UpdateRuntimeAspect();
+
 	private:
+
+		friend class HierarchyPanel;
 
 		EditorCamera m_EditorCamera;
 		Ref<Scene> m_EditorScene;
 
 		Entity m_RuntimeCameraEntity = {};
 		Ref<Scene> m_RuntimeScene;
+		nlm::vec2 m_RuntimeAspect = {};
 		
 		std::string m_EditorScenePath = "";
 
@@ -69,7 +75,7 @@ namespace NL
 
 		// Hierarchy variables
 		bool m_ShowHierarchy;
-		HierarchyPanel m_HierarchyPanel;
+		Ref<HierarchyPanel> m_HierarchyPanel;
 
 		// Icons
 		Ref<Texture2D> m_PlayButton;

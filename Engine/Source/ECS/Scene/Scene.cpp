@@ -81,7 +81,9 @@ namespace NL
     {
         if (entity.HasComponent<ModelRendererComponent>())
         {
-            entity.GetComponent<ModelRendererComponent>().mModel->DeleteMaterialTexturesReference();
+            auto& model = entity.GetComponent<ModelRendererComponent>().mModel;
+            if (model)
+                model->DeleteMaterialTexturesReference();
         }
 
         m_Registry.destroy(entity);
@@ -103,11 +105,11 @@ namespace NL
         }
     }
 
-    void Scene::OnUpdateRuntime(TimeStep ts, Camera* camera)
+    void Scene::OnUpdateRuntime(TimeStep ts, Entity cameraEntity)
     {
         for (auto& system : m_Systems)
         {
-            system->OnUpdateRuntime(ts, camera);
+            system->OnUpdateRuntime(ts, cameraEntity);
         }
     }
 
@@ -119,7 +121,7 @@ namespace NL
         }
     }
 
-    void Scene::OnViewportResize(uint32_t width, uint32_t height)
+    /*nlm::vec2 Scene::OnViewportResize(uint32_t width, uint32_t height)
     {
         auto view = m_Registry.view<CameraComponent>();
         for (auto entity : view)
@@ -128,7 +130,7 @@ namespace NL
             if (!cameraComponent.FixedAspectRatio)
                 cameraComponent.mCamera.SetAspectRatio(width, height);
         }
-    }
+    }*/
 
 #pragma region OnComponentAdded
 
@@ -159,6 +161,7 @@ namespace NL
     {
         NL_ENGINE_TRACE("Entity {0}: Added CameraComponent!", entity.GetName());
 
+        component.LoadGizmosModel((uint32_t)entity);
         // m_RuntimeCameraMap.insert(std::make_pair(entity, component.mCamera));
     }
 
@@ -191,7 +194,10 @@ namespace NL
     template<>
     void Scene::OnComponentRemoved<ModelRendererComponent>(Entity entity, ModelRendererComponent& component)
     {
-        component.mModel->DeleteMaterialTexturesReference();
+        if (component.mModel)
+        {
+            component.mModel->DeleteMaterialTexturesReference();
+        }
     }
 
     template<>

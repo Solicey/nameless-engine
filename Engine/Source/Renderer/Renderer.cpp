@@ -18,9 +18,9 @@ namespace NL
 		s_SceneData->ViewPositionMatrix = camera.GetViewProjectionMatrix();
 	}
 
-	void Renderer::BeginScene(Camera* camera)
+	void Renderer::BeginScene(Camera& camera, const nlm::mat4& transform)
 	{
-		s_SceneData->ViewPositionMatrix = camera->GetProjectionMatrix();
+		s_SceneData->ViewPositionMatrix = camera.GetProjectionMatrix() * nlm::inverse(transform);
 	}
 
 	void Renderer::EndScene()

@@ -57,7 +57,8 @@ namespace NL
 			for (auto& item : m_Materials)
 			{
 				Ref<Material> mat = item.second;
-				mat->DeleteMaterialTexturesReference();
+				if (mat != nullptr)
+					mat->DeleteMaterialTexturesReference();
 			}
 			Library<Texture2D>::GetInstance().TraverseDelete();
 		}

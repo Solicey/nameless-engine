@@ -13,7 +13,7 @@ namespace NL
 		RecalculateViewMatrix();
 	}
 
-	EditorCamera::EditorCamera(ProjectionType type, float fovOrSize, unsigned int width, unsigned int height, float nearClip, float farClip) : m_ViewportWidth(width), m_ViewportHeight(height)
+	EditorCamera::EditorCamera(ProjectionType type, float fovOrSize, unsigned int width, unsigned int height, float nearClip, float farClip)
 	{
 		SetAspectRatio(m_ViewportWidth, m_ViewportHeight);
 		if (type == ProjectionType::Orthographic)
@@ -75,13 +75,6 @@ namespace NL
 	inline nlm::quat EditorCamera::GetOrientation() const
 	{
 		return nlm::quat(nlm::vec3(-m_Pitch, -m_Yaw, 0.0f));
-	}
-
-	void EditorCamera::SetAspectRatio(uint32_t width, uint32_t height)
-	{
-		Camera::SetAspectRatio(width, height);
-		m_ViewportWidth = width;
-		m_ViewportHeight = height;
 	}
 
 	void EditorCamera::SetCenter(const nlm::vec3& center)

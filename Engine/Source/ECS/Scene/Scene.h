@@ -26,10 +26,10 @@ namespace NL
 
 		void OnStartRuntime();
 		void OnStopRuntime();
-		void OnUpdateRuntime(TimeStep ts, Camera* camera);
+		void OnUpdateRuntime(TimeStep ts, Entity cameraEntity);
 		void OnUpdateEditor(TimeStep ts, EditorCamera& camera);
 
-		void OnViewportResize(uint32_t width, uint32_t height);
+		// nlm::vec2 OnViewportResize(uint32_t width, uint32_t height);
 		
 		/*std::unordered_map<Entity, Ref<Camera>>& GetRuntimeCameraMapNotConst() { return m_RuntimeCameraMap; }
 		bool ContainRuntimeCamera(const Entity& entity) const

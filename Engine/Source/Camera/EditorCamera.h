@@ -25,8 +25,6 @@ namespace NL
 		inline nlm::vec3 GetPosition() const { return m_Position; }
 		inline nlm::quat GetOrientation() const;
 
-		virtual void SetAspectRatio(uint32_t width, uint32_t height) override;
-
 		// For Viewport Interactions
 		bool IsMouseButtonHolding() const { return m_IsMouseButtonHolding; }
 
@@ -46,9 +44,6 @@ namespace NL
 		float ZoomSpeed() const;
 
 	private:
-		float m_ViewportWidth = 1280.0f;
-		float m_ViewportHeight = 720.0f;
-
 		float m_CameraSpeed = 1.0f;
 		float m_Pitch = 0.0f, m_Yaw = 0.0f;
 

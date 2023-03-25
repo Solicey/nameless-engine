@@ -219,6 +219,25 @@ namespace NL
 					}
 				}
 			}
+
+			auto cameraComponent = entity["CameraComponent"];
+			if (cameraComponent)
+			{
+				auto& comp = deserializedEntity.AddComponent<CameraComponent>();
+				comp.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
+				comp.ClearColor = cameraComponent["ClearColor"].as<nlm::vec4>();
+				comp.mCamera = Camera(
+					cameraComponent["ProjectionType"].as<int>(),
+					cameraComponent["PerspFOV"].as<float>(),
+					cameraComponent["PerspNear"].as<float>(),
+					cameraComponent["PerspFar"].as<float>(),
+					cameraComponent["OrthoSize"].as<float>(),
+					cameraComponent["OrthoNear"].as<float>(),
+					cameraComponent["OrthoFar"].as<float>(),
+					cameraComponent["ViewportWidth"].as<uint32_t>(),
+					cameraComponent["ViewportHeight"].as<uint32_t>()
+				);
+			}
 		}
 
 		return true;
@@ -297,6 +316,29 @@ namespace NL
 			out << YAML::EndSeq; // Materials
 
 			out << YAML::EndMap; // ModelRendererComponent
+		}
+
+		if (entity.HasComponent<CameraComponent>())
+		{
+			out << YAML::Key << "CameraComponent";
+			out << YAML::BeginMap; // CameraComponent
+
+			auto& comp = entity.GetComponent<CameraComponent>();
+			out << YAML::Key << "FixedAspectRatio" << YAML::Value << comp.FixedAspectRatio;
+			out << YAML::Key << "ClearColor" << YAML::Value << comp.ClearColor;
+
+			auto& cam = comp.mCamera;
+			out << YAML::Key << "ProjectionType" << YAML::Value << (int)cam.GetProjectionType();
+			out << YAML::Key << "OrthoSize" << YAML::Value << cam.GetOrthographicSize();
+			out << YAML::Key << "OrthoFar" << YAML::Value << cam.GetOrthographicFar();
+			out << YAML::Key << "OrthoNear" << YAML::Value << cam.GetOrthographicNear();
+			out << YAML::Key << "PerspFOV" << YAML::Value << cam.GetPerspectiveFOV();
+			out << YAML::Key << "PerspFar" << YAML::Value << cam.GetPerspectiveFar();
+			out << YAML::Key << "PerspNear" << YAML::Value << cam.GetPerspectiveNear();
+			out << YAML::Key << "ViewportWidth" << YAML::Value << cam.GetViewportWidth();
+			out << YAML::Key << "ViewportHeight" << YAML::Value << cam.GetViewportHeight();
+
+			out << YAML::EndMap; // CameraComponent
 		}
 
 		out << YAML::EndMap; // Entity

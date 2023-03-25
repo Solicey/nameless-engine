@@ -66,12 +66,25 @@ namespace NL
 	{
 	}
 
-	void RenderSystem::OnUpdateRuntime(TimeStep ts, Camera* camera)
+	void RenderSystem::OnUpdateRuntime(TimeStep ts, Entity cameraEntity)
 	{
-		if (camera == nullptr)
+		if (!cameraEntity.HasComponent<CameraComponent>())
 			return;
 
-		Renderer::BeginScene(camera);
+		if (!cameraEntity.HasComponent<TransformComponent>())
+		{
+			NL_ENGINE_ASSERT(false, "Entity with CameraComponent should also has TransformComponent!");
+			return;
+		}
+
+		auto& camera = cameraEntity.GetComponent<CameraComponent>();
+		auto& camTransform = cameraEntity.GetComponent<TransformComponent>();
+
+		// Camera Clear Color
+		Renderer::SetClearColor(camera.ClearColor);
+		Renderer::Clear();
+
+		Renderer::BeginScene(camera.mCamera, camTransform.GetTransform());
 
 		auto view = m_Scene->m_Registry.view<TransformComponent, ModelRendererComponent>();
 		for (auto& e : view)
@@ -92,9 +105,6 @@ namespace NL
 
 	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera)
 	{
-		// Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-		// Renderer::Clear();
-
 		Renderer::BeginScene(camera);
 
 		auto view = m_Scene->m_Registry.view<TransformComponent, ModelRendererComponent>();
@@ -108,6 +118,21 @@ namespace NL
 			if (model.mModel != nullptr)
 			{
 				Renderer::DrawModel(model.mModel, transform.GetTransform());
+			}
+		}
+
+		// Render Camera Gizmos
+		auto view2 = m_Scene->m_Registry.view<TransformComponent, CameraComponent>();
+		for (auto& e : view2)
+		{
+			Entity entity = Entity(e, m_Scene);
+
+			auto& transform = entity.GetComponent<TransformComponent>();
+			auto& camera = entity.GetComponent<CameraComponent>();
+
+			if (camera.Gizmos != nullptr)
+			{
+				Renderer::DrawModel(camera.Gizmos, transform.GetTransform() * nlm::scale(nlm::mat4(1.0f), nlm::vec3(1.0f, 1.0f, -1.0f)));
 			}
 		}
 

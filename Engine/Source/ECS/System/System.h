@@ -15,7 +15,7 @@ namespace NL
 
 		virtual void OnStartRuntime() = 0;
 		virtual void OnStopRuntime() = 0;
-		virtual void OnUpdateRuntime(TimeStep ts, Camera* camera) = 0;
+		virtual void OnUpdateRuntime(TimeStep ts, Entity cameraEntity) = 0;
 		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera) = 0;
 
 	protected:

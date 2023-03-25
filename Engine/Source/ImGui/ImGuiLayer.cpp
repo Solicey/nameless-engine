@@ -44,7 +44,7 @@ namespace NL
         ImGuiIO& io = ImGui::GetIO(); (void)io;
         std::string fontsFolder = PathConfig::GetInstance().GetFontsFolder().string() + "/Karla-Regular.ttf";
         NL_ENGINE_TRACE("Fonts folder: {0}", fontsFolder);
-        ImFont* font = io.Fonts->AddFontFromFileTTF(fontsFolder.c_str(), 20.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
+        ImFont* font = io.Fonts->AddFontFromFileTTF(fontsFolder.c_str(), 22.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
 
         auto& colors = ImGui::GetStyle().Colors;
         colors[ImGuiCol_WindowBg] = ImVec4{ 0.1f, 0.105f, 0.11f, 1.0f };

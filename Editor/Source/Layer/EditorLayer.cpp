@@ -74,7 +74,9 @@ namespace NL
         eSphere.GetComponent<TransformComponent>().SetTranslation(0, -1, 0);*/
 
         // Hierarchy
-        m_HierarchyPanel = HierarchyPanel(m_EditorScene);
+        m_HierarchyPanel = CreateRef<HierarchyPanel>(m_EditorScene);
+        m_HierarchyPanel->SetUpdateRuntimeCameraCallback([this]() { EditorLayer::UpdateRuntimeAspect(); });
+
 
         // Test mono
         /*auto& scripting = ScriptEngine::GetInstance();
@@ -103,17 +105,20 @@ namespace NL
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             // Camera Controller
             m_EditorCamera.SetAspectRatio(m_ViewportSize.x, m_ViewportSize.y);
-            
-            if (!IsEditorMode())
-            {
-                m_RuntimeScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-            }
+        }
+
+        // Update Runtime Camera. SHOULD BE OPTIMIZED BUT I DONT KNOW HOW TO DO THIS WITH CALLBACKS
+        if (!IsEditorMode())
+        {
+            // m_RuntimeScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            UpdateRuntimeAspect();
         }
 
         // Framebuffer preparation
         m_Framebuffer->Bind();
         Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.75f });
         Renderer::Clear();
+
         // Clear entity ID attachment to -1
         // m_Framebuffer->ClearAttachment(1, -1);
 
@@ -130,26 +135,17 @@ namespace NL
         }
         else
         {
-            Camera* camera = nullptr;
-
-            if (m_RuntimeCameraEntity.HasComponent<CameraComponent>())
-            {
-                auto& comp = m_RuntimeCameraEntity.GetComponent<CameraComponent>();
-                camera = &comp.mCamera;
-            }
-            else
+            if (!m_RuntimeCameraEntity.HasComponent<CameraComponent>())
             {
                 auto camView = m_RuntimeScene->m_Registry.view<CameraComponent>();
                 for (auto entity : camView)
                 {
-                    auto& comp = m_RuntimeScene->m_Registry.get<CameraComponent>(entity);
-                    camera = &comp.mCamera;
                     m_RuntimeCameraEntity = Entity(entity, m_RuntimeScene.get());
                     break;
                 }
             }
 
-            m_RuntimeScene->OnUpdateRuntime(ts, camera);
+            m_RuntimeScene->OnUpdateRuntime(ts, m_RuntimeCameraEntity);
         }
 
         // Check Hovered Entity
@@ -294,10 +290,11 @@ namespace NL
             const auto& buttonActive = colors[ImGuiCol_ButtonActive];
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(buttonActive.x, buttonActive.y, buttonActive.z, 0.5f));
 
+            float menuBarHeight, menuBarWidth;
             if (ImGui::BeginMenuBar())
             {
-                float menuBarWidth = ImGui::GetWindowContentRegionMax().x;
-                float menuBarHeight = ImGui::GetFrameHeight();
+                menuBarWidth = ImGui::GetWindowContentRegionMax().x;
+                menuBarHeight = ImGui::GetFrameHeight();
 
                 // Show TRS
                 if (IsEditorMode())
@@ -342,6 +339,7 @@ namespace NL
                                 if (!isSelected)
                                 {
                                     m_RuntimeCameraEntity = Entity(entity, m_RuntimeScene.get());
+                                    // UpdateRuntimeAspect();
                                 }
                             }
                         }
@@ -371,7 +369,6 @@ namespace NL
                 ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - (menuBarHeight * 4.5f));
                 if (ImGui::Checkbox("Maximize", &m_IsMaximizeOnPlay))
                 {
-
                 }
                 ImGui::PopStyleVar();
 
@@ -412,12 +409,16 @@ namespace NL
             // Update Viewport Image
             uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
             // uint64_t textureID = Library<Texture2D>::GetInstance().Get("../Assets/Models/nanosuit/arm_dif.png")->GetRendererID();
-            ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+            if (!IsEditorMode())
+            {
+                ImGui::SetCursorPos(ImVec2{ ImGui::GetWindowContentRegionMin().x + (m_ViewportSize.x - m_RuntimeAspect.x) / 2.0f, ImGui::GetWindowContentRegionMin().y + (m_ViewportSize.y - m_RuntimeAspect.y) / 2.0f });
+            }
+            ImGui::Image(reinterpret_cast<void*>(textureID), IsEditorMode() ? ImVec2{m_ViewportSize.x, m_ViewportSize.y} : ImVec2{m_RuntimeAspect.x, m_RuntimeAspect.y}, ImVec2{0, 1}, ImVec2{1, 0});
 
             // Gizmos
             if (IsEditorMode())
             {
-                Entity entitySelected = m_HierarchyPanel.GetSelectedEntity();
+                Entity entitySelected = m_HierarchyPanel->GetSelectedEntity();
                 if (entitySelected && entitySelected.HasComponent<TransformComponent>())
                 {
                     ImGuizmo::SetOrthographic(false);
@@ -470,7 +471,7 @@ namespace NL
         // Hierarchy
         if (m_ShowHierarchy && !(m_IsMaximizeOnPlay && m_ViewportMode == ViewportMode::Runtime))
         {
-            m_HierarchyPanel.OnImGuiRender(m_ShowHierarchy, true);
+            m_HierarchyPanel->OnImGuiRender(m_ShowHierarchy, true);
         }
 
 #pragma endregion
@@ -532,7 +533,7 @@ namespace NL
         // Focus
         case Key::F:
         {
-            Entity selectedEntity = m_HierarchyPanel.GetSelectedEntity();
+            Entity selectedEntity = m_HierarchyPanel->GetSelectedEntity();
             if (selectedEntity)
             {
                 // Ought to have transform...
@@ -550,9 +551,9 @@ namespace NL
         if (event.GetMouseButton() == Mouse::ButtonLeft)
         {
             // !ImGuizmo::IsOver()
-            if (m_ViewportHovered && !(ImGuizmo::IsOver() && m_TRSEntity == m_HierarchyPanel.GetSelectedEntity()))
+            if (m_ViewportHovered && !(ImGuizmo::IsOver() && m_TRSEntity == m_HierarchyPanel->GetSelectedEntity()))
             {
-                m_HierarchyPanel.SetSelectedEntity(m_EntityHovered);
+                m_HierarchyPanel->SetSelectedEntity(m_EntityHovered);
                 // Click a viewport entity
                 if (m_EntityHovered)
                 {
@@ -587,7 +588,7 @@ namespace NL
         if (m_EditorScene)
             m_EditorScene->m_Registry.clear();
         m_EditorScene = CreateRef<Scene>();
-        m_HierarchyPanel.SetCurrentScene(m_EditorScene);
+        m_HierarchyPanel->SetCurrentScene(m_EditorScene);
         m_EditorScenePath = "";
 
         Library<Texture2D>::GetInstance().TraverseDelete();
@@ -625,7 +626,7 @@ namespace NL
 
             m_EditorScene = newScene;            
             m_EditorScenePath = path;
-            m_HierarchyPanel.SetCurrentScene(m_EditorScene);
+            m_HierarchyPanel->SetCurrentScene(m_EditorScene);
 
             Application::GetInstance().SetWindowTitle("Nameless Editor - " + path.substr(path.find_last_of("/\\") + 1));
         }
@@ -677,7 +678,9 @@ namespace NL
         m_RuntimeScene = Scene::Copy(m_EditorScene);
         m_RuntimeScene->OnStartRuntime();
 
-        m_HierarchyPanel.SetCurrentScene(m_RuntimeScene);
+        m_HierarchyPanel->SetCurrentScene(m_RuntimeScene);
+        // UpdateRuntimeAspect();
+        // m_RuntimeScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 
         // m_ShowHierarchy = m_IsMaximizeOnPlay;
     }
@@ -690,6 +693,23 @@ namespace NL
         m_RuntimeScene.reset();
         m_RuntimeCameraEntity = {};
 
-        m_HierarchyPanel.SetCurrentScene(m_EditorScene);
+        m_HierarchyPanel->SetCurrentScene(m_EditorScene);
+    }
+
+    void EditorLayer::UpdateRuntimeAspect()
+    {
+        if (this->m_RuntimeCameraEntity.HasComponent<CameraComponent>())
+        {
+            auto& cam = this->m_RuntimeCameraEntity.GetComponent<CameraComponent>();
+            if (cam.FixedAspectRatio)
+            {
+                this->m_RuntimeAspect = nlm::vec2(cam.mCamera.GetViewportWidth(), cam.mCamera.GetViewportHeight());
+            }
+            else
+            {
+                this->m_RuntimeAspect = nlm::vec2((uint32_t)this->m_ViewportSize.x, (uint32_t)this->m_ViewportSize.y);
+                cam.mCamera.SetAspectRatio((uint32_t)this->m_ViewportSize.x, (uint32_t)this->m_ViewportSize.y);
+            }
+        }
     }
 }

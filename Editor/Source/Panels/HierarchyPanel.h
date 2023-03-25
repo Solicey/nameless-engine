@@ -6,9 +6,15 @@ namespace NL
 {
 	class HierarchyPanel
 	{
+		typedef std::function<void()> Callback;
+
 	public:
 		HierarchyPanel() = default;
 		HierarchyPanel(const Ref<Scene>& scene);
+		void SetUpdateRuntimeCameraCallback(Callback callback)
+		{
+			m_RuntimeCameraUpdateCallback = std::move(callback);
+		}
 
 		void SetCurrentScene(const Ref<Scene>& scene);
 
@@ -28,12 +34,13 @@ namespace NL
 		template<Component C, typename UIFunction>
 		void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction);
 
-		static void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 100.0f);
+		static void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 120.0f);
 
 		static void DrawShaderProperties(Ref<Material> mat);
 
 	private:
 		Ref<Scene> m_Scene;
 		Entity m_EntitySelected;
+		Callback m_RuntimeCameraUpdateCallback;
 	};
 }
