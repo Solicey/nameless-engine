@@ -18,6 +18,11 @@ namespace NL
 		s_SceneData->ViewPositionMatrix = camera.GetViewProjectionMatrix();
 	}
 
+	void Renderer::BeginScene(Camera* camera)
+	{
+		s_SceneData->ViewPositionMatrix = camera->GetProjectionMatrix();
+	}
+
 	void Renderer::EndScene()
 	{
 	}

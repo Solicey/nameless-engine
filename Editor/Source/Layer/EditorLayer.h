@@ -7,6 +7,11 @@
 
 namespace NL
 {
+	enum class ViewportMode
+	{
+		Editor, Runtime
+	};
+
 	class EditorLayer : public Layer
 	{
 	public:
@@ -32,11 +37,19 @@ namespace NL
 		void SaveSceneAs();
 		void SerializeScene(Ref<Scene> scene, const std::string& path);
 
+		void OnScenePlay();
+		void OnSceneStop();
+
+		inline bool IsEditorMode() { return m_ViewportMode == ViewportMode::Editor; }
+
 	private:
 
 		EditorCamera m_EditorCamera;
 		Ref<Scene> m_EditorScene;
 
+		Entity m_RuntimeCameraEntity = {};
+		Ref<Scene> m_RuntimeScene;
+		
 		std::string m_EditorScenePath = "";
 
 		// Viewport framebuffer
@@ -50,12 +63,20 @@ namespace NL
 		bool m_ViewportHovered = false;
 		Entity m_EntityHovered = {};
 		ImGuizmo::OPERATION m_GuizmoType = ImGuizmo::OPERATION::TRANSLATE;
-		bool m_ShowTRS;
+		// bool m_ShowTRS;
 		Entity m_TRSEntity = {};
+		ViewportMode m_ViewportMode = ViewportMode::Editor;
 
 		// Hierarchy variables
 		bool m_ShowHierarchy;
 		HierarchyPanel m_HierarchyPanel;
+
+		// Icons
+		Ref<Texture2D> m_PlayButton;
+		Ref<Texture2D> m_StopButton;
+
+		// Runtime Settings
+		bool m_IsMaximizeOnPlay = true;
 
 	};
 }

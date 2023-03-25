@@ -5,6 +5,8 @@
 #include "ECS/Component/Basic/TransformComponent.h"
 #include "ECS/Component/Basic/IdentityComponent.h"
 #include "ECS/Component/Render/ModelRendererComponent.h"
+#include "ECS/Component/Camera/CameraComponent.h"
+#include "ECS/Component/Scripting/ScriptingComponent.h"
 
 namespace NL
 {
@@ -15,6 +17,5 @@ namespace NL
     };
 
     // Component to be copied
-    using AllComponents = Components<TransformComponent, IdentityComponent, 
-        ModelRendererComponent>;
+    using AllComponents = Components<TransformComponent, CameraComponent, ModelRendererComponent, ScriptingComponent>;
 }

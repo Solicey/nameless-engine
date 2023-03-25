@@ -13,11 +13,15 @@ namespace NL
 
 	ID Entity::GetID()
 	{
-		return GetComponent<IdentityComponent>().ID;
+		if (HasComponent<IdentityComponent>())
+			return GetComponent<IdentityComponent>().ID;
+		return ID();
 	}
 
 	const std::string& Entity::GetName()
-	{
-		return GetComponent<IdentityComponent>().Name;
+	{ 
+		if (HasComponent<IdentityComponent>())
+			return GetComponent<IdentityComponent>().Name;
+		return "";
 	}
 }

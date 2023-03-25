@@ -10,10 +10,10 @@ namespace NL
 	public:
 		RenderSystem(Scene* scene);
 
-		virtual void OnStartRuntime();
-		virtual void OnStopRuntime();
-		virtual void OnUpdateRuntime(TimeStep ts);
-		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera);
+		virtual void OnStartRuntime() override;
+		virtual void OnStopRuntime() override;
+		virtual void OnUpdateRuntime(TimeStep ts, Camera* camera) override;
+		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera) override;
 
 	private:
 		// Ref<Shader> m_TestShader;

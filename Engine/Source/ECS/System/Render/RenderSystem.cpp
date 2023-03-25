@@ -66,8 +66,28 @@ namespace NL
 	{
 	}
 
-	void RenderSystem::OnUpdateRuntime(TimeStep ts)
+	void RenderSystem::OnUpdateRuntime(TimeStep ts, Camera* camera)
 	{
+		if (camera == nullptr)
+			return;
+
+		Renderer::BeginScene(camera);
+
+		auto view = m_Scene->m_Registry.view<TransformComponent, ModelRendererComponent>();
+		for (auto& e : view)
+		{
+			Entity entity = Entity(e, m_Scene);
+
+			auto& transform = entity.GetComponent<TransformComponent>();
+			auto& model = entity.GetComponent<ModelRendererComponent>();
+
+			if (model.mModel != nullptr)
+			{
+				Renderer::DrawModel(model.mModel, transform.GetTransform());
+			}
+		}
+
+		Renderer::EndScene();
 	}
 
 	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera)

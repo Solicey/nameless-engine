@@ -75,6 +75,18 @@ namespace NL
 
         // Hierarchy
         m_HierarchyPanel = HierarchyPanel(m_EditorScene);
+
+        // Test mono
+        /*auto& scripting = ScriptEngine::GetInstance();
+        MonoAssembly* assembly = scripting.LoadCSharpAssembly("../ScriptCore/Scripts/ScriptCore.dll");
+        MonoClass* testClass = scripting.GetClassInAssembly(assembly, "TestNamespace", "TestClass");
+        MonoObject* testClassInstance = scripting.Instantiate(testClass);
+        scripting.CallMethod(testClassInstance, "PrintFloatVar");*/
+
+        // Icons
+        m_PlayButton = Texture2D::Create(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/PlayButton.png");
+        m_StopButton = Texture2D::Create(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/StopButton.png");
+
 	}
 
 	void EditorLayer::OnDetach()
@@ -91,6 +103,11 @@ namespace NL
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             // Camera Controller
             m_EditorCamera.SetAspectRatio(m_ViewportSize.x, m_ViewportSize.y);
+            
+            if (!IsEditorMode())
+            {
+                m_RuntimeScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            }
         }
 
         // Framebuffer preparation
@@ -102,32 +119,61 @@ namespace NL
 
 		//NL_TRACE("Delta Time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
 
-        if (m_ViewportHovered || m_EditorCamera.IsMouseButtonHolding())
+        if (IsEditorMode())
         {
-            m_EditorCamera.OnUpdate(ts);
-        }
-		
-		m_EditorScene->OnUpdateEditor(ts, m_EditorCamera);
+            if (m_ViewportHovered || m_EditorCamera.IsMouseButtonHolding())
+            {
+                m_EditorCamera.OnUpdate(ts);
+            }
 
-        // Check Hovered Entity
-
-        auto [mx, my] = ImGui::GetMousePos();
-        mx -= m_ViewportBounds[0].x;
-        my -= m_ViewportBounds[0].y;
-        nlm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-        my = viewportSize.y - my;
-        int mouseX = (int)mx;
-        int mouseY = (int)my;
-        if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
-        {
-            int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
-            m_EntityHovered = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
-            m_ViewportHovered = true;
+            m_EditorScene->OnUpdateEditor(ts, m_EditorCamera);
         }
         else
         {
-            m_ViewportHovered = false;
-        }        
+            Camera* camera = nullptr;
+
+            if (m_RuntimeCameraEntity.HasComponent<CameraComponent>())
+            {
+                auto& comp = m_RuntimeCameraEntity.GetComponent<CameraComponent>();
+                camera = &comp.mCamera;
+            }
+            else
+            {
+                auto camView = m_RuntimeScene->m_Registry.view<CameraComponent>();
+                for (auto entity : camView)
+                {
+                    auto& comp = m_RuntimeScene->m_Registry.get<CameraComponent>(entity);
+                    camera = &comp.mCamera;
+                    m_RuntimeCameraEntity = Entity(entity, m_RuntimeScene.get());
+                    break;
+                }
+            }
+
+            m_RuntimeScene->OnUpdateRuntime(ts, camera);
+        }
+
+        // Check Hovered Entity
+
+        if (IsEditorMode())
+        {
+            auto [mx, my] = ImGui::GetMousePos();
+            mx -= m_ViewportBounds[0].x;
+            my -= m_ViewportBounds[0].y;
+            nlm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+            my = viewportSize.y - my;
+            int mouseX = (int)mx;
+            int mouseY = (int)my;
+            if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+            {
+                int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
+                m_EntityHovered = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
+                m_ViewportHovered = true;
+            }
+            else
+            {
+                m_ViewportHovered = false;
+            }
+        }
 
         m_Framebuffer->Unbind();
 
@@ -237,31 +283,105 @@ namespace NL
         if (m_ShowViewport)
         {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-            ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_MenuBar);
-
+            ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollWithMouse |ImGuiWindowFlags_NoScrollbar);
+            
             // Toolbar
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+            auto& colors = ImGui::GetStyle().Colors;
+            const auto& buttonHovered = colors[ImGuiCol_ButtonHovered];
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(buttonHovered.x, buttonHovered.y, buttonHovered.z, 0.5f));
+            const auto& buttonActive = colors[ImGuiCol_ButtonActive];
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(buttonActive.x, buttonActive.y, buttonActive.z, 0.5f));
+
             if (ImGui::BeginMenuBar())
             {
-                ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+                float menuBarWidth = ImGui::GetWindowContentRegionMax().x;
+                float menuBarHeight = ImGui::GetFrameHeight();
 
-                if (ImGui::RadioButton("Translate", m_GuizmoType == ImGuizmo::OPERATION::TRANSLATE))
+                // Show TRS
+                if (IsEditorMode())
                 {
-                    m_GuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+
+                    if (ImGui::RadioButton("T", m_GuizmoType == ImGuizmo::OPERATION::TRANSLATE))
+                    {
+                        m_GuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::RadioButton("R", m_GuizmoType == ImGuizmo::OPERATION::ROTATE))
+                    {
+                        m_GuizmoType = ImGuizmo::OPERATION::ROTATE;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::RadioButton("S", m_GuizmoType == ImGuizmo::OPERATION::SCALE))
+                    {
+                        m_GuizmoType = ImGuizmo::OPERATION::SCALE;
+                    }
+                    ImGui::SameLine();
+
+                    ImGui::PopStyleVar();
                 }
+                // Show Runtime Camera
+                else if (m_ViewportMode == ViewportMode::Runtime)
+                {
+                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+                    ImGui::PushItemWidth(menuBarWidth * 0.2f);
+
+                    auto& runtimeCameraName = m_RuntimeCameraEntity.GetName();
+                    if (ImGui::BeginCombo("Runtime Camera", runtimeCameraName.c_str()))
+                    {
+                        auto camView = m_RuntimeScene->m_Registry.view<CameraComponent>();
+                        for (auto entity : camView)
+                        {
+                            auto& comp = m_RuntimeScene->m_Registry.get<CameraComponent>(entity);
+                            auto& name = m_RuntimeScene->m_Registry.get<IdentityComponent>(entity).Name;
+                            bool isSelected = entity == m_RuntimeCameraEntity;
+                            if (ImGui::Selectable(name.c_str(), isSelected))
+                            {
+                                if (!isSelected)
+                                {
+                                    m_RuntimeCameraEntity = Entity(entity, m_RuntimeScene.get());
+                                }
+                            }
+                        }
+
+                        ImGui::EndCombo();
+                    }
+
+                    ImGui::PopStyleVar();
+                    ImGui::PopItemWidth();
+                }
+
+                // Play & Stop Button
+                Ref<Texture2D> icon = IsEditorMode() ? m_PlayButton : m_StopButton;
+                ImGui::SetCursorPosX((menuBarWidth * 0.5f) - (menuBarHeight * 0.5f));
+                if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(menuBarHeight, menuBarHeight), ImVec2(0, 0), ImVec2(1, 1), 0))
+                {
+                    if (IsEditorMode())
+                        OnScenePlay();
+                    else
+                        OnSceneStop();
+                }
+
                 ImGui::SameLine();
-                if (ImGui::RadioButton("Rotate", m_GuizmoType == ImGuizmo::OPERATION::ROTATE))
+
+                // Maximize On Play
+                ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+                ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - (menuBarHeight * 4.5f));
+                if (ImGui::Checkbox("Maximize", &m_IsMaximizeOnPlay))
                 {
-                    m_GuizmoType = ImGuizmo::OPERATION::ROTATE;
+
                 }
-                ImGui::SameLine();
-                if (ImGui::RadioButton("Scale", m_GuizmoType == ImGuizmo::OPERATION::SCALE))
-                {
-                    m_GuizmoType = ImGuizmo::OPERATION::SCALE;
-                }
+                ImGui::PopStyleVar();
 
                 ImGui::EndMenuBar();
-                ImGui::PopStyleVar();
             }
+
+            ImGui::PopStyleVar();
+            ImGui::PopStyleColor(3);
+
+            //
 
             auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
             auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
@@ -271,13 +391,15 @@ namespace NL
 
 
             // Grid
-            ImGuizmo::SetOrthographic(false);
-            ImGuizmo::SetDrawlist();
-            ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
-            const nlm::mat4& cameraProjection = m_EditorCamera.GetProjectionMatrix();
-            const nlm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
-            ImGuizmo::DrawGrid(nlm::value_ptr(cameraView), nlm::value_ptr(cameraProjection), nlm::value_ptr(nlm::mat4(1.0f)), 20.0f);
-            
+            if (IsEditorMode())
+            {
+                ImGuizmo::SetOrthographic(false);
+                ImGuizmo::SetDrawlist();
+                ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
+                const nlm::mat4& cameraProjection = m_EditorCamera.GetProjectionMatrix();
+                const nlm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
+                ImGuizmo::DrawGrid(nlm::value_ptr(cameraView), nlm::value_ptr(cameraProjection), nlm::value_ptr(nlm::mat4(1.0f)), 20.0f);
+            }
             
             m_ViewportFocused = ImGui::IsWindowFocused();
             // m_ViewportHovered = ImGui::IsWindowHovered();
@@ -293,48 +415,51 @@ namespace NL
             ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
             // Gizmos
-            Entity entitySelected = m_HierarchyPanel.GetSelectedEntity();
-            if (entitySelected && entitySelected.HasComponent<TransformComponent>())
+            if (IsEditorMode())
             {
-                ImGuizmo::SetOrthographic(false);
-                ImGuizmo::SetDrawlist();
-                ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
-
-                // Editor camera
-                const nlm::mat4& cameraProjection = m_EditorCamera.GetProjectionMatrix();
-                const nlm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
-
-                auto& component = entitySelected.GetComponent<TransformComponent>();
-                nlm::mat4 transform = component.GetTransform();
-
-                // Snap
-                bool snap = Input::IsKeyPressed(Key::LeftControl);
-                float snapValue = 0.5f; // Snap to 0.5m for translation/scale
-                // Snap to 45 degrees for rotation
-                if (m_GuizmoType == ImGuizmo::OPERATION::ROTATE)
-                    snapValue = 45.0f;
-
-                float snapValues[3] = { snapValue, snapValue, snapValue };
-
-                ImGuizmo::Manipulate(nlm::value_ptr(cameraView), nlm::value_ptr(cameraProjection),
-                    (ImGuizmo::OPERATION)m_GuizmoType, ImGuizmo::LOCAL, nlm::value_ptr(transform),
-                    nullptr, snap ? snapValues : nullptr);
-
-                m_TRSEntity = entitySelected;
-
-                if (ImGuizmo::IsUsing())
+                Entity entitySelected = m_HierarchyPanel.GetSelectedEntity();
+                if (entitySelected && entitySelected.HasComponent<TransformComponent>())
                 {
-                    nlm::vec3 translation, rotation, scale, skew;
-                    nlm::vec4 persp;
-                    nlm::quat orien;
-                    nlm::decompose(transform, scale, orien, translation, skew, persp);
+                    ImGuizmo::SetOrthographic(false);
+                    ImGuizmo::SetDrawlist();
+                    ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
 
-                    rotation = nlm::eulerAngles(orien);
-                    nlm::vec3 deltaRotation = rotation - component.Rotation;
+                    // Editor camera
+                    const nlm::mat4& cameraProjection = m_EditorCamera.GetProjectionMatrix();
+                    const nlm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
 
-                    component.Translation = translation;
-                    component.Rotation += deltaRotation;
-                    component.Scale = scale;
+                    auto& component = entitySelected.GetComponent<TransformComponent>();
+                    nlm::mat4 transform = component.GetTransform();
+
+                    // Snap
+                    bool snap = Input::IsKeyPressed(Key::LeftControl);
+                    float snapValue = 0.5f; // Snap to 0.5m for translation/scale
+                    // Snap to 45 degrees for rotation
+                    if (m_GuizmoType == ImGuizmo::OPERATION::ROTATE)
+                        snapValue = 45.0f;
+
+                    float snapValues[3] = { snapValue, snapValue, snapValue };
+
+                    ImGuizmo::Manipulate(nlm::value_ptr(cameraView), nlm::value_ptr(cameraProjection),
+                        (ImGuizmo::OPERATION)m_GuizmoType, ImGuizmo::LOCAL, nlm::value_ptr(transform),
+                        nullptr, snap ? snapValues : nullptr);
+
+                    m_TRSEntity = entitySelected;
+
+                    if (ImGuizmo::IsUsing())
+                    {
+                        nlm::vec3 translation, rotation, scale, skew;
+                        nlm::vec4 persp;
+                        nlm::quat orien;
+                        nlm::decompose(transform, scale, orien, translation, skew, persp);
+
+                        rotation = nlm::eulerAngles(orien);
+                        nlm::vec3 deltaRotation = rotation - component.Rotation;
+
+                        component.Translation = translation;
+                        component.Rotation += deltaRotation;
+                        component.Scale = scale;
+                    }
                 }
             }
 
@@ -343,7 +468,7 @@ namespace NL
         }
 
         // Hierarchy
-        if (m_ShowHierarchy)
+        if (m_ShowHierarchy && !(m_IsMaximizeOnPlay && m_ViewportMode == ViewportMode::Runtime))
         {
             m_HierarchyPanel.OnImGuiRender(m_ShowHierarchy, true);
         }
@@ -454,6 +579,11 @@ namespace NL
 
     void EditorLayer::NewScene()
     {
+        if (m_ViewportMode == ViewportMode::Runtime)
+        {
+            OnSceneStop();
+        }
+
         if (m_EditorScene)
             m_EditorScene->m_Registry.clear();
         m_EditorScene = CreateRef<Scene>();
@@ -466,6 +596,11 @@ namespace NL
 
     void EditorLayer::OpenScene()
     {
+        if (m_ViewportMode == ViewportMode::Runtime)
+        {
+            OnSceneStop();
+        }
+
         std::string path = Application::GetInstance().OpenFileDialogue(L"NL Scene(*.nl)\0*.nl\0\0");
         if (!path.empty())
             OpenScene(path);
@@ -498,6 +633,11 @@ namespace NL
 
     void EditorLayer::SaveScene()
     {
+        if (m_ViewportMode == ViewportMode::Runtime)
+        {
+            OnSceneStop();
+        }
+
         if (!m_EditorScenePath.empty())
             SerializeScene(m_EditorScene, m_EditorScenePath);
         else
@@ -507,6 +647,11 @@ namespace NL
 
     void EditorLayer::SaveSceneAs()
     {
+        if (m_ViewportMode == ViewportMode::Runtime)
+        {
+            OnSceneStop();
+        }
+
         std::string path = Application::GetInstance().SaveFileDialogue(L"NL Scene(*.nl)\0*.nl\0\0");
         if (!path.empty())
         {
@@ -523,5 +668,28 @@ namespace NL
 
             Application::GetInstance().SetWindowTitle("Nameless Editor - " + path.substr(path.find_last_of("/\\") + 1));
         }
+    }
+
+    void EditorLayer::OnScenePlay()
+    {
+        m_ViewportMode = ViewportMode::Runtime;
+
+        m_RuntimeScene = Scene::Copy(m_EditorScene);
+        m_RuntimeScene->OnStartRuntime();
+
+        m_HierarchyPanel.SetCurrentScene(m_RuntimeScene);
+
+        // m_ShowHierarchy = m_IsMaximizeOnPlay;
+    }
+    
+    void EditorLayer::OnSceneStop()
+    {
+        m_ViewportMode = ViewportMode::Editor;
+
+        m_RuntimeScene->OnStopRuntime();
+        m_RuntimeScene.reset();
+        m_RuntimeCameraEntity = {};
+
+        m_HierarchyPanel.SetCurrentScene(m_EditorScene);
     }
 }

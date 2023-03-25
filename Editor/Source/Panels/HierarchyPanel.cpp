@@ -150,7 +150,9 @@ namespace NL
 			// DisplayAddComponentEntry<>("Camera");
 
 			InspectorAddComponent<TransformComponent>("Transform");
+			InspectorAddComponent<CameraComponent>("Camera");
 			InspectorAddComponent<ModelRendererComponent>("Model Renderer");
+			InspectorAddComponent<ScriptingComponent>("Scripting");
 
 			ImGui::EndPopup();
 		}
@@ -170,6 +172,15 @@ namespace NL
 
 #pragma endregion
 
+#pragma region Draw Camera
+
+		DrawComponent<CameraComponent>("Camera", entity, [](auto& entity, auto& component) {
+
+		
+
+		});
+
+#pragma endregion
 		
 #pragma region Draw Mesh Renderer
 
@@ -269,6 +280,16 @@ namespace NL
 
 			ImGui::TreePop();
 		}
+
+		});
+
+#pragma endregion
+
+#pragma region Draw Scripting
+
+		DrawComponent<ScriptingComponent>("Scripting", entity, [](auto& entity, auto& component) {
+
+
 
 		});
 

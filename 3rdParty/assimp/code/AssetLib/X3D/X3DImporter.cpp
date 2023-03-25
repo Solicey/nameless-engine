@@ -131,7 +131,7 @@ void X3DImporter::skipUnsupportedNode(const std::string &pParentNodeName, XmlNod
         // Rigid body physics
         "BallJoint", "CollidableOffset", "CollidableShape", "CollisionCollection", "CollisionSensor", "CollisionSpace", "Contact", "DoubleAxisHingeJoint",
         "MotorJoint", "RigidBody", "RigidBodyCollection", "SingleAxisHingeJoint", "SliderJoint", "UniversalJoint",
-        // Scripting component
+        // ScriptEngine component
         "Script",
         // Programmable shaders component
         "ComposedShader", "FloatVertexAttribute", "Matrix3VertexAttribute", "Matrix4VertexAttribute", "PackagedShader", "ProgramShader", "ShaderPart",

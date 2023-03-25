@@ -55,8 +55,10 @@ namespace NL
 		}
 
 		template<Component C>
-		bool HasComponent()
+		bool HasComponent() const
 		{
+			if (m_Scene == nullptr)
+				return false;
 			return m_Scene->m_Registry.all_of<C>(m_EntityHandle);
 		}
 
@@ -88,4 +90,16 @@ namespace NL
 		Scene* m_Scene = nullptr;
 	};
 	
+}
+
+namespace std
+{
+	template<>
+	struct hash<NL::Entity>
+	{
+		std::size_t operator()(const NL::Entity& entity) const
+		{
+			return hash<uint32_t>()((uint32_t)entity);
+		}
+	};
 }

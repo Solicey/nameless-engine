@@ -23,13 +23,15 @@ IncludeDir["assimp"] = "3rdParty/assimp/include"
 IncludeDir["Glad"] = "3rdParty/Glad/include"
 IncludeDir["GLFW"] = "3rdParty/GLFW/include"
 IncludeDir["imgui"] = "3rdParty/imgui"
-IncludeDir["yamlcpp"] = "3rdParty/yamlcpp"
+IncludeDir["yamlcpp"] = "3rdParty/yamlcpp/include"
+IncludeDir["mono"] = "3rdParty/mono/include"
 
 include "3rdParty/assimp"
 include "3rdParty/Glad"
 include "3rdParty/GLFW"
 include "3rdParty/imgui"
 include "3rdParty/yamlcpp"
+include "ScriptCore"
 
 project "Engine"
     location "Engine"
@@ -68,9 +70,10 @@ project "Engine"
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.imgui}",
         "%{IncludeDir.ImGuizmo}",
-        "%{IncludeDir.yamlcpp}/include",
+        "%{IncludeDir.yamlcpp}",
         "%{IncludeDir.entt}",
-        "%{IncludeDir.stb}"
+        "%{IncludeDir.stb}",
+        "%{IncludeDir.mono}"
     }
 
     links
@@ -95,14 +98,39 @@ project "Engine"
             "NL_PLATFORM_WINDOWS",
             "GLFW_INCLUDE_NONE"
         }
+        links
+		{
+		    -- windows needed libs for mono
+			"Ws2_32.lib",
+			"Bcrypt.lib",
+			"Version.lib",
+			"Winmm.lib",
+            "msvcrtd.lib"
+		}
 
     filter "configurations:Debug"
         defines "NL_DEBUG"
+        libdirs
+		{
+			"3rdParty/mono/lib/Debug"
+		}
+        links
+		{
+			"libmono-static-sgen.lib"
+		}
         runtime "Debug"
         symbols "on"
     
     filter "configurations:Release"
         defines "NL_RELEASE"
+        libdirs
+		{
+			"3rdParty/mono/lib/Release"
+		}
+        links
+		{
+			"libmono-static-sgen.lib"
+		}
         runtime "Release"
         optimize "on"
 
@@ -132,7 +160,8 @@ project "Editor"
         "%{IncludeDir.glm}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.stb}",
-        "%{IncludeDir.yamlcpp}/include",
+        "%{IncludeDir.yamlcpp}",
+        "%{IncludeDir.mono}",
         "Engine/Source",
         "%{prj.name}/Source"
     }

@@ -1,6 +1,8 @@
 # Binaries
 **/bin/
 **/bin-int/
+**/obj/
+**/Intermediates/
 Debug/*.exe
 Release/*.exe
 
