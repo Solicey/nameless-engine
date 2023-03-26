@@ -5,11 +5,13 @@
 #include "ECS/Entity/Entity.h"
 #include "ECS/Component/AllComponents.h"
 #include "ECS/System/AllSystems.h"
+#include "Scripting/ScriptEngine.h"
 
 namespace NL
 {
     Scene::Scene()
     {
+        m_Systems.emplace_back(CreateScope<ScriptingSystem>(this));
         m_Systems.emplace_back(CreateScope<RenderSystem>(this));
     }
 
@@ -74,6 +76,9 @@ namespace NL
         NL_ENGINE_TRACE("Entity entt id: {0}, nl id: {1}", (uint32_t)entity, id.GetID());
         entity.AddComponent<IdentityComponent>(id, name);
         entity.AddComponent<TransformComponent>();
+
+        m_EntityMap[id] = entity;
+
         return entity;
     }
 
@@ -86,6 +91,7 @@ namespace NL
                 model->DeleteMaterialTexturesReference();
         }
 
+        m_EntityMap.erase(entity.GetID());
         m_Registry.destroy(entity);
     }
 
@@ -119,6 +125,26 @@ namespace NL
         {
             system->OnUpdateEditor(ts, camera);
         }
+    }
+
+    Entity Scene::GetEntityWithID(ID id)
+    {
+        if (m_EntityMap.find(id) != m_EntityMap.end())
+            return { m_EntityMap.at(id), this };
+
+        return {};
+    }
+
+    Entity Scene::FindEntityByName(std::string_view name)
+    {
+        auto view = m_Registry.view<IdentityComponent>();
+        for (auto entity : view)
+        {
+            const IdentityComponent& comp = view.get<IdentityComponent>(entity);
+            if (comp.Name == name)
+                return Entity{ entity, this };
+        }
+        return {};
     }
 
     /*nlm::vec2 Scene::OnViewportResize(uint32_t width, uint32_t height)
@@ -166,9 +192,9 @@ namespace NL
     }
 
     template<>
-    void Scene::OnComponentAdded<ScriptingComponent>(Entity entity, ScriptingComponent& component)
+    void Scene::OnComponentAdded<ScriptComponent>(Entity entity, ScriptComponent& component)
     {
-        
+
     }
 
 #pragma endregion
@@ -207,7 +233,7 @@ namespace NL
     }
 
     template<>
-    void Scene::OnComponentRemoved<ScriptingComponent>(Entity entity, ScriptingComponent& component)
+    void Scene::OnComponentRemoved<ScriptComponent>(Entity entity, ScriptComponent& component)
     {
        
     }

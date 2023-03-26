@@ -89,6 +89,8 @@ namespace NL
         m_PlayButton = Texture2D::Create(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/PlayButton.png");
         m_StopButton = Texture2D::Create(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/StopButton.png");
 
+        // Scripting
+        ScriptEngine::GetInstance().Init();
 	}
 
 	void EditorLayer::OnDetach()
@@ -256,6 +258,13 @@ namespace NL
 
                 if (ImGui::MenuItem("Exit", "Alt + F4", false))
                     Application::GetInstance().Close();
+
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Script"))
+            {
+                if (ImGui::MenuItem("Reload Assembly", "Ctrl+R"))
+                    ScriptEngine::GetInstance().ReloadAssembly();
 
                 ImGui::EndMenu();
             }
@@ -591,6 +600,7 @@ namespace NL
         m_HierarchyPanel->SetCurrentScene(m_EditorScene);
         m_EditorScenePath = "";
 
+        // Avoid Memory Leak
         Library<Texture2D>::GetInstance().TraverseDelete();
         Application::GetInstance().SetWindowTitle("Nameless Editor - New Scene");
     }
@@ -606,6 +616,7 @@ namespace NL
         if (!path.empty())
             OpenScene(path);
 
+        // Avoid Memory Leak
         Library<Texture2D>::GetInstance().TraverseDelete();
     }
 
@@ -679,6 +690,8 @@ namespace NL
         m_RuntimeScene->OnStartRuntime();
 
         m_HierarchyPanel->SetCurrentScene(m_RuntimeScene);
+
+        m_RuntimeScene->SetCurrentState(true, false);
         // UpdateRuntimeAspect();
         // m_RuntimeScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 

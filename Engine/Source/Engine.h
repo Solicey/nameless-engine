@@ -42,3 +42,4 @@
 #include "Renderer/Framebuffer.h"
 
 #include "Scripting/ScriptEngine.h"
+#include "Scripting/ScriptGlue.h"

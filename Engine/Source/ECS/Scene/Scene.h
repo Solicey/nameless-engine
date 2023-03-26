@@ -29,6 +29,13 @@ namespace NL
 		void OnUpdateRuntime(TimeStep ts, Entity cameraEntity);
 		void OnUpdateEditor(TimeStep ts, EditorCamera& camera);
 
+		Entity GetEntityWithID(ID id);
+		Entity FindEntityByName(std::string_view name);
+
+		bool IsRunning() const { return m_IsRunning; }
+		bool IsPaused() const { return m_IsPaused; }
+		void SetCurrentState(bool isRunning, bool isPaused) { m_IsRunning = isRunning; m_IsPaused = isPaused; }
+
 		// nlm::vec2 OnViewportResize(uint32_t width, uint32_t height);
 		
 		/*std::unordered_map<Entity, Ref<Camera>>& GetRuntimeCameraMapNotConst() { return m_RuntimeCameraMap; }
@@ -65,7 +72,9 @@ namespace NL
 		friend class System;
 
 	private:
+		std::unordered_map<ID, entt::entity> m_EntityMap;
 		std::vector<Scope<System>> m_Systems;
-
+		bool m_IsRunning = false;
+		bool m_IsPaused = false;
 	};
 }

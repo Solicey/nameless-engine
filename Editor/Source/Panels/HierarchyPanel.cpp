@@ -156,7 +156,7 @@ namespace NL
 			InspectorAddComponent<TransformComponent>("Transform");
 			InspectorAddComponent<CameraComponent>("Camera");
 			InspectorAddComponent<ModelRendererComponent>("Model Renderer");
-			InspectorAddComponent<ScriptingComponent>("Scripting");
+			InspectorAddComponent<ScriptComponent>("Scripting");
 
 			ImGui::EndPopup();
 		}
@@ -362,9 +362,87 @@ namespace NL
 
 #pragma region Draw Scripting
 
-		DrawComponent<ScriptingComponent>("Scripting", entity, [](auto& entity, auto& component) {
+		DrawComponent<ScriptComponent>("Scripting", entity, [scene = m_Scene](auto& entity, auto& component) {
 
+		bool scriptClassExists = ScriptEngine::GetInstance().EntityClassExists(component.ClassName);
 
+		static char buffer[64];
+		strcpy_s(buffer, sizeof(buffer), component.ClassName.c_str());
+
+		if (!scriptClassExists)
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
+
+		if (ImGui::InputText("Class", buffer, sizeof(buffer)))
+		{
+			component.ClassName = buffer;
+
+			if (!scriptClassExists)
+				ImGui::PopStyleColor();
+
+			return;
+		}
+
+		// If this is Runtime Scene and not pausing
+		if (scene != nullptr && scene->IsRunning())
+		{
+			Ref<ScriptInstance> instance = ScriptEngine::GetInstance().GetScriptInstance(entity.GetID());
+			if (instance)
+			{
+				const auto& fields = instance->GetScriptClass()->GetFields();
+				for (const auto& [name, field] : fields)
+				{
+					if (field.Type == ScriptFieldType::Float)
+					{
+						float data = instance->GetFieldValue<float>(name);
+						if (ImGui::DragFloat(name.c_str(), &data))
+						{
+							instance->SetFieldValue(name, data);
+						}
+					}
+				}
+			}
+		}
+		else
+		{
+			if (scriptClassExists)
+			{
+				Ref<ScriptClass> entityClass = ScriptEngine::GetInstance().GetEntityClass(component.ClassName);
+				const auto& fields = entityClass->GetFields();
+
+				auto& fieldInstances = ScriptEngine::GetInstance().GetScriptFieldInstances(entity);
+				for (const auto& [name, field] : fields)
+				{
+					// Field has been set in editor
+					if (fieldInstances.find(name) != fieldInstances.end())
+					{
+						ScriptFieldInstance& fieldInstance = fieldInstances.at(name);
+
+						if (field.Type == ScriptFieldType::Float)
+						{
+							float data = fieldInstance.GetValue<float>();
+							if (ImGui::DragFloat(name.c_str(), &data))
+								fieldInstance.SetValue(data);
+						}
+					}
+					else
+					{
+						if (field.Type == ScriptFieldType::Float)
+						{
+							float data = 0.0f;
+							if (ImGui::DragFloat(name.c_str(), &data))
+							{
+								ScriptFieldInstance& fieldInstance = fieldInstances[name];
+								fieldInstance.Field = field;
+								fieldInstance.SetValue(data);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (!scriptClassExists)
+			ImGui::PopStyleColor();
 
 		});
 
@@ -483,12 +561,14 @@ namespace NL
 			auto& component = entity.GetComponent<C>();
 			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 4, 4 });
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
+			//ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 4, 4 });
+			//ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
 			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+			ImGui::Dummy(ImVec2{ 0.0f, 1.0f });
 			ImGui::Separator();
 			bool isExpanded = ImGui::TreeNodeEx((void*)typeid(C).hash_code(), treeNodeFlags, name.c_str());
-			ImGui::PopStyleVar(2);
+			
+			//ImGui::PopStyleVar(2);
 
 			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
 			if (ImGui::Button("+", ImVec2{ lineHeight, lineHeight }))

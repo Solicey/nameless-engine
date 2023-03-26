@@ -68,7 +68,8 @@ namespace NL
 		friend class ScriptInstance;
 	};
 
-	using ScriptFieldMap = std::unordered_map<std::string, ScriptFieldInstance>;
+	using ScriptFields = std::unordered_map<std::string, ScriptField>;
+	using ScriptFieldInstances = std::unordered_map<std::string, ScriptFieldInstance>;
 
 	// C#脚本中的类
 	class ScriptClass
@@ -81,12 +82,12 @@ namespace NL
 		MonoMethod* GetMethod(const std::string& name, int parameterCount);
 		MonoObject* CallMethod(MonoObject* instance, MonoMethod* method, void** params = nullptr);
 
-		const ScriptFieldMap& GetFieldMap() const { return m_Fields; }
+		const ScriptFields& GetFields() const { return m_Fields; }
 
 	private:
 		std::string m_ClassNamespace;
 		std::string m_ClassName;
-		ScriptFieldMap m_Fields;
+		ScriptFields m_Fields;
 		MonoClass* m_MonoClass = nullptr;
 
 		friend class ScriptEngine;
@@ -128,6 +129,8 @@ namespace NL
 		bool SetFieldValueInternal(const std::string& name, const void* value);
 
 	private:
+		friend class ScriptEngine;
+
 		Ref<ScriptClass> m_ScriptClass;
 
 		MonoObject* m_Instance = nullptr;
@@ -151,14 +154,14 @@ namespace NL
 
 		void ReloadAssembly();
 
-		void OnRuntimeStart(Ref<Scene> scene);
-		void OnRuntimeStop();
+		void OnStartRuntime(Scene* scene);
+		void OnStopRuntime();
 
 		bool EntityClassExists(const std::string& fullClassName);
 		void OnCreateEntity(Entity entity);
 		void OnUpdateEntity(Entity entity, TimeStep ts);
 
-		// ========================
+#pragma region Deprecated
 
 		MonoAssembly* LoadCSharpAssembly(const std::string& assemblyPath);
 
@@ -198,6 +201,34 @@ namespace NL
 			return value;
 		}
 
+#pragma endregion
+
+		MonoImage* GetCoreAssemblyImage() { return m_CoreAssemblyImage; }
+		MonoImage* GetAppAssemblyImage() { return m_AppAssemblyImage; }
+		ScriptClass* GetClassEntity() { return &m_EntityClass; }
+		Ref<ScriptClass> GetEntityClass(const std::string& name)
+		{
+			if (m_EntityClasses.find(name) == m_EntityClasses.end())
+				return nullptr;
+
+			return m_EntityClasses.at(name);
+		}
+
+		MonoObject* GetManagedInstance(ID id)
+		{
+			NL_ENGINE_ASSERT(m_EntityInstances.find(id) != m_EntityInstances.end(), "");
+			return m_EntityInstances.at(id)->GetManagedObject();
+		}
+		Scene* GetSceneContext() { return m_Scene; }
+		Ref<ScriptInstance> GetScriptInstance(ID entityID);
+		ScriptFieldInstances& GetScriptFieldInstances(Entity entity)
+		{
+			NL_ENGINE_ASSERT(entity, "");
+
+			ID entityID = entity.GetID();
+			return m_EntityScriptFieldInstances[entityID];
+		}
+
 	private:
 
 		void LoadAssemblyClasses();
@@ -216,7 +247,8 @@ namespace NL
 		ScriptClass m_EntityClass;
 		std::unordered_map<std::string, Ref<ScriptClass>> m_EntityClasses;
 		std::unordered_map<ID, Ref<ScriptInstance>> m_EntityInstances;
+		std::unordered_map<ID, ScriptFieldInstances> m_EntityScriptFieldInstances;
 
-		Ref<Scene> m_Scene;
+		Scene* m_Scene;
 	};
 }

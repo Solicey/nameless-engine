@@ -28,8 +28,6 @@ project "CSharpScripts"
 		"**.cs"
 	}
 
-	include (RootDir .. "/ScriptCore")
-
 	links
 	{
 		"ScriptCore"
@@ -43,4 +41,6 @@ project "CSharpScripts"
 		optimize "On"
 		symbols "Default"
 
-
+group "NL"
+	include (RootDir .. "/ScriptCore")
+group ""
