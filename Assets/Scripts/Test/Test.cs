@@ -13,7 +13,7 @@ namespace Test
         private TransformComponent m_Transform;
 
         public float Speed;
-        public float Time = 0.0f;
+        public float Time = 5.0f;
 
         void OnCreate()
         {

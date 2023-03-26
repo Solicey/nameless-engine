@@ -100,32 +100,6 @@ namespace NL
 
 			return it->second;
 		}
-
-		inline const char* ScriptFieldTypeToString(ScriptFieldType fieldType)
-		{
-			switch (fieldType)
-			{
-			case ScriptFieldType::None:    return "None";
-			case ScriptFieldType::Float:   return "Float";
-			case ScriptFieldType::Double:  return "Double";
-			case ScriptFieldType::Bool:    return "Bool";
-			case ScriptFieldType::Char:    return "Char";
-			case ScriptFieldType::Byte:    return "Byte";
-			case ScriptFieldType::Short:   return "Short";
-			case ScriptFieldType::Int:     return "Int";
-			case ScriptFieldType::Long:    return "Long";
-			case ScriptFieldType::UByte:   return "UByte";
-			case ScriptFieldType::UShort:  return "UShort";
-			case ScriptFieldType::UInt:    return "UInt";
-			case ScriptFieldType::ULong:   return "ULong";
-			case ScriptFieldType::Vector2: return "Vector2";
-			case ScriptFieldType::Vector3: return "Vector3";
-			case ScriptFieldType::Vector4: return "Vector4";
-			case ScriptFieldType::Entity:  return "Entity";
-			}
-			NL_ENGINE_ASSERT(false, "Unknown ScriptFieldType");
-			return "None";
-		}
 	}
 
 	void ScriptEngine::Init()
@@ -144,7 +118,8 @@ namespace NL
 
 		ScriptGlue::RegisterFunctions();
 
-		bool status = LoadCoreAssembly("../ScriptCore/Binaries/ScriptCore.dll");
+		m_CoreAssemblyFilepath = "../ScriptCore/Binaries/ScriptCore.dll";
+		bool status = LoadCoreAssembly(m_CoreAssemblyFilepath);
 		if (!status)
 		{
 			NL_ENGINE_ERROR("[Mono] Could not load ScriptCore assembly!");
@@ -154,7 +129,8 @@ namespace NL
 		// all C# scripts in assets folder will be put into one app assembly
 		// this may be temporary
 		std::filesystem::path appPath = PathConfig::GetInstance().GetScriptsFolder() / "Binaries/CSharpScripts.dll";
-		status = LoadAppAssembly(appPath.string());
+		m_AppAssemblyFilepath = appPath.string();
+		status = LoadAppAssembly(m_AppAssemblyFilepath);
 		if (!status)
 		{
 			NL_ENGINE_ERROR("[Mono] Could not load App assembly!");

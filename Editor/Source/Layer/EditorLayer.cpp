@@ -256,7 +256,7 @@ namespace NL
                 if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
                     SaveSceneAs();
 
-                if (ImGui::MenuItem("Exit", "Alt + F4", false))
+                if (ImGui::MenuItem("Exit", "Alt+F4", false))
                     Application::GetInstance().Close();
 
                 ImGui::EndMenu();
@@ -409,7 +409,7 @@ namespace NL
             
             m_ViewportFocused = ImGui::IsWindowFocused();
             // m_ViewportHovered = ImGui::IsWindowHovered();
-            Application::GetInstance().GetImGuiLayer()->BlockEvents(!m_ViewportHovered && !m_ViewportFocused);
+            Application::GetInstance().GetImGuiLayer()->BlockEvents(false);
 
             ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
             // Update Viewport Size
@@ -542,6 +542,9 @@ namespace NL
         // Focus
         case Key::F:
         {
+            if (!m_ViewportFocused && !m_ViewportHovered)
+                break;
+
             Entity selectedEntity = m_HierarchyPanel->GetSelectedEntity();
             if (selectedEntity)
             {
@@ -557,6 +560,8 @@ namespace NL
 
     bool EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& event)
     {
+        if (!m_ViewportFocused && !m_ViewportHovered)
+            return false;
         if (event.GetMouseButton() == Mouse::ButtonLeft)
         {
             // !ImGuizmo::IsOver()
