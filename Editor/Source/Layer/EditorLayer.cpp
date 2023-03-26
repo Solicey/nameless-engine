@@ -91,6 +91,7 @@ namespace NL
 
         // Scripting
         ScriptEngine::GetInstance().Init();
+        ScriptEngine::GetInstance().SetSceneContext(m_EditorScene.get());
 	}
 
 	void EditorLayer::OnDetach()
@@ -712,6 +713,7 @@ namespace NL
         m_RuntimeCameraEntity = {};
 
         m_HierarchyPanel->SetCurrentScene(m_EditorScene);
+        ScriptEngine::GetInstance().SetSceneContext(m_EditorScene.get());
     }
 
     void EditorLayer::UpdateRuntimeAspect()

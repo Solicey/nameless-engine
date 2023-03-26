@@ -3,8 +3,10 @@
 #include "Core/Log/Log.h"
 #include "Resources/Mesh.h"
 #include "Resources/Material.h"
+#include "Animation/Bones.h"
 
 #include <vector>
+#include <map>
 
 namespace NL
 {
@@ -71,5 +73,8 @@ namespace NL
 		std::string					m_Path;
 		std::vector<Ref<Mesh>>		m_Meshes;
 		std::unordered_map<std::string, Ref<Material>> m_Materials;
+
+		std::unordered_map<std::string, int>	m_BoneMap;
+		std::map<int, BoneInfo>					m_Bones;
 	};
 }

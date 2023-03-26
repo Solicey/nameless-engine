@@ -1,6 +1,7 @@
 #include "HierarchyPanel.h"
 
 #include "Layer/EditorLayer.h"
+#include "Scripting/ScriptEngine.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -379,11 +380,17 @@ namespace NL
 			if (!scriptClassExists)
 				ImGui::PopStyleColor();
 
+			NL_ENGINE_TRACE("Entity Script Class Modified");
+
+			// ScriptEngine::GetInstance().OnCreateEntity(entity);
+			component.HasInstantiate = false;
+
 			return;
 		}
 
 		// If this is Runtime Scene and not pausing
-		if (scene != nullptr && scene->IsRunning())
+		// if (scene != nullptr && scene->IsRunning())
+		if (component.HasInstantiate)
 		{
 			Ref<ScriptInstance> instance = ScriptEngine::GetInstance().GetScriptInstance(entity.GetID());
 			if (instance)
@@ -402,7 +409,7 @@ namespace NL
 				}
 			}
 		}
-		else
+		/*else
 		{
 			if (scriptClassExists)
 			{
@@ -440,6 +447,7 @@ namespace NL
 				}
 			}
 		}
+		*/
 
 		if (!scriptClassExists)
 			ImGui::PopStyleColor();

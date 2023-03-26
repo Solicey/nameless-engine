@@ -23,7 +23,7 @@ namespace NL
 	{
 	public:
 		Application(token) {}
-		~Application() = default;
+		~Application();
 		Application(const Application&) = delete;
 		Application& operator = (const Application&) = delete;
 

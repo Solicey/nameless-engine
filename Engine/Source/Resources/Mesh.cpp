@@ -4,13 +4,17 @@
 
 namespace NL
 {
-	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices, uint32_t matIndex, const std::string& name) :
+	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<SkinnedVertex>& skinnedVertices, const std::vector<uint32_t>& indices, uint32_t matIndex, const std::string& name, bool hasBones) :
 		m_VertexCount(static_cast<uint32_t>(vertices.size())),
 		m_IndexCount(static_cast<uint32_t>(indices.size())),
 		m_MaterialIndex(matIndex),
-		m_MaterialName(name)
+		m_MaterialName(name),
+		m_HasBones(hasBones)
 	{
-		CreateBuffers(vertices, indices);
+		if (m_HasBones)
+			CreateBuffers(skinnedVertices, indices);
+		else
+			CreateBuffers(vertices, indices);
 
 		// BoundingSphere
 	}
@@ -94,5 +98,33 @@ namespace NL
 
 		// NL_ENGINE_TRACE("    indices counts: {0}", indexBuffer->GetCount());
 
+	}
+
+	void Mesh::CreateBuffers(const std::vector<SkinnedVertex>& vertices, const std::vector<uint32_t>& indices)
+	{
+		BufferLayout layout = {
+			{ShaderDataType::Float3, "a_Position"},
+			{ShaderDataType::Float2, "a_TexCoord"},
+			{ShaderDataType::Float3, "a_Normal"},
+			{ShaderDataType::Float3, "a_Tangent"},
+			{ShaderDataType::Float3, "a_Bitangent"},
+			{ShaderDataType::Int, "a_EntityID"},
+			{ShaderDataType::Int4, "a_BoneIndex"},
+			{ShaderDataType::Float4, "a_BoneWeight"},
+		};
+
+		m_VertexArray = VertexArray::Create();
+
+		Ref<VertexBuffer> vertexBuffer = VertexBuffer::Create((void*)const_cast<SkinnedVertex*>(vertices.data()), vertices.size() * layout.GetStride());
+		vertexBuffer->SetLayout(layout);
+		m_VertexArray->AddVertexBuffer(vertexBuffer);
+
+		/*for (int i = 0; i < indices.size(); i += 3)
+		{
+			NL_ENGINE_TRACE("    index: ({0}, {1}, {2})", indices[i], indices[i + 1], indices[i + 2]);
+		}*/
+
+		Ref<IndexBuffer> indexBuffer = IndexBuffer::Create(const_cast<uint32_t*>(indices.data()), indices.size());
+		m_VertexArray->SetIndexBuffer(indexBuffer);
 	}
 }

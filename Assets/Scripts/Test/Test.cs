@@ -23,7 +23,7 @@ namespace Test
             
         }
 
-        void OnUpdate(float ts)
+        void OnUpdateRuntime(float ts)
         {
             Time += ts;
             // Console.WriteLine($"Player.OnUpdate: {ts}");
@@ -48,5 +48,10 @@ namespace Test
             m_Transform.Translation = translation;
         }
 
+
+        void OnUpdateEditor(float ts)
+        {
+            Console.WriteLine($"Player.OnUpdateEditor: {ts}");
+        }
     }
 }

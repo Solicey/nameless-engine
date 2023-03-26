@@ -7,7 +7,7 @@ namespace NL
 {
 	void ScriptingSystem::OnStartRuntime()
 	{
-		ScriptEngine::GetInstance().OnStartRuntime(m_Scene);
+		ScriptEngine::GetInstance().SetSceneContext(m_Scene);
 		// Instantiate all script entities
 		auto view = m_Scene->m_Registry.view<ScriptComponent>();
 		for (auto e : view)
@@ -27,11 +27,24 @@ namespace NL
 		for (auto e : view)
 		{
 			Entity entity = { e, m_Scene };
-			ScriptEngine::GetInstance().OnUpdateEntity(entity, ts);
+			ScriptEngine::GetInstance().OnUpdateRuntime(entity, ts);
 		}
 	}
 
 	void ScriptingSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera)
 	{
+		auto view = m_Scene->m_Registry.view<ScriptComponent>();
+		for (auto e : view)
+		{
+			Entity entity = { e, m_Scene };
+
+			auto& hasInstantiate = entity.GetComponent<ScriptComponent>().HasInstantiate;
+			if (!hasInstantiate)
+			{
+				if (ScriptEngine::GetInstance().OnCreateEntity(entity))
+					hasInstantiate = true;
+			}
+			ScriptEngine::GetInstance().OnUpdateEditor(entity, ts);
+		}
 	}
 }

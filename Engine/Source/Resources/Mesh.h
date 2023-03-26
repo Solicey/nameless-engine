@@ -10,9 +10,11 @@ namespace NL
 	{
 	public:
 		Mesh(const std::vector<Vertex>& vertices, 
+			const std::vector<SkinnedVertex>& skinnedVertices,
 			const std::vector<uint32_t>& indices,
 			uint32_t matIndex, 
-			const std::string& name);
+			const std::string& name,
+			bool hasBones = false);
 
 		// VAO actually
 		void Bind();
@@ -32,6 +34,7 @@ namespace NL
 
 	private:
 		void CreateBuffers(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
+		void CreateBuffers(const std::vector<SkinnedVertex>& skinnedVertices, const std::vector<uint32_t>& indices);
 
 	private:
 		uint32_t m_VertexCount;
@@ -42,6 +45,7 @@ namespace NL
 		Ref<VertexArray> m_VertexArray;
 
 		std::string m_MaterialName;
+		bool m_HasBones;
 
 		// bounding sphere
 	};

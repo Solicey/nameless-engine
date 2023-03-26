@@ -100,7 +100,8 @@ namespace NL
 		ScriptInstance(Ref<ScriptClass> scriptClass, Entity entity);
 
 		void CallOnCreate();
-		void CallOnUpdate(float ts);
+		void CallOnUpdateRuntime(float ts);
+		void CallOnUpdateEditor(float ts);
 
 		Ref<ScriptClass> GetScriptClass(){ return m_ScriptClass; }
 
@@ -136,7 +137,8 @@ namespace NL
 		MonoObject* m_Instance = nullptr;
 		MonoMethod* m_Constructor = nullptr;
 		MonoMethod* m_OnCreateMethod = nullptr;
-		MonoMethod* m_OnUpdateMethod = nullptr;
+		MonoMethod* m_OnUpdateRuntimeMethod = nullptr;
+		MonoMethod* m_OnUpdateEditorMethod = nullptr;
 
 		inline static char s_FieldValueBuffer[16];
 	};
@@ -149,17 +151,19 @@ namespace NL
 		ScriptEngine(token) {}
 
 		void Init();
+		void Shutdown();
 		bool LoadCoreAssembly(const std::string& filepath);
 		bool LoadAppAssembly(const std::string& filepath);
 
 		void ReloadAssembly();
 
-		void OnStartRuntime(Scene* scene);
+		void SetSceneContext(Scene* scene);
 		void OnStopRuntime();
 
 		bool EntityClassExists(const std::string& fullClassName);
-		void OnCreateEntity(Entity entity);
-		void OnUpdateEntity(Entity entity, TimeStep ts);
+		bool OnCreateEntity(Entity entity);
+		void OnUpdateRuntime(Entity entity, TimeStep ts);
+		void OnUpdateEditor(Entity entity, TimeStep ts);
 
 #pragma region Deprecated
 
@@ -234,6 +238,7 @@ namespace NL
 		void LoadAssemblyClasses();
 
 	private:
+		MonoDomain* m_RootDomain = nullptr;
 		MonoDomain* m_AppDomain = nullptr;
 
 		MonoAssembly* m_CoreAssembly = nullptr;

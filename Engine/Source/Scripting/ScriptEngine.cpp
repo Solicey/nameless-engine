@@ -107,8 +107,8 @@ namespace NL
 		// Let Mono know where the .NET libraries are located.
 		mono_set_assemblies_path("../3rdParty/mono/DotNetLibs/4.5");
 
-		MonoDomain* rootDomain = mono_jit_init("NLJITRuntime");
-		if (rootDomain == nullptr)
+		m_RootDomain = mono_jit_init("NLJITRuntime");
+		if (m_RootDomain == nullptr)
 		{
 			NL_ENGINE_ERROR("[Mono] Root domain init error!");
 			return;
@@ -144,6 +144,17 @@ namespace NL
 		// Retrieve and instantiate class
 		m_EntityClass = ScriptClass("NL", "Entity", true);
 
+	}
+
+	void ScriptEngine::Shutdown()
+	{
+		mono_domain_set(mono_get_root_domain(), false);
+
+		mono_domain_unload(m_AppDomain);
+		m_AppDomain = nullptr;
+
+		mono_jit_cleanup(m_RootDomain);
+		m_RootDomain = nullptr;
 	}
 
 	bool ScriptEngine::LoadCoreAssembly(const std::string& filepath)
@@ -189,7 +200,7 @@ namespace NL
 		m_EntityClass = ScriptClass("NL", "Entity", true);
 	}
 
-	void ScriptEngine::OnStartRuntime(Scene* scene)
+	void ScriptEngine::SetSceneContext(Scene* scene)
 	{
 		//m_Scene.reset();
 		m_Scene = scene;
@@ -207,13 +218,12 @@ namespace NL
 		return m_EntityClasses.find(fullClassName) != m_EntityClasses.end();
 	}
 
-	void ScriptEngine::OnCreateEntity(Entity entity)
+	bool ScriptEngine::OnCreateEntity(Entity entity)
 	{
+		ID entityID = entity.GetID();
 		const auto& comp = entity.GetComponent<ScriptComponent>();
 		if (EntityClassExists(comp.ClassName))
 		{
-			ID entityID = entity.GetID();
-
 			Ref<ScriptInstance> instance = CreateRef<ScriptInstance>(m_EntityClasses[comp.ClassName], entity);
 			m_EntityInstances[entityID] = instance;
 
@@ -226,20 +236,42 @@ namespace NL
 			}
 
 			instance->CallOnCreate();
+
+			return true;
+		}
+		else
+		{
+			if (m_EntityScriptFieldInstances.find(entityID) != m_EntityScriptFieldInstances.end())
+				m_EntityScriptFieldInstances.erase(entityID);
+			return false;
 		}
 	}
 
-	void ScriptEngine::OnUpdateEntity(Entity entity, TimeStep ts)
+	void ScriptEngine::OnUpdateRuntime(Entity entity, TimeStep ts)
 	{
 		ID entityID = entity.GetID();
 		if (m_EntityInstances.find(entityID) != m_EntityInstances.end())
 		{
 			Ref<ScriptInstance> instance = m_EntityInstances[entityID];
-			instance->CallOnUpdate((float)ts);
+			instance->CallOnUpdateRuntime((float)ts);
 		}
 		else
 		{
 			NL_ENGINE_ERROR("Could not find Script Instance for entity {0}", entityID);
+		}
+	}
+
+	void ScriptEngine::OnUpdateEditor(Entity entity, TimeStep ts)
+	{
+		ID entityID = entity.GetID();
+		if (m_EntityInstances.find(entityID) != m_EntityInstances.end())
+		{
+			Ref<ScriptInstance> instance = m_EntityInstances[entityID];
+			instance->CallOnUpdateEditor((float)ts);
+		}
+		else
+		{
+			// NL_ENGINE_ERROR("Could not find Script Instance for entity {0}", entityID);
 		}
 	}
 
@@ -460,7 +492,8 @@ namespace NL
 
 		m_Constructor = ScriptEngine::GetInstance().GetClassEntity()->GetMethod(".ctor", 1);
 		m_OnCreateMethod = scriptClass->GetMethod("OnCreate", 0);
-		m_OnUpdateMethod = scriptClass->GetMethod("OnUpdate", 1);
+		m_OnUpdateRuntimeMethod = scriptClass->GetMethod("OnUpdateRuntime", 1);
+		m_OnUpdateEditorMethod = scriptClass->GetMethod("OnUpdateEditor", 1);
 
 		// Call Entity Constructor
 		{
@@ -476,12 +509,21 @@ namespace NL
 			m_ScriptClass->CallMethod(m_Instance, m_OnCreateMethod);
 	}
 
-	void ScriptInstance::CallOnUpdate(float ts)
+	void ScriptInstance::CallOnUpdateRuntime(float ts)
 	{
-		if (m_OnUpdateMethod)
+		if (m_OnUpdateRuntimeMethod)
 		{
 			void* param = &ts;
-			m_ScriptClass->CallMethod(m_Instance, m_OnUpdateMethod, &param);
+			m_ScriptClass->CallMethod(m_Instance, m_OnUpdateRuntimeMethod, &param);
+		}
+	}
+
+	void ScriptInstance::CallOnUpdateEditor(float ts)
+	{
+		if (m_OnUpdateEditorMethod)
+		{
+			void* param = &ts;
+			m_ScriptClass->CallMethod(m_Instance, m_OnUpdateEditorMethod, &param);
 		}
 	}
 
