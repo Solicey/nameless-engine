@@ -34,7 +34,7 @@ namespace NL
 		template<Component C, typename UIFunction>
 		void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction);
 
-		static void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 120.0f);
+		static void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 140.0f);
 
 		static void DrawShaderProperties(Ref<Material> mat);
 

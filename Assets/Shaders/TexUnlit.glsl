@@ -3,6 +3,7 @@
 #prop
 
 color3 u_Color;
+sampler2D u_Diffuse;
 
 #end
 
@@ -46,9 +47,10 @@ layout (location = 2) in vec3 v_Normal;
 layout (location = 3) in flat int v_EntityID;
 
 uniform vec3 u_Color;
+uniform sampler2D u_Diffuse;
 			
 void main()
 {
-	color = vec4(u_Color, 1.0);
+	color = vec4(texture2D(u_Diffuse, v_TexCoord).rgb, 1.0) * vec4(u_Color, 1.0);
 	color2 = v_EntityID;
 }			

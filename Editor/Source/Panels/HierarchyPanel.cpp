@@ -9,6 +9,8 @@
 
 namespace NL
 {
+#define RIGHT_COLUMN_WIDTH 180
+
 	namespace Utils
 	{
 		static bool TreeNodeExStyle1(const void* str_id, const std::string& name, ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding)
@@ -17,6 +19,93 @@ namespace NL
 			bool isExpanded = ImGui::TreeNodeEx((void*)str_id, flags, name.c_str());
 			ImGui::PopStyleVar();
 			return isExpanded;
+		}
+
+		static bool DragFloatStyle1(const std::string& label, float dragFloatWidth, float& value, float speed, float min, float max, const std::string& format = "%.2f")
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - dragFloatWidth);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+
+			std::string emitLabel = "##" + label;
+			bool isModified = ImGui::DragFloat(emitLabel.c_str(), &value, speed, min, max, format.c_str());
+			ImGui::Columns(1);
+			ImGui::PopItemWidth();
+
+			return isModified;
+		}
+
+		static bool DragFloatStyle1(const std::string& label, float dragFloatWidth, float& value)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - dragFloatWidth);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+
+			std::string emitLabel = "##" + label;
+			bool isModified = ImGui::DragFloat(emitLabel.c_str(), &value);
+			ImGui::Columns(1);
+			ImGui::PopItemWidth();
+
+			return isModified;
+		}
+
+		static bool CheckBoxStyle1(const std::string& label, float checkBoxWidth, bool& value)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - checkBoxWidth);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+			
+			std::string emitLabel = "##" + label;
+			bool isModified = ImGui::Checkbox(emitLabel.c_str(), &value);
+			ImGui::Columns(1);
+			ImGui::PopItemWidth();
+
+			return isModified;
+		}
+
+		// Remember to ImGui::Columns(1); manually
+		static bool ComboStyle1(const std::string& label, float comboWidth, const char* value)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - comboWidth);
+			float width = ImGui::CalcItemWidth();
+			ImGui::PushMultiItemsWidths(1, width);
+
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+
+			std::string emitLabel = "##" + label;
+			bool isModified = ImGui::BeginCombo(emitLabel.c_str(), value);
+
+			ImGui::PopItemWidth();
+			if (!isModified)
+				ImGui::Columns(1);
+			return isModified;
+		}
+
+		static bool InputTextStyle1(const std::string& label, float textWidth, char* buffer, int size)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - textWidth);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+
+			std::string emitLabel = "##" + label;
+			bool isModified = ImGui::InputText(emitLabel.c_str(), buffer, size);
+
+			ImGui::Columns(1);
+			ImGui::PopItemWidth();
+			return isModified;
 		}
 
 	}
@@ -131,6 +220,8 @@ namespace NL
 	{
 		//ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 4, 4 }); // ItemSpacing
 
+		float addComponentButtonWidth = 150.0f;
+
 		if (entity.HasComponent<IdentityComponent>())
 		{
 			auto& name = entity.GetComponent<IdentityComponent>().Name;
@@ -138,6 +229,7 @@ namespace NL
 			char buffer[256];
 			memset(buffer, 0, sizeof(buffer));
 			strncpy_s(buffer, sizeof(buffer), name.c_str(), sizeof(buffer));
+			ImGui::SetNextItemWidth(ImGui::GetWindowContentRegionWidth() - addComponentButtonWidth);
 			if (ImGui::InputText("##Name", buffer, sizeof(buffer)))
 			{
 				name = std::string(buffer);
@@ -146,6 +238,7 @@ namespace NL
 
 		ImGui::SameLine();
 
+		ImGui::SetNextItemWidth(addComponentButtonWidth);
 		if (ImGui::Button("Add Component"))
 			ImGui::OpenPopup("AddComponent");
 
@@ -183,9 +276,9 @@ namespace NL
 
 		auto& camera = component.mCamera;
 
-		const char* projectionTypeStrings[] = { "Orthographic", "Perspective" };
+		const char* projectionTypeStrings[] = { "Ortho", "Persp" };
 		const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];
-		if (ImGui::BeginCombo("Projection", currentProjectionTypeString))
+		if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentProjectionTypeString))
 		{
 			for (int i = 0; i < 2; i++)
 			{
@@ -200,38 +293,39 @@ namespace NL
 					ImGui::SetItemDefaultFocus();
 			}
 			ImGui::EndCombo();
+			ImGui::Columns(1);
 		}
 
 		if (camera.GetProjectionType() == Camera::ProjectionType::Perspective)
 		{
 			float perspectiveVerticalFOV = nlm::degrees(camera.GetPerspectiveFOV());
-			if (ImGui::DragFloat("Vertical FOV", &perspectiveVerticalFOV))
+			if (Utils::DragFloatStyle1("Vertical FOV", RIGHT_COLUMN_WIDTH, perspectiveVerticalFOV, 0.1f, 10.0f, 170.0f))
 				camera.SetPerspectiveFOV(nlm::radians(perspectiveVerticalFOV));
 
 			float perspectiveNear = camera.GetPerspectiveNear();
-			if (ImGui::DragFloat("Near Clip", &perspectiveNear))
+			if (Utils::DragFloatStyle1("Near Clip", RIGHT_COLUMN_WIDTH, perspectiveNear, 0.001f, 0.001f, 10.0f, "%.3f"))
 				camera.SetPerspectiveNear(perspectiveNear);
 
 			float perspectiveFar = camera.GetPerspectiveFar();
-			if (ImGui::DragFloat("Far Clip", &perspectiveFar))
+			if (Utils::DragFloatStyle1("Far Clip", RIGHT_COLUMN_WIDTH, perspectiveFar, 10.0f, 100.0f, 3000.0f, "%d"))
 				camera.SetPerspectiveFar(perspectiveFar);
 		}
 		else
 		{
 			float orthoSize = camera.GetOrthographicSize();
-			if (ImGui::DragFloat("Size", &orthoSize))
+			if (Utils::DragFloatStyle1("Size", RIGHT_COLUMN_WIDTH, orthoSize, 1.0f, 1.0f, 500.0f, "%d"))
 				camera.SetOrthographicSize(orthoSize);
 
 			float orthoNear = camera.GetOrthographicNear();
-			if (ImGui::DragFloat("Near Clip", &orthoNear))
+			if (Utils::DragFloatStyle1("Near Clip", RIGHT_COLUMN_WIDTH, orthoNear, 0.001f, 0.001f, 10.0f, "%.3f"))
 				camera.SetOrthographicNear(orthoNear);
 
 			float orthoFar = camera.GetOrthographicFar();
-			if (ImGui::DragFloat("Far Clip", &orthoFar))
+			if (Utils::DragFloatStyle1("Far Clip", RIGHT_COLUMN_WIDTH, orthoFar, 10.0f, 100.0f, 3000.0f, "%d"))
 				camera.SetOrthographicFar(orthoFar);
 		}
 
-		if (ImGui::Checkbox("Fixed Aspect Ratio", &component.FixedAspectRatio))
+		if (Utils::CheckBoxStyle1("Fixed Aspect Ratio", RIGHT_COLUMN_WIDTH, component.FixedAspectRatio))
 		{
 			// m_RuntimeCameraUpdateCallback();
 		}
@@ -241,13 +335,13 @@ namespace NL
 			float width = camera.GetViewportWidth();
 			float height = camera.GetViewportHeight();
 
-			if (ImGui::DragFloat("Width", &width))
+			if (Utils::DragFloatStyle1("Width", RIGHT_COLUMN_WIDTH, width, 10.0f, 50.0f, 1920.0f, "%d"))
 			{
 				camera.SetViewportWidth(width);
 				// m_RuntimeCameraUpdateCallback();
 			}
 
-			if (ImGui::DragFloat("Height", &height))
+			if (Utils::DragFloatStyle1("Height", RIGHT_COLUMN_WIDTH, height, 10.0f, 50.0f, 1080.0f, "%d"))
 			{
 				camera.SetViewportHeight(height);
 				// m_RuntimeCameraUpdateCallback();
@@ -268,7 +362,7 @@ namespace NL
 		Ref<Model> model = component.mModel;
 
 		ImGui::Columns(2);
-		ImGui::SetColumnWidth(0, 120.0f);
+		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - 420.0f);
 		ImGui::Text("Model Path");
 		ImGui::NextColumn();
 
@@ -277,7 +371,9 @@ namespace NL
 		ImGui::Text(std::string_view(modelPath.c_str() + modelPath.find("Assets")).data());
 
 		ImGui::SameLine();
-		if (ImGui::Button("..."))
+		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+		ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
+		if (ImGui::Button("...", buttonSize))
 		{
 			std::string filepath = Application::GetInstance().OpenFileDialogue(L"Model(*.obj;*.fbx;*.dae;*.gltf)\0*.obj;*.fbx;*.dae;*.gltf\0\0");
 			size_t pos = filepath.find("Models");
@@ -341,7 +437,7 @@ namespace NL
 								}
 							}
 						}
-
+						
 						ImGui::EndCombo();
 					}
 
@@ -373,7 +469,7 @@ namespace NL
 		if (!scriptClassExists)
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
 
-		if (ImGui::InputText("Class", buffer, sizeof(buffer)))
+		if (Utils::InputTextStyle1("Class", RIGHT_COLUMN_WIDTH, buffer, sizeof(buffer)))
 		{
 			component.ClassName = buffer;
 
@@ -401,7 +497,7 @@ namespace NL
 					if (field.Type == ScriptFieldType::Float)
 					{
 						float data = instance->GetFieldValue<float>(name);
-						if (ImGui::DragFloat(name.c_str(), &data))
+						if (Utils::DragFloatStyle1(name, RIGHT_COLUMN_WIDTH, data))
 						{
 							instance->SetFieldValue(name, data);
 						}
@@ -468,15 +564,17 @@ namespace NL
 		ImGui::PushID(label.c_str());
 
 		ImGui::Columns(2);
-		ImGui::SetColumnWidth(0, columnWidth);
+		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - columnWidth * 3);
 		ImGui::Text(label.c_str());
 		ImGui::NextColumn();
 
-		ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
-
 		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 		ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
+
+		// NL_ENGINE_INFO("CalcItemWidth: {0}", ImGui::CalcItemWidth());
+		float width = ImGui::CalcItemWidth();
+		ImGui::PushMultiItemsWidths(3, width);
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
 
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{ 0.9f, 0.2f, 0.2f, 1.0f });
