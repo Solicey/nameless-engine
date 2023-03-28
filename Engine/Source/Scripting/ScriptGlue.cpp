@@ -87,21 +87,7 @@ namespace NL
 		entity.GetComponent<TransformComponent>().Translation = *translation;
 	}
 
-	static void ModelRendererComponent_GetBoneLocalTransformation(ID entityID, int boneId, nlm::vec3* outTranslation, nlm::vec3* outRotation)
-	{
-		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
-		NL_ENGINE_ASSERT(scene, "");
-		Entity entity = scene->GetEntityWithID(entityID);
-		NL_ENGINE_ASSERT(entity, "");
-
-		if (entity.HasComponent<ModelRendererComponent>())
-		{
-			const auto& comp = entity.GetComponent<ModelRendererComponent>();
-			comp.GetBoneLocalTransform(boneId, *outTranslation, *outRotation);
-		}
-	}
-
-	static void ModelRendererComponent_SetBoneLocalTransformation(ID entityID, int boneId, nlm::vec3* translation, nlm::vec3* rotation)
+	static void ModelRendererComponent_CalculateFinalBoneMatrices(ID entityID)
 	{
 		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
 		NL_ENGINE_ASSERT(scene, "");
@@ -111,7 +97,66 @@ namespace NL
 		if (entity.HasComponent<ModelRendererComponent>())
 		{
 			auto& comp = entity.GetComponent<ModelRendererComponent>();
-			comp.SetBoneLocalTransform(boneId, *translation, *rotation);
+			comp.CalculateFinalBoneMatrices();
+		}
+	}
+
+	static int ModelRendererComponent_CreateBoneChain(ID entityID, int tipBoneId)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		if (entity.HasComponent<ModelRendererComponent>())
+		{
+			auto& comp = entity.GetComponent<ModelRendererComponent>();
+			return comp.CreateBoneChain(tipBoneId);
+		}
+		return -1;
+	}
+
+	static void ModelRendererComponent_InitializeBoneChainLocalOffsetAndRotation(ID entityID, int chainId, float tipLocalOffset)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		if (entity.HasComponent<ModelRendererComponent>())
+		{
+			auto& comp = entity.GetComponent<ModelRendererComponent>();
+			comp.InitializeBoneChainLocalOffsetAndRotation(chainId, tipLocalOffset);
+		}
+	}
+
+	static bool ModelRendererComponent_InverseKinematicsCCD(ID entityID, int chainId, nlm::vec3 modelWorldPosition, nlm::vec3 targetWorldPosition, int maxCCDIKIteration, float eps)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		if (entity.HasComponent<ModelRendererComponent>())
+		{
+			auto& comp = entity.GetComponent<ModelRendererComponent>();
+			return comp.InverseKinematicsCCD(chainId, modelWorldPosition, targetWorldPosition, maxCCDIKIteration, eps);
+		}
+
+		return false;
+	}
+
+	static void ModelRendererComponent_RecalculateTransformationMatrices(ID entityID, int chainId)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		if (entity.HasComponent<ModelRendererComponent>())
+		{
+			auto& comp = entity.GetComponent<ModelRendererComponent>();
+			comp.RecalculateTransformationMatrices(chainId);
 		}
 	}
 
@@ -170,7 +215,11 @@ namespace NL
 
 		NL_ADD_INTERNAL_CALL(Input_IsKeyDown);
 
-		NL_ADD_INTERNAL_CALL(ModelRendererComponent_GetBoneLocalTransformation);
-		NL_ADD_INTERNAL_CALL(ModelRendererComponent_SetBoneLocalTransformation);
+		NL_ADD_INTERNAL_CALL(ModelRendererComponent_CalculateFinalBoneMatrices);
+		NL_ADD_INTERNAL_CALL(ModelRendererComponent_CreateBoneChain);
+		NL_ADD_INTERNAL_CALL(ModelRendererComponent_InitializeBoneChainLocalOffsetAndRotation);
+		NL_ADD_INTERNAL_CALL(ModelRendererComponent_InverseKinematicsCCD);
+		NL_ADD_INTERNAL_CALL(ModelRendererComponent_RecalculateTransformationMatrices);
+		
 	}
 }

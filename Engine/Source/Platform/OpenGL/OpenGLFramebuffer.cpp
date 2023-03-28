@@ -129,8 +129,8 @@ namespace NL
 		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
 		// NL_ENGINE_TRACE("Read pixel data: {0}", pixelData);
 		// There may be bugs...
-		// if (pixelData > 0 && pixelData < 1)
-			// return -1;
+		//if (pixelData > 0 && pixelData < 1)
+			//return -1;
 		return pixelData;
 	}
 

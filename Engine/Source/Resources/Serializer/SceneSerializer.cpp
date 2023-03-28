@@ -254,9 +254,10 @@ namespace NL
 				{
 					std::string parent = bone["Parent"].as<std::string>();
 					std::string child = bone["Child"].as<std::string>();
-					comp.Bones.push_back(std::make_pair(parent, child));
+					//comp.Bones.push_back(std::make_pair(parent, child));
+					comp.mModel->AddBonePair(std::make_pair(parent, child));
 				}
-				comp.UpdateBoneInfos();
+				//comp.UpdateBoneInfos();
 			}
 
 			auto cameraComponent = entity["CameraComponent"];
@@ -278,6 +279,8 @@ namespace NL
 				);
 			}
 
+
+			// Always at the bottom!!!!
 			auto scriptComponent = entity["ScriptComponent"];
 			if (scriptComponent)
 			{

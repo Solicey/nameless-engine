@@ -16,6 +16,11 @@ namespace NL
         m_EntityMap.clear();
     }
 
+    Scene::~Scene()
+    {
+        m_Registry.clear();
+    }
+
     template<Component... C>
     static void CopyComponent(entt::registry& dst, entt::registry& src, const std::unordered_map<ID, entt::entity>& enttMap)
     {
@@ -110,6 +115,8 @@ namespace NL
         {
             system->OnStopRuntime();
         }
+
+        m_Registry.clear();
     }
 
     void Scene::OnUpdateRuntime(TimeStep ts, Entity cameraEntity)

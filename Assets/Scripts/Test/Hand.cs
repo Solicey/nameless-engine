@@ -10,20 +10,27 @@ namespace Homework1
 {
     public class Hand : Entity
     {
-        private struct Bone
-        {
+        ModelRendererComponent Model;
+        TransformComponent ModelTransform;
 
-        };
+        public Int32 MaxCCDIKIteration = 30;
+        public Single eps = 0.01f;
 
-        public Int32 ThumbFingerTipParentId = -1;
+        public Int32 ThumbTipBoneId = -1;
+        public Single ThumbTipOffset = 1.0f;
 
-        TransformComponent ThumbFingerTip;
-        TransformComponent ThumbFingerTarget;
+        private Int32 ThumbTipBoneId_LastFrame = -1;
+        private Int32 ThumbChainId = -1; 
+        TransformComponent ThumbFingerTargetTransform;
+        
 
         void OnCreate()
         {
-            ThumbFingerTip = FindEntityByName("ThumbFingerTip")?.GetComponent<TransformComponent>();
-            ThumbFingerTarget = FindEntityByName("ThumbFingerTarget")?.GetComponent<TransformComponent>();
+            Model = GetComponent<ModelRendererComponent>();
+            ModelTransform = GetComponent<TransformComponent>();
+
+            ThumbFingerTargetTransform = FindEntityByName("ThumbFingerTarget")?.GetComponent<TransformComponent>();
+            
         }
 
         void OnUpdateRuntime(float ts)
@@ -33,7 +40,24 @@ namespace Homework1
 
         void OnUpdateEditor(float ts)
         {
-            
+            if (ThumbTipBoneId != ThumbTipBoneId_LastFrame && ThumbTipBoneId != -1)
+            {
+                ThumbChainId = Model.CreateBoneChain(ThumbTipBoneId);
+                Model.InitializeBoneChainLocalOffsetAndRotation(ThumbChainId, ThumbTipOffset);
+
+                Model.InverseKinematicsCCD(ThumbChainId, ModelTransform.Translation, ThumbFingerTargetTransform.Translation, MaxCCDIKIteration, eps);
+                Model.RecalculateTransformationMatrices(ThumbChainId);
+
+                Model.CalculateFinalBoneMatrices();
+            }            
+
+            UpdateVariables();
+        }
+
+        // For variables changing detection
+        void UpdateVariables()
+        {
+            ThumbTipBoneId_LastFrame = ThumbTipBoneId;
         }
     }
 }

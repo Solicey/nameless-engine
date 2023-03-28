@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Math/Math.h"
+#include "Core/Misc/PtrWrapper.h"
 
 #include <set>
 
@@ -16,7 +17,22 @@ namespace NL
 		int ID;
 		std::set<int> Childrens;
 
+		nlm::vec3 LocalOffset;
+		nlm::quat LocalRotation;
 		nlm::vec3 WorldPosition;
-		nlm::vec3 WorldDirection;
+		nlm::quat WorldRotation;
+	};
+
+	struct ChainInfo
+	{
+		std::vector<BoneInfo*>		Bones;
+		int							ID;
+		bool						IsRootFixed = true;
+		int							Root;
+
+		nlm::vec3					TipLocalOffset;
+		nlm::quat					TipLocalRotation;
+		nlm::vec3					TipWorldPosition;
+		nlm::quat					TipWorldRotation;
 	};
 }

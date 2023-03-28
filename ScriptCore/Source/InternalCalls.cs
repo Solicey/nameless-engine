@@ -27,10 +27,23 @@ namespace NL
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static bool Input_IsKeyDown(KeyCode keycode);
 
+
+        // IK
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal extern static void ModelRendererComponent_GetBoneLocalTransformation(ulong entityID, Int32 boneId, out Vector3 outTranslation, out Vector3 outRotation);
+        internal extern static void ModelRendererComponent_CalculateFinalBoneMatrices(ulong entityID);
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        internal extern static void ModelRendererComponent_SetBoneLocalTransformation(ulong entityID, Int32 boneId, ref Vector3 outTranslation, ref Vector3 outRotation);
+        internal extern static int ModelRendererComponent_CreateBoneChain(ulong entityID, Int32 tipBoneId);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void ModelRendererComponent_InitializeBoneChainLocalOffsetAndRotation(ulong entityID, Int32 chainId, Single tipLocalOffset);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static bool ModelRendererComponent_InverseKinematicsCCD(ulong entityID, Int32 chainId, Vector3 modelWorldPosition, Vector3 targetWorldPosition, Int32 maxCCDIKIteration, Single eps);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void ModelRendererComponent_RecalculateTransformationMatrices(ulong entityID, Int32 chainId);
+
+        // IK
     }
 }

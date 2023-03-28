@@ -17,6 +17,7 @@ namespace NL
 	{
 	public:
 		Scene();
+		~Scene();
 
 		static Ref<Scene> Copy(Ref<Scene> other);
 

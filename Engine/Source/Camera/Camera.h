@@ -61,7 +61,11 @@ namespace NL
 
 	private:
 		void RecalculateProjectionMatrix();		
-		void ReCalculateAspectRatio() { m_AspectRatio = (float)m_ViewportWidth / (float)m_ViewportHeight; }
+		void ReCalculateAspectRatio() 
+		{ 
+			m_AspectRatio = (float)m_ViewportWidth / (float)m_ViewportHeight; 
+			RecalculateProjectionMatrix();
+		}
 
 	protected:
 		nlm::mat4 m_ProjectionMatrix = nlm::mat4(1.0f);

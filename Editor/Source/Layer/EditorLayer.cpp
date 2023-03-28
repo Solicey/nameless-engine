@@ -123,7 +123,7 @@ namespace NL
         Renderer::Clear();
 
         // Clear entity ID attachment to -1
-        // m_Framebuffer->ClearAttachment(1, -1);
+        m_Framebuffer->ClearAttachment(1, -1);
 
 		//NL_TRACE("Delta Time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
 
