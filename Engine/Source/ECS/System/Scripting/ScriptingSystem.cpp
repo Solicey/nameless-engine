@@ -39,7 +39,7 @@ namespace NL
 			Entity entity = { e, m_Scene };
 
 			auto& hasInstantiate = entity.GetComponent<ScriptComponent>().HasInstantiate;
-			if (!hasInstantiate)
+			if (!hasInstantiate && entity.GetComponent<ScriptComponent>().ScriptClassExists)
 			{
 				if (ScriptEngine::GetInstance().OnCreateEntity(entity))
 					hasInstantiate = true;

@@ -16,7 +16,7 @@ namespace NL
 			m_RuntimeCameraUpdateCallback = std::move(callback);
 		}
 
-		void SetCurrentScene(const Ref<Scene>& scene);
+		void SetSceneContext(const Ref<Scene>& scene);
 
 		void OnImGuiRender(bool showHierarchy, bool showInspector);
 
@@ -37,6 +37,8 @@ namespace NL
 		static void DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 140.0f);
 
 		static void DrawShaderProperties(Ref<Material> mat);
+		static void DrawBonesHierarchy(Ref<Model> model, std::pair<int, int>& adjust);
+		static void DrawBonesRecursive(BoneInfo& boneInfo, std::map<int, BoneInfo>& bones, std::pair<int, int>& adjust);
 
 	private:
 		Ref<Scene> m_Scene;

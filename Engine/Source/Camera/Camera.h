@@ -69,7 +69,7 @@ namespace NL
 		ProjectionType m_ProjectionType = ProjectionType::Perspective;
 
 		float m_OrthographicSize = 10.0f;
-		float m_OrthographicNear = -1.0f, m_OrthographicFar = 1.0f;
+		float m_OrthographicNear = 0.01f, m_OrthographicFar = 100.0f;
 
 		float m_PerspectiveFOV = nlm::radians(45.0f);
 		float m_PerspectiveNear = 0.01f, m_PerspectiveFar = 1000.0f;

@@ -25,6 +25,7 @@ namespace NL
 		ImproveCacheLocality = 0x800,
 		RemoveRedundantMaterials = 0x1000,
 		FixInfacingNormals = 0x2000,
+		PopulateArmatureData = 0x4000,
 		SortByPType = 0x8000,
 		FindDegenerates = 0x10000,
 		FindInvalidData = 0x20000,

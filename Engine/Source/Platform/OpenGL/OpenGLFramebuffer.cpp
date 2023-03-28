@@ -125,13 +125,13 @@ namespace NL
 		NL_ENGINE_ASSERT(attachmentIndex < m_ColorAttachments.size(), "Attachment index invalid!");
 
 		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
-		float pixelData;
+		int pixelData;
 		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
 		// NL_ENGINE_TRACE("Read pixel data: {0}", pixelData);
 		// There may be bugs...
-		if (pixelData > 0 && pixelData < 1)
-			return -1;
-		return (int)pixelData;
+		// if (pixelData > 0 && pixelData < 1)
+			// return -1;
+		return pixelData;
 	}
 
 	void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value)

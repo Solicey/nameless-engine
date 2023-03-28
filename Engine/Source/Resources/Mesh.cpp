@@ -110,7 +110,7 @@ namespace NL
 			{ShaderDataType::Float3, "a_Bitangent"},
 			{ShaderDataType::Int, "a_EntityID"},
 			{ShaderDataType::Int4, "a_BoneIndex"},
-			{ShaderDataType::Float4, "a_BoneWeight"},
+			{ShaderDataType::Float4, "a_BoneWeight"}
 		};
 
 		m_VertexArray = VertexArray::Create();

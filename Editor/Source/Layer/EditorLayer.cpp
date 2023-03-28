@@ -603,7 +603,11 @@ namespace NL
         if (m_EditorScene)
             m_EditorScene->m_Registry.clear();
         m_EditorScene = CreateRef<Scene>();
-        m_HierarchyPanel->SetCurrentScene(m_EditorScene);
+
+        // Switch Scene Context
+        m_HierarchyPanel->SetSceneContext(m_EditorScene);
+        ScriptEngine::GetInstance().SetSceneContext(m_EditorScene.get());
+
         m_EditorScenePath = "";
 
         // Avoid Memory Leak
@@ -643,9 +647,13 @@ namespace NL
 
             m_EditorScene = newScene;            
             m_EditorScenePath = path;
-            m_HierarchyPanel->SetCurrentScene(m_EditorScene);
+
+            // Switch Scene Context
+            m_HierarchyPanel->SetSceneContext(m_EditorScene);
+            ScriptEngine::GetInstance().SetSceneContext(m_EditorScene.get());
 
             Application::GetInstance().SetWindowTitle("Nameless Editor - " + path.substr(path.find_last_of("/\\") + 1));
+            
         }
     }
 
@@ -680,7 +688,7 @@ namespace NL
                 path = path + ".nl";
                 filepath.replace_filename(path);
             }
-
+            // Switch Scene Context
             SerializeScene(m_EditorScene, path);
             m_EditorScenePath = path;
 
@@ -695,7 +703,9 @@ namespace NL
         m_RuntimeScene = Scene::Copy(m_EditorScene);
         m_RuntimeScene->OnStartRuntime();
 
-        m_HierarchyPanel->SetCurrentScene(m_RuntimeScene);
+        // Shift Scene Context
+        m_HierarchyPanel->SetSceneContext(m_RuntimeScene);
+        ScriptEngine::GetInstance().SetSceneContext(m_RuntimeScene.get());
 
         m_RuntimeScene->SetCurrentState(true, false);
         // UpdateRuntimeAspect();
@@ -712,7 +722,7 @@ namespace NL
         m_RuntimeScene.reset();
         m_RuntimeCameraEntity = {};
 
-        m_HierarchyPanel->SetCurrentScene(m_EditorScene);
+        m_HierarchyPanel->SetSceneContext(m_EditorScene);
         ScriptEngine::GetInstance().SetSceneContext(m_EditorScene.get());
     }
 

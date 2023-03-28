@@ -27,4 +27,17 @@ namespace NL
         }
     }
 
+    public class ModelRendererComponent : Component
+    {
+        public void GetBoneTransformation(Int32 boneIndex, out Vector3 translation, out Vector3 rotation)
+        {
+            InternalCalls.ModelRendererComponent_GetBoneLocalTransformation(Entity.ID, boneIndex, out translation, out rotation);
+        }
+
+        public void SetBoneTransformation(Int32 boneIndex, ref Vector3 translation, ref Vector3 rotation)
+        {
+            InternalCalls.ModelRendererComponent_SetBoneLocalTransformation(Entity.ID, boneIndex, ref translation, ref rotation);
+        }
+    }
+
 }

@@ -241,6 +241,8 @@ namespace NL
 		}
 		else
 		{
+			if (m_EntityInstances.find(entityID) != m_EntityInstances.end())
+				m_EntityInstances.erase(entityID);
 			if (m_EntityScriptFieldInstances.find(entityID) != m_EntityScriptFieldInstances.end())
 				m_EntityScriptFieldInstances.erase(entityID);
 			return false;

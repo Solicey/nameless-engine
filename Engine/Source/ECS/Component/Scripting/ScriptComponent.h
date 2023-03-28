@@ -12,6 +12,7 @@ namespace NL
 		ScriptComponent(const ScriptComponent&) = default;
 
 		std::string ClassName;
+		bool ScriptClassExists = false;
 		bool HasInstantiate = false;
 	};
 }

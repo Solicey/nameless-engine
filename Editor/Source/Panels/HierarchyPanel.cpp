@@ -37,6 +37,22 @@ namespace NL
 			return isModified;
 		}
 
+		static bool DragIntStyle1(const std::string& label, float dragIntWidth, int& value)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - dragIntWidth);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+
+			std::string emitLabel = "##" + label;
+			bool isModified = ImGui::DragInt(emitLabel.c_str(), &value);
+			ImGui::Columns(1);
+			ImGui::PopItemWidth();
+
+			return isModified;
+		}
+
 		static bool DragFloatStyle1(const std::string& label, float dragFloatWidth, float& value)
 		{
 			ImGui::Columns(2);
@@ -112,10 +128,10 @@ namespace NL
 
 	HierarchyPanel::HierarchyPanel(const Ref<Scene>& scene)
 	{
-		SetCurrentScene(scene);
+		SetSceneContext(scene);
 	}
 
-	void HierarchyPanel::SetCurrentScene(const Ref<Scene>& scene)
+	void HierarchyPanel::SetSceneContext(const Ref<Scene>& scene)
 	{
 		m_Scene = scene;
 		m_EntitySelected = {};
@@ -307,13 +323,13 @@ namespace NL
 				camera.SetPerspectiveNear(perspectiveNear);
 
 			float perspectiveFar = camera.GetPerspectiveFar();
-			if (Utils::DragFloatStyle1("Far Clip", RIGHT_COLUMN_WIDTH, perspectiveFar, 10.0f, 100.0f, 3000.0f, "%d"))
+			if (Utils::DragFloatStyle1("Far Clip", RIGHT_COLUMN_WIDTH, perspectiveFar, 10.0f, 100.0f, 3000.0f, "%.0f"))
 				camera.SetPerspectiveFar(perspectiveFar);
 		}
 		else
 		{
 			float orthoSize = camera.GetOrthographicSize();
-			if (Utils::DragFloatStyle1("Size", RIGHT_COLUMN_WIDTH, orthoSize, 1.0f, 1.0f, 500.0f, "%d"))
+			if (Utils::DragFloatStyle1("Size", RIGHT_COLUMN_WIDTH, orthoSize, 1.0f, 1.0f, 500.0f, "%.0f"))
 				camera.SetOrthographicSize(orthoSize);
 
 			float orthoNear = camera.GetOrthographicNear();
@@ -321,7 +337,7 @@ namespace NL
 				camera.SetOrthographicNear(orthoNear);
 
 			float orthoFar = camera.GetOrthographicFar();
-			if (Utils::DragFloatStyle1("Far Clip", RIGHT_COLUMN_WIDTH, orthoFar, 10.0f, 100.0f, 3000.0f, "%d"))
+			if (Utils::DragFloatStyle1("Far Clip", RIGHT_COLUMN_WIDTH, orthoFar, 10.0f, 100.0f, 3000.0f, "%.0f"))
 				camera.SetOrthographicFar(orthoFar);
 		}
 
@@ -335,13 +351,13 @@ namespace NL
 			float width = camera.GetViewportWidth();
 			float height = camera.GetViewportHeight();
 
-			if (Utils::DragFloatStyle1("Width", RIGHT_COLUMN_WIDTH, width, 10.0f, 50.0f, 1920.0f, "%d"))
+			if (Utils::DragFloatStyle1("Width", RIGHT_COLUMN_WIDTH, width, 10.0f, 50.0f, 1920.0f, "%.0f"))
 			{
 				camera.SetViewportWidth(width);
 				// m_RuntimeCameraUpdateCallback();
 			}
 
-			if (Utils::DragFloatStyle1("Height", RIGHT_COLUMN_WIDTH, height, 10.0f, 50.0f, 1080.0f, "%d"))
+			if (Utils::DragFloatStyle1("Height", RIGHT_COLUMN_WIDTH, height, 10.0f, 50.0f, 1080.0f, "%.0f"))
 			{
 				camera.SetViewportHeight(height);
 				// m_RuntimeCameraUpdateCallback();
@@ -352,7 +368,7 @@ namespace NL
 
 #pragma endregion
 		
-#pragma region Draw Mesh Renderer
+#pragma region Draw Model Renderer
 
 		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [](auto& entity, auto& component) {
 			
@@ -408,11 +424,10 @@ namespace NL
 				std::string matName = item.first;
 				Ref<Material> mat = item.second;
 
-				ImGui::PushID(matName.c_str());
+				ImGui::PushID(&mat);
 
 				std::string shaderName = mat->GetShaderName();				
-
-				if (ImGui::TreeNode((void*)matName.c_str(), matName.c_str()))
+				if (ImGui::TreeNode(matName.c_str()))
 				{
 					// Select Shaders
 					if (ImGui::BeginCombo("Shader", shaderName.c_str()))
@@ -453,6 +468,70 @@ namespace NL
 			ImGui::TreePop();
 		}
 
+		// Bones
+		if (model->HasBones())
+		{
+			bool open = Utils::TreeNodeExStyle1((void*)"Bones", "Bones");
+
+			std::pair<int, int> adjust = { -1, -1 };
+
+			if (ImGui::BeginDragDropTarget()) {
+
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("BONE_INFO"))
+				{
+					adjust.first = *((int*)payload->Data);
+					adjust.second = -1;
+				}
+
+				ImGui::EndDragDropTarget();
+			}
+			
+			if (open)
+			{
+				DrawBonesHierarchy(model, adjust);
+				ImGui::TreePop();
+			}
+
+			auto& bones = model->GetBonesNotConst();
+			if (adjust.first != -1)
+			{
+				if (adjust.second == -1)
+				{
+					auto& srcBone = bones[adjust.first];
+					if (srcBone.parentID != -1)
+						bones[srcBone.parentID].Childrens.erase(srcBone.ID);
+					srcBone.parentID = -1;
+				}
+				else
+				{
+					auto& srcBone = bones[adjust.first];
+					auto& dstBone = bones[adjust.second];
+					
+					int fa = dstBone.parentID;
+					bool flag = true;
+					while (fa != -1)
+					{
+						if (fa == srcBone.ID)
+						{
+							flag = false;
+							break;
+						}
+						fa = bones[fa].parentID;
+					}
+
+					if (flag)
+					{
+						if (srcBone.parentID != -1)
+							bones[srcBone.parentID].Childrens.erase(srcBone.ID);
+						srcBone.parentID = dstBone.ID;
+						dstBone.Childrens.insert(srcBone.ID);
+					}
+				}
+
+				model->CalculateFinalBoneMatrices();
+			}
+		}
+
 		});
 
 #pragma endregion
@@ -461,91 +540,97 @@ namespace NL
 
 		DrawComponent<ScriptComponent>("Scripting", entity, [scene = m_Scene](auto& entity, auto& component) {
 
-		bool scriptClassExists = ScriptEngine::GetInstance().EntityClassExists(component.ClassName);
+		component.ScriptClassExists = ScriptEngine::GetInstance().EntityClassExists(component.ClassName);
 
 		static char buffer[64];
 		strcpy_s(buffer, sizeof(buffer), component.ClassName.c_str());
 
-		if (!scriptClassExists)
+		if (!component.ScriptClassExists)
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
 
 		if (Utils::InputTextStyle1("Class", RIGHT_COLUMN_WIDTH, buffer, sizeof(buffer)))
 		{
 			component.ClassName = buffer;
 
-			if (!scriptClassExists)
+			if (!component.ScriptClassExists)
 				ImGui::PopStyleColor();
 
 			NL_ENGINE_TRACE("Entity Script Class Modified");
 
-			// ScriptEngine::GetInstance().OnCreateEntity(entity);
+			// Modify Script Class
 			component.HasInstantiate = false;
 
 			return;
 		}
 
+		Ref<ScriptInstance> instance = ScriptEngine::GetInstance().GetScriptInstance(entity.GetID());
+
 		// If this is Runtime Scene and not pausing
-		// if (scene != nullptr && scene->IsRunning())
-		if (component.HasInstantiate)
+		if (scene != nullptr && scene->IsRunning() && instance)
+		// if (component.HasInstantiate)
 		{
-			Ref<ScriptInstance> instance = ScriptEngine::GetInstance().GetScriptInstance(entity.GetID());
-			if (instance)
+			const auto& fields = instance->GetScriptClass()->GetFields();
+			for (const auto& [name, field] : fields)
 			{
-				const auto& fields = instance->GetScriptClass()->GetFields();
-				for (const auto& [name, field] : fields)
+				// Float
+				if (field.Type == ScriptFieldType::Float)
 				{
-					if (field.Type == ScriptFieldType::Float)
+					float data = instance->GetFieldValue<float>(name);
+					if (Utils::DragFloatStyle1(name, RIGHT_COLUMN_WIDTH, data))
 					{
-						float data = instance->GetFieldValue<float>(name);
-						if (Utils::DragFloatStyle1(name, RIGHT_COLUMN_WIDTH, data))
-						{
-							instance->SetFieldValue(name, data);
-						}
+						instance->SetFieldValue(name, data);
+					}
+				}
+				// Int
+				else if (field.Type == ScriptFieldType::Int)
+				{
+					int data = instance->GetFieldValue<int>(name);
+					if (Utils::DragIntStyle1(name, RIGHT_COLUMN_WIDTH, data))
+					{
+						instance->SetFieldValue(name, data);
 					}
 				}
 			}
 		}
-		/*else
+		// Editor
+		else if (component.HasInstantiate && instance)
 		{
-			if (scriptClassExists)
+			Ref<ScriptClass> entityClass = ScriptEngine::GetInstance().GetEntityClass(component.ClassName);
+			const auto& fields = entityClass->GetFields();
+
+			auto& fieldInstances = ScriptEngine::GetInstance().GetScriptFieldInstances(entity);
+			for (const auto& [name, field] : fields)
 			{
-				Ref<ScriptClass> entityClass = ScriptEngine::GetInstance().GetEntityClass(component.ClassName);
-				const auto& fields = entityClass->GetFields();
+				bool flag = fieldInstances.find(name) == fieldInstances.end();
 
-				auto& fieldInstances = ScriptEngine::GetInstance().GetScriptFieldInstances(entity);
-				for (const auto& [name, field] : fields)
+				// Float
+				if (field.Type == ScriptFieldType::Float)
 				{
-					// Field has been set in editor
-					if (fieldInstances.find(name) != fieldInstances.end())
+					float data = flag ? instance->GetFieldValue<float>(name) : fieldInstances[name].GetValue<float>();
+					if (Utils::DragFloatStyle1(name, RIGHT_COLUMN_WIDTH, data))
 					{
-						ScriptFieldInstance& fieldInstance = fieldInstances.at(name);
-
-						if (field.Type == ScriptFieldType::Float)
-						{
-							float data = fieldInstance.GetValue<float>();
-							if (ImGui::DragFloat(name.c_str(), &data))
-								fieldInstance.SetValue(data);
-						}
+						ScriptFieldInstance& fieldInstance = fieldInstances[name];
+						fieldInstance.Field = field;
+						fieldInstance.SetValue(data);
+						instance->SetFieldValue(name, data);
 					}
-					else
+				}
+				// Int
+				else if (field.Type == ScriptFieldType::Int)
+				{
+					int data = flag ? instance->GetFieldValue<int>(name) : fieldInstances[name].GetValue<int>();
+					if (Utils::DragIntStyle1(name, RIGHT_COLUMN_WIDTH, data))
 					{
-						if (field.Type == ScriptFieldType::Float)
-						{
-							float data = 0.0f;
-							if (ImGui::DragFloat(name.c_str(), &data))
-							{
-								ScriptFieldInstance& fieldInstance = fieldInstances[name];
-								fieldInstance.Field = field;
-								fieldInstance.SetValue(data);
-							}
-						}
+						ScriptFieldInstance& fieldInstance = fieldInstances[name];
+						fieldInstance.Field = field;
+						fieldInstance.SetValue(data);
+						instance->SetFieldValue(name, data);
 					}
 				}
 			}
 		}
-		*/
 
-		if (!scriptClassExists)
+		if (!component.ScriptClassExists)
 			ImGui::PopStyleColor();
 
 		});
@@ -644,6 +729,91 @@ namespace NL
 		}
 	}
 
+	void HierarchyPanel::DrawBonesHierarchy(Ref<Model> model, std::pair<int, int>& adjust)
+	{
+		auto& bones = model->GetBonesNotConst();
+		auto& boneMap = model->GetBoneMap();
+		for (auto& pair : bones)
+		{
+			auto& bone = pair.second;
+			if (bone.parentID == -1)	// Root
+			{
+				// ImGui::SetNextItemOpen(true);
+				std::string name = fmt::format("{}({})", bone.Name, bone.ID);
+
+				ImGui::PushID(&bone);
+				bool open = ImGui::TreeNode(name.c_str());
+
+				if (ImGui::BeginDragDropTarget()) {
+					
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("BONE_INFO"))
+					{
+						adjust.first = *((int*)payload->Data);
+						adjust.second = bone.ID;
+					}
+
+					ImGui::EndDragDropTarget();
+				}
+
+				if (ImGui::BeginDragDropSource()) {
+					
+					ImGui::SetDragDropPayload("BONE_INFO", &(bone.ID), sizeof(&(bone.ID)));
+					ImGui::EndDragDropSource();
+				}
+
+				if (open)
+				{
+					for (auto& childID : bone.Childrens)
+					{
+						NL_ASSERT(childID < bones.size(), "");
+						DrawBonesRecursive(bones[childID], bones, adjust);
+					}
+					
+					ImGui::TreePop();
+				}
+				ImGui::PopID();
+			}
+		}
+	}
+
+	void HierarchyPanel::DrawBonesRecursive(BoneInfo& bone, std::map<int, BoneInfo>& bones, std::pair<int, int>& adjust)
+	{
+		// ImGui::SetNextItemOpen(true);
+		std::string name = fmt::format("{}({})", bone.Name, bone.ID);
+		ImGui::PushID(&bone);
+		bool open = ImGui::TreeNode(name.c_str());
+
+		if (ImGui::BeginDragDropTarget()) {
+
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("BONE_INFO"))
+			{
+				adjust.first = *((int*)payload->Data);
+				adjust.second = bone.ID;
+			}
+
+			ImGui::EndDragDropTarget();
+		}
+
+		if (ImGui::BeginDragDropSource()) {
+
+			ImGui::SetDragDropPayload("BONE_INFO", &(bone.ID), sizeof(&(bone.ID)));
+			ImGui::EndDragDropSource();
+		}
+
+		if (open)
+		{
+			// NL_ENGINE_INFO("Open Tree Node, {0}", name);
+			for (auto& childID : bone.Childrens)
+			{
+				NL_ASSERT(childID < bones.size(), "");
+				DrawBonesRecursive(bones[childID], bones, adjust);
+			}
+
+			ImGui::TreePop();
+		}
+		ImGui::PopID();
+	}
+
 	template<Component C>
 	void HierarchyPanel::InspectorAddComponent(const char* componentName)
 	{
@@ -667,14 +837,14 @@ namespace NL
 			auto& component = entity.GetComponent<C>();
 			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
 
-			//ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 4, 4 });
-			//ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 4, 4 });
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
 			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
-			ImGui::Dummy(ImVec2{ 0.0f, 1.0f });
+			//ImGui::Dummy(ImVec2{ 0.0f, 1.0f });
 			ImGui::Separator();
 			bool isExpanded = ImGui::TreeNodeEx((void*)typeid(C).hash_code(), treeNodeFlags, name.c_str());
 			
-			//ImGui::PopStyleVar(2);
+			ImGui::PopStyleVar(2);
 
 			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
 			if (ImGui::Button("+", ImVec2{ lineHeight, lineHeight }))

@@ -87,6 +87,34 @@ namespace NL
 		entity.GetComponent<TransformComponent>().Translation = *translation;
 	}
 
+	static void ModelRendererComponent_GetBoneLocalTransformation(ID entityID, int boneId, nlm::vec3* outTranslation, nlm::vec3* outRotation)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		if (entity.HasComponent<ModelRendererComponent>())
+		{
+			const auto& comp = entity.GetComponent<ModelRendererComponent>();
+			comp.GetBoneLocalTransform(boneId, *outTranslation, *outRotation);
+		}
+	}
+
+	static void ModelRendererComponent_SetBoneLocalTransformation(ID entityID, int boneId, nlm::vec3* translation, nlm::vec3* rotation)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		if (entity.HasComponent<ModelRendererComponent>())
+		{
+			auto& comp = entity.GetComponent<ModelRendererComponent>();
+			comp.SetBoneLocalTransform(boneId, *translation, *rotation);
+		}
+	}
+
 	static bool Input_IsKeyDown(KeyCode keycode)
 	{
 		return Input::IsKeyPressed(keycode);
@@ -142,5 +170,7 @@ namespace NL
 
 		NL_ADD_INTERNAL_CALL(Input_IsKeyDown);
 
+		NL_ADD_INTERNAL_CALL(ModelRendererComponent_GetBoneLocalTransformation);
+		NL_ADD_INTERNAL_CALL(ModelRendererComponent_SetBoneLocalTransformation);
 	}
 }

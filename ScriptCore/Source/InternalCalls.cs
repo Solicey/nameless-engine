@@ -26,5 +26,11 @@ namespace NL
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static bool Input_IsKeyDown(KeyCode keycode);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void ModelRendererComponent_GetBoneLocalTransformation(ulong entityID, Int32 boneId, out Vector3 outTranslation, out Vector3 outRotation);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void ModelRendererComponent_SetBoneLocalTransformation(ulong entityID, Int32 boneId, ref Vector3 outTranslation, ref Vector3 outRotation);
     }
 }

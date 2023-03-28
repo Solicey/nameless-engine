@@ -13,6 +13,7 @@ namespace NL
     {
         m_Systems.emplace_back(CreateScope<ScriptingSystem>(this));
         m_Systems.emplace_back(CreateScope<RenderSystem>(this));
+        m_EntityMap.clear();
     }
 
     template<Component... C>

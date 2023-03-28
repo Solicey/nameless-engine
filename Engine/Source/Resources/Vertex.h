@@ -25,8 +25,9 @@ namespace NL
 		nlm::vec3	Tangent;
 		nlm::vec3	Bitangent;
 		int			EntityID;
-
-		int			BoneIDs[MAX_BONE_INFLUENCE] = {-1, -1, -1, -1};
-		float		Weights[MAX_BONE_INFLUENCE];
+		nlm::ivec4	BoneIDs;
+		nlm::vec4	Weights;
+		// int			BoneIDs[MAX_BONE_INFLUENCE];
+		// float		Weights[MAX_BONE_INFLUENCE];
 	};
 }

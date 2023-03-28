@@ -37,6 +37,7 @@ namespace NL
 			std::unordered_map<std::string, Ref<Material>>& materials,
 			std::unordered_map<std::string, int>& boneMap,
 			std::map<int, BoneInfo>& bones,
+			std::vector<std::pair<std::string, std::string>>& bonePairs,
 			int entityID);
 
 		static void ProcessMesh(const struct aiScene* scene,
@@ -53,6 +54,12 @@ namespace NL
 			std::vector<SkinnedVertex>& vertices,
 			std::vector<uint32_t>& indices,
 			int entityID
+		);
+
+		static void ProcessBoneHierarchy(
+			std::unordered_map<std::string, int>& boneMap,
+			std::map<int, BoneInfo>& bones,
+			std::vector<std::pair<std::string, std::string>>& bonePairs
 		);
 	};
 }

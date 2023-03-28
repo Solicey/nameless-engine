@@ -203,6 +203,7 @@ namespace NL
 				comp.Scale = transformComponent["Scale"].as<nlm::vec3>();
 			}
 
+			// Model
 			auto modelRendererComponent = entity["ModelRendererComponent"];
 			if (modelRendererComponent)
 			{
@@ -211,8 +212,6 @@ namespace NL
 				auto& materialMap = comp.mModel->GetMaterialsNotConst();
 
 				auto mats = modelRendererComponent["Materials"];
-				if (!mats)
-					continue;
 				for (auto mat : mats)
 				{
 					std::string matName = mat["MaterialName"].as<std::string>();
@@ -249,6 +248,15 @@ namespace NL
 						properties.emplace_back(newProp);
 					}
 				}
+
+				auto bones = modelRendererComponent["Bones"];
+				for (auto bone : bones)
+				{
+					std::string parent = bone["Parent"].as<std::string>();
+					std::string child = bone["Child"].as<std::string>();
+					comp.Bones.push_back(std::make_pair(parent, child));
+				}
+				comp.UpdateBoneInfos();
 			}
 
 			auto cameraComponent = entity["CameraComponent"];
@@ -400,6 +408,25 @@ namespace NL
 				out << YAML::EndMap; // Material
 			}
 			out << YAML::EndSeq; // Materials
+
+
+			out << YAML::Key << "Bones" << YAML::Value << YAML::BeginSeq; // Bones
+			auto& bones = comp.mModel->GetBonesNotConst();
+			std::string empty = "null";
+			for (auto& pair : bones)
+			{
+				int id = pair.first;
+				int parentId = pair.second.parentID;
+
+				out << YAML::BeginMap; // BonePair
+				if (parentId == -1)
+					out << YAML::Key << "Parent" << YAML::Value << empty;
+				else
+					out << YAML::Key << "Parent" << YAML::Value << bones[parentId].Name;
+				out << YAML::Key << "Child" << YAML::Value << bones[id].Name;
+				out << YAML::EndMap; // BonePair
+			}
+			out << YAML::EndSeq; // Bones
 
 			out << YAML::EndMap; // ModelRendererComponent
 		}

@@ -64,10 +64,51 @@ namespace NL
 			}
 			Library<Texture2D>::GetInstance().TraverseDelete();
 		}
+		
+		bool HasBones() const
+		{
+			return m_Bones.size() > 0;
+		}
+
+		const std::unordered_map<std::string, int>& GetBoneMap() const { return m_BoneMap; }
+		std::map<int, BoneInfo>& GetBonesNotConst() { return m_Bones; }
+		const std::map<int, BoneInfo>& GetBones() const { return m_Bones; }
+
+		const std::vector<nlm::mat4>& GetFinalBoneMatrices() const
+		{
+			return m_FinalBoneMatrices;
+		}
+
+		const std::vector<nlm::mat4>& CalculateFinalBoneMatrices()
+		{
+			m_FinalBoneMatrices.resize(m_Bones.size());
+
+			for (auto& pair : m_Bones)
+			{
+				auto& bone = pair.second;
+				if (bone.parentID == -1)
+					CalculateFinalBoneMatrixRecursively(bone.ID, nlm::mat4(1.0f));
+			}
+
+			return m_FinalBoneMatrices;
+		}
 
 	private:
 		Model() = delete;
 		Model(const std::string& path) : m_Path(path) {}
+
+		void CalculateFinalBoneMatrixRecursively(int boneId, const nlm::mat4& parentTransform)
+		{
+			auto& bone = m_Bones[boneId];
+			nlm::mat4 globalTransform = parentTransform * bone.Transformation;
+			m_FinalBoneMatrices[boneId] = globalTransform * bone.Offset;
+			// NL_ENGINE_TRACE("finalBoneMatrix[{0}] = {1}", boneId, nlm::to_string(m_FinalBoneMatrices[boneId]));
+
+			for (int childId : bone.Childrens)
+			{
+				CalculateFinalBoneMatrixRecursively(childId, globalTransform);
+			}
+		}
 
 	private:
 		std::string					m_Path;
@@ -76,5 +117,6 @@ namespace NL
 
 		std::unordered_map<std::string, int>	m_BoneMap;
 		std::map<int, BoneInfo>					m_Bones;
+		std::vector<nlm::mat4>					m_FinalBoneMatrices;
 	};
 }

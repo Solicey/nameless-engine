@@ -43,6 +43,11 @@ namespace NL
 			return nullptr;
 		}
 
+		if (model != nullptr && model->HasBones())
+		{
+			model->CalculateFinalBoneMatrices();
+		}
+
 		NL_ENGINE_INFO("Model loaded successfully: {0}", normPath);
 
 		model->DebugPrintModelInfo();
@@ -67,7 +72,10 @@ namespace NL
 
 		aiMatrix4x4 identity;
 
-		ProcessNode(scene, &identity, scene->mRootNode, meshes, materials, boneMap, bones, entityID);
+		std::vector<std::pair<std::string, std::string>> bonePairs;
+		ProcessNode(scene, &identity, scene->mRootNode, meshes, materials, boneMap, bones, bonePairs, entityID);
+		if (!bonePairs.empty())
+			ProcessBoneHierarchy(boneMap, bones, bonePairs);
 
 		ProcessMaterials(path, scene, materials);
 
@@ -193,8 +201,7 @@ namespace NL
 		}
 	}
 
-	void ModelLoader::ProcessNode(const struct aiScene* scene, void* transform, aiNode* node, std::vector<Ref<Mesh>>& meshes, std::unordered_map<std::string, Ref<Material>>& materials, std::unordered_map<std::string, int>& boneMap,
-		std::map<int, BoneInfo>& bones, int entityID)
+	void ModelLoader::ProcessNode(const struct aiScene* scene, void* transform, aiNode* node, std::vector<Ref<Mesh>>& meshes, std::unordered_map<std::string, Ref<Material>>& materials, std::unordered_map<std::string, int>& boneMap, std::map<int, BoneInfo>& bones, std::vector<std::pair<std::string, std::string>>& bonePairs, int entityID)
 	{
 		aiMatrix4x4 nodeTransformation = *reinterpret_cast<aiMatrix4x4*>(transform) * node->mTransformation;
 
@@ -227,7 +234,30 @@ namespace NL
 				{
 					BoneInfo boneInfo;
 					boneID = boneInfo.ID = bones.size();
+					boneInfo.parentID = -1;
+					boneInfo.Name = boneName;
+					if (aiBone->mNode != nullptr)
+					{
+						// NL_ENGINE_TRACE("aiBone {0} has mNode", boneName);
+						if (node->mParent != nullptr)
+						{
+							std::string parentNodeName = std::string(aiBone->mNode->mParent->mName.C_Str());
+							NL_ENGINE_TRACE("  parent node name {0}", parentNodeName);
+							if (boneMap.find(parentNodeName) != boneMap.end())
+							{
+								boneInfo.parentID = boneMap[parentNodeName];
+								bones[boneMap[parentNodeName]].Childrens.insert(boneID);
+							}
+							else
+							{
+								bonePairs.push_back(std::make_pair(parentNodeName, boneName));
+							}
+							NL_ENGINE_TRACE("  parent Id {0}", boneInfo.parentID);
+						}
+						boneInfo.Transformation = Utils::ConvertMatrixToNLMFormat(aiBone->mNode->mTransformation);
+					}
 					boneInfo.Offset = Utils::ConvertMatrixToNLMFormat(aiBone->mOffsetMatrix);
+					// NL_ENGINE_INFO("bone {0} offset: {1}", boneID, nlm::to_string(boneInfo.Offset));
 					boneMap[boneName] = boneID;
 					bones[boneID] = boneInfo;
 				}
@@ -252,9 +282,30 @@ namespace NL
 						{
 							skinnedVertices[vertexID].BoneIDs[k] = boneID;
 							skinnedVertices[vertexID].Weights[k] = weight;
+							break;
 						}
 					}
 				}
+			}
+
+			if (hasBones)
+			{
+				int cnt = 0;
+				for (int v = 0; v < skinnedVertices.size(); v++)
+				{
+					bool flag = false;
+					for (int k = 0; k < MAX_BONE_INFLUENCE; k++)
+					{
+						if (skinnedVertices[v].BoneIDs[k] >= 0)
+						{
+							flag = true;
+							break;
+						}
+					}
+					if (!flag)
+						cnt++;
+				}
+				NL_ENGINE_WARN("There are {0} vertices that aren't skinned yet!", cnt);
 			}
 
 			std::string matName = std::string(scene->mMaterials[mesh->mMaterialIndex]->GetName().C_Str());
@@ -265,8 +316,26 @@ namespace NL
 		// Then do the same for each of its children
 		for (uint32_t i = 0; i < node->mNumChildren; ++i)
 		{
-			ProcessNode(scene, &nodeTransformation, node->mChildren[i], meshes, materials, boneMap, bones, entityID);
+			ProcessNode(scene, &nodeTransformation, node->mChildren[i], meshes, materials, boneMap, bones, bonePairs, entityID);
 		}
+
+		// If it is a tip
+		/*if (node->mNumChildren == 0 && node->mParent != nullptr)
+		{
+			std::string parentNodeName = std::string(node->mParent->mName.C_Str());
+			if (boneMap.find(parentNodeName) != boneMap.end())
+			{
+				BoneInfo boneInfo;
+				int boneID = boneInfo.ID = bones.size();
+				boneInfo.parentID = boneMap[parentNodeName];
+				boneInfo.Name = node->mName.C_Str();
+				boneInfo.Transformation = Utils::ConvertMatrixToNLMFormat(node->mTransformation);
+				boneMap[boneInfo.Name] = boneID;
+				bones[boneID] = boneInfo;
+				bones[boneInfo.parentID].Childrens.insert(boneID);
+				NL_ENGINE_TRACE("aiBone tip {0}", boneInfo.Name);
+			}
+		}*/
 	}
 
 	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, int entityID)
@@ -327,8 +396,8 @@ namespace NL
 					nlm::vec3(tangent.x, tangent.y, tangent.z),
 					nlm::vec3(bitangent.x, bitangent.y, bitangent.z),
 					entityID,
-					{-1, -1, -1, -1},
-					{0, 0, 0, 0}
+					nlm::ivec4(-1, -1, -1, -1),
+					nlm::vec4(0.0f, 0.0f, 0.0f, 0.0f)
 				}
 			);
 
@@ -343,5 +412,19 @@ namespace NL
 				indices.push_back(face.mIndices[indexID]);
 		}
 
+	}
+
+	void ModelLoader::ProcessBoneHierarchy(std::unordered_map<std::string, int>& boneMap, std::map<int, BoneInfo>& bones, std::vector<std::pair<std::string, std::string>>& bonePairs)
+	{
+		for (auto& pair : bonePairs)
+		{
+			if (boneMap.find(pair.first) != boneMap.end() && boneMap.find(pair.second) != boneMap.end())
+			{
+				int parentId = boneMap[pair.first];
+				int childId = boneMap[pair.second];
+				bones[childId].parentID = parentId;
+				bones[parentId].Childrens.insert(childId);
+			}
+		}
 	}
 }
