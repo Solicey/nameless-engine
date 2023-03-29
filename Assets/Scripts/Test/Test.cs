@@ -17,7 +17,7 @@ namespace Test
 
         void OnCreate()
         {
-            Console.WriteLine($"Player.OnCreate - {ID}");
+            // Console.WriteLine($"Player.OnCreate - {ID}");
 
             m_Transform = GetComponent<TransformComponent>();
             

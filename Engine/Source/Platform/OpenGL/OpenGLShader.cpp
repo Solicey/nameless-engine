@@ -79,6 +79,12 @@ namespace NL
 		glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, nlm::value_ptr(value));
 	}
 
+	void OpenGLShader::SetUniformMat4Array(const std::string& name, const std::vector<nlm::mat4>& values)
+	{
+		// GL_FALSE£∫¡–”≈œ»æÿ’Û
+		glUniformMatrix4fv(GetUniformLocation(name), values.size(), GL_FALSE, (float*)values.data());
+	}
+
 	uint32_t OpenGLShader::GetUniformLocation(const std::string& name)
 	{
 		if (m_UniformLocationMap.find(name) != m_UniformLocationMap.end())

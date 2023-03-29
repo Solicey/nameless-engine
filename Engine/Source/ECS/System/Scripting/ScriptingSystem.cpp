@@ -27,6 +27,15 @@ namespace NL
 		for (auto e : view)
 		{
 			Entity entity = { e, m_Scene };
+			auto& comp = entity.GetComponent<ScriptComponent>();
+
+			if (!ScriptEngine::GetInstance().EntityClassExists(comp.ClassName))
+			{
+				comp.ScriptClassExists = false;
+				continue;
+			}
+			else comp.ScriptClassExists = true;
+
 			ScriptEngine::GetInstance().OnUpdateRuntime(entity, ts);
 		}
 	}
@@ -37,14 +46,32 @@ namespace NL
 		for (auto e : view)
 		{
 			Entity entity = { e, m_Scene };
+			auto& comp = entity.GetComponent<ScriptComponent>();
 
-			auto& hasInstantiate = entity.GetComponent<ScriptComponent>().HasInstantiate;
-			if (!hasInstantiate && entity.GetComponent<ScriptComponent>().ScriptClassExists)
+			if (!ScriptEngine::GetInstance().EntityClassExists(comp.ClassName))
+			{
+				comp.ScriptClassExists = false;
+				continue;
+			}
+			else comp.ScriptClassExists = true;
+
+			auto& hasInstantiate = comp.HasInstantiate;
+			if (!hasInstantiate)
 			{
 				if (ScriptEngine::GetInstance().OnCreateEntity(entity))
 					hasInstantiate = true;
 			}
 			ScriptEngine::GetInstance().OnUpdateEditor(entity, ts);
+		}
+	}
+
+	void ScriptingSystem::SetAllHasInstantiateToFalse()
+	{
+		auto view = m_Scene->m_Registry.view<ScriptComponent>();
+		for (auto e : view)
+		{
+			Entity entity = { e, m_Scene };
+			entity.GetComponent<ScriptComponent>().HasInstantiate = false;
 		}
 	}
 }

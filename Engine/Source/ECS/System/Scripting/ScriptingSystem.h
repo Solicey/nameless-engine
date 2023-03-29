@@ -15,5 +15,8 @@ namespace NL
 		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera) override;
 
 	private:
+		void SetAllHasInstantiateToFalse();
+
+
 	};
 }

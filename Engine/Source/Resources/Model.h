@@ -84,65 +84,15 @@ namespace NL
 			return m_FinalBoneMatrices;
 		}
 
-		const std::vector<nlm::mat4>& CalculateFinalBoneMatrices()
-		{
-			m_FinalBoneMatrices.resize(m_Bones.size());
+		const std::vector<nlm::mat4>& CalculateFinalBoneMatrices();
 
-			for (auto& pair : m_Bones)
-			{
-				auto& bone = pair.second;
-				if (bone.parentID == -1)
-					CalculateFinalBoneMatrixRecursively(bone.ID, nlm::mat4(1.0f));
-			}
-
-			return m_FinalBoneMatrices;
-		}
-
-		void AddBonePair(const std::pair<std::string, std::string>& pair)
-		{
-			auto& parentName = pair.first;
-			auto& childName = pair.second;
-			NL_ENGINE_INFO("Bone pair: {0}, {1}", parentName, childName);
-			if (m_BoneMap.find(childName) == m_BoneMap.end())
-				return;
-			int childId = m_BoneMap.at(childName);
-
-			BoneInfo& child = m_Bones[childId];
-
-			if (parentName == "null")
-			{
-				child.parentID = -1;
-			}
-			else
-			{
-				if (m_BoneMap.find(parentName) == m_BoneMap.end())
-					return;
-				int parentId = m_BoneMap.at(parentName);
-				BoneInfo& parent = m_Bones[parentId];
-				
-				if (child.parentID != -1)
-					m_Bones[child.parentID].Childrens.erase(childId);
-				parent.Childrens.insert(childId);
-				child.parentID = parentId;
-			}
-		}
+		void AddBonePair(const std::pair<std::string, std::string>& pair);
 
 	private:
 		Model() = delete;
 		Model(const std::string& path) : m_Path(path) {}
 
-		void CalculateFinalBoneMatrixRecursively(int boneId, const nlm::mat4& parentTransform)
-		{
-			auto& bone = m_Bones[boneId];
-			nlm::mat4 globalTransform = parentTransform * bone.Transformation;
-			m_FinalBoneMatrices[boneId] = globalTransform * bone.Offset;
-			// NL_ENGINE_TRACE("finalBoneMatrix[{0}] = {1}", boneId, nlm::to_string(m_FinalBoneMatrices[boneId]));
-
-			for (int childId : bone.Childrens)
-			{
-				CalculateFinalBoneMatrixRecursively(childId, globalTransform);
-			}
-		}
+		void CalculateFinalBoneMatrixRecursively(int boneId, const aiMatrix4x4& parentTransform, const aiMatrix4x4& invRootTransform);
 
 	private:
 		std::string					m_Path;

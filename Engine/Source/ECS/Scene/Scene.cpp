@@ -166,6 +166,16 @@ namespace NL
         }
     }*/
 
+    void Scene::ReloadAssembly()
+    {
+        auto view = m_Registry.view<ScriptComponent>();
+        for (auto e : view)
+        {
+            Entity entity = { e, this };
+            entity.GetComponent<ScriptComponent>().HasInstantiate = false;
+        }
+    }
+
 #pragma region OnComponentAdded
 
     template<Component C>

@@ -119,11 +119,12 @@ namespace NL
 
         // Framebuffer preparation
         m_Framebuffer->Bind();
+        m_Framebuffer->ClearAttachment(1, -1);
+
         Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.75f });
         Renderer::Clear();
 
         // Clear entity ID attachment to -1
-        m_Framebuffer->ClearAttachment(1, -1);
 
 		//NL_TRACE("Delta Time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
 
@@ -165,7 +166,9 @@ namespace NL
             if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
             {
                 int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
-                m_EntityHovered = pixelData == -1 ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
+                // NL_ENGINE_INFO("pixelData {0}", pixelData);
+                // Bugs to fix...
+                m_EntityHovered = (pixelData == -1 || pixelData > 114514) ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
                 m_ViewportHovered = true;
             }
             else
@@ -264,8 +267,11 @@ namespace NL
             }
             if (ImGui::BeginMenu("Script"))
             {
-                if (ImGui::MenuItem("Reload Assembly", "Ctrl+R"))
+                if (ImGui::MenuItem("Reload Assembly", "Ctrl+R", false, IsEditorMode()))
+                {
+                    m_EditorScene->ReloadAssembly();
                     ScriptEngine::GetInstance().ReloadAssembly();
+                }
 
                 ImGui::EndMenu();
             }
@@ -539,6 +545,18 @@ namespace NL
             }
             break;
         }
+        case Key::R:
+        {
+            if (control)
+            {
+                if (IsEditorMode())
+                {
+                    m_EditorScene->ReloadAssembly();
+                    ScriptEngine::GetInstance().ReloadAssembly();
+                }
+            }
+            break;
+        }
 
         // Focus
         case Key::F:
@@ -707,7 +725,7 @@ namespace NL
         m_HierarchyPanel->SetSceneContext(m_RuntimeScene);
         ScriptEngine::GetInstance().SetSceneContext(m_RuntimeScene.get());
 
-        m_RuntimeScene->SetCurrentState(true, false);
+        m_RuntimeScene->SetRuntimeViewportState(true, false);
         // UpdateRuntimeAspect();
         // m_RuntimeScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 

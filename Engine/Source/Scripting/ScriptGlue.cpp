@@ -87,7 +87,7 @@ namespace NL
 		entity.GetComponent<TransformComponent>().Translation = *translation;
 	}
 
-	static void ModelRendererComponent_CalculateFinalBoneMatrices(ID entityID)
+	static void ModelRendererComponent_RotateBone(ID entityID, int boneId, nlm::vec3* eulerAngles)
 	{
 		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
 		NL_ENGINE_ASSERT(scene, "");
@@ -97,11 +97,11 @@ namespace NL
 		if (entity.HasComponent<ModelRendererComponent>())
 		{
 			auto& comp = entity.GetComponent<ModelRendererComponent>();
-			comp.CalculateFinalBoneMatrices();
+			comp.RotateBone(boneId, eulerAngles);
 		}
 	}
 
-	static int ModelRendererComponent_CreateBoneChain(ID entityID, int tipBoneId)
+	static void ModelRendererComponent_RecalculateFinalBoneMatrices(ID entityID)
 	{
 		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
 		NL_ENGINE_ASSERT(scene, "");
@@ -111,52 +111,7 @@ namespace NL
 		if (entity.HasComponent<ModelRendererComponent>())
 		{
 			auto& comp = entity.GetComponent<ModelRendererComponent>();
-			return comp.CreateBoneChain(tipBoneId);
-		}
-		return -1;
-	}
-
-	static void ModelRendererComponent_InitializeBoneChainLocalOffsetAndRotation(ID entityID, int chainId, float tipLocalOffset)
-	{
-		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
-		NL_ENGINE_ASSERT(scene, "");
-		Entity entity = scene->GetEntityWithID(entityID);
-		NL_ENGINE_ASSERT(entity, "");
-
-		if (entity.HasComponent<ModelRendererComponent>())
-		{
-			auto& comp = entity.GetComponent<ModelRendererComponent>();
-			comp.InitializeBoneChainLocalOffsetAndRotation(chainId, tipLocalOffset);
-		}
-	}
-
-	static bool ModelRendererComponent_InverseKinematicsCCD(ID entityID, int chainId, nlm::vec3 modelWorldPosition, nlm::vec3 targetWorldPosition, int maxCCDIKIteration, float eps)
-	{
-		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
-		NL_ENGINE_ASSERT(scene, "");
-		Entity entity = scene->GetEntityWithID(entityID);
-		NL_ENGINE_ASSERT(entity, "");
-
-		if (entity.HasComponent<ModelRendererComponent>())
-		{
-			auto& comp = entity.GetComponent<ModelRendererComponent>();
-			return comp.InverseKinematicsCCD(chainId, modelWorldPosition, targetWorldPosition, maxCCDIKIteration, eps);
-		}
-
-		return false;
-	}
-
-	static void ModelRendererComponent_RecalculateTransformationMatrices(ID entityID, int chainId)
-	{
-		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
-		NL_ENGINE_ASSERT(scene, "");
-		Entity entity = scene->GetEntityWithID(entityID);
-		NL_ENGINE_ASSERT(entity, "");
-
-		if (entity.HasComponent<ModelRendererComponent>())
-		{
-			auto& comp = entity.GetComponent<ModelRendererComponent>();
-			comp.RecalculateTransformationMatrices(chainId);
+			comp.RecalculateFinalBoneMatrices();
 		}
 	}
 
@@ -215,11 +170,7 @@ namespace NL
 
 		NL_ADD_INTERNAL_CALL(Input_IsKeyDown);
 
-		NL_ADD_INTERNAL_CALL(ModelRendererComponent_CalculateFinalBoneMatrices);
-		NL_ADD_INTERNAL_CALL(ModelRendererComponent_CreateBoneChain);
-		NL_ADD_INTERNAL_CALL(ModelRendererComponent_InitializeBoneChainLocalOffsetAndRotation);
-		NL_ADD_INTERNAL_CALL(ModelRendererComponent_InverseKinematicsCCD);
-		NL_ADD_INTERNAL_CALL(ModelRendererComponent_RecalculateTransformationMatrices);
-		
+		NL_ADD_INTERNAL_CALL(ModelRendererComponent_RotateBone);
+		NL_ADD_INTERNAL_CALL(ModelRendererComponent_RecalculateFinalBoneMatrices);
 	}
 }

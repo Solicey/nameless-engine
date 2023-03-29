@@ -194,6 +194,8 @@ namespace NL
 		LoadAppAssembly(m_AppAssemblyFilepath);
 		LoadAssemblyClasses();
 
+		ScriptGlue::RegisterFunctions();
+
 		ScriptGlue::RegisterComponents();
 
 		// Retrieve and instantiate class

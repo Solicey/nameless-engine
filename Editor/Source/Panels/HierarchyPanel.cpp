@@ -540,7 +540,7 @@ namespace NL
 
 		DrawComponent<ScriptComponent>("Scripting", entity, [scene = m_Scene](auto& entity, auto& component) {
 
-		component.ScriptClassExists = ScriptEngine::GetInstance().EntityClassExists(component.ClassName);
+		// component.ScriptClassExists = ScriptEngine::GetInstance().EntityClassExists(component.ClassName);
 
 		static char buffer[64];
 		strcpy_s(buffer, sizeof(buffer), component.ClassName.c_str());

@@ -29,30 +29,16 @@ namespace NL
 
     public class ModelRendererComponent : Component
     {
-        public void CalculateFinalBoneMatrices()
+        public void RecalculateFinalBoneMatrices()
         {
-            InternalCalls.ModelRendererComponent_CalculateFinalBoneMatrices(Entity.ID);
+            InternalCalls.ModelRendererComponent_RecalculateFinalBoneMatrices(Entity.ID);
         }
 
-        public int CreateBoneChain(Int32 tipBoneId)
+        public void RotateBone(Int32 boneId, ref Vector3 eulerAngles)
         {
-            return InternalCalls.ModelRendererComponent_CreateBoneChain(Entity.ID, tipBoneId);
+            InternalCalls.ModelRendererComponent_RotateBone(Entity.ID, boneId, ref eulerAngles);
         }
 
-        public void InitializeBoneChainLocalOffsetAndRotation(Int32 chainId, Single tipLocalOffset)
-        {
-            InternalCalls.ModelRendererComponent_InitializeBoneChainLocalOffsetAndRotation(Entity.ID, chainId, tipLocalOffset);
-        }
-
-        public bool InverseKinematicsCCD(Int32 chainId, Vector3 modelWorldPosition, Vector3 targetWorldPosition, Int32 maxCCDIKIteration, Single eps)
-        {
-            return InternalCalls.ModelRendererComponent_InverseKinematicsCCD(Entity.ID, chainId, modelWorldPosition, targetWorldPosition, maxCCDIKIteration, eps);
-        }
-
-        public void RecalculateTransformationMatrices(Int32 chainId)
-        {
-            InternalCalls.ModelRendererComponent_RecalculateTransformationMatrices(Entity.ID, chainId);
-        }
     }
 
 }

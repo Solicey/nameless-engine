@@ -43,10 +43,12 @@ namespace NL
 
 		if (!finalMatrices.empty())
 		{
-			for (int i = 0; i < finalMatrices.size(); i++)
+			/*for (int i = 0; i < finalMatrices.size(); i++)
 			{
-				shader->SetUniformMat4("u_FinalBoneMatrices[" + std::to_string(i) + "]", finalMatrices[i]);
-			}
+				NL_ENGINE_TRACE("final[{0}] = {1}", i, nlm::to_string(finalMatrices[i]));
+			}*/
+
+			shader->SetUniformMat4Array("u_FinalBoneMatrices", finalMatrices);
 		}
 
 		// Custom

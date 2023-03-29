@@ -16,17 +16,7 @@ namespace NL
 {
 	namespace Utils
 	{
-		// Credit to HEngine
-		static nlm::mat4 ConvertMatrixToNLMFormat(const aiMatrix4x4& from)
-		{
-			nlm::mat4 to;
-			//the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
-			to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
-			to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
-			to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
-			to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
-			return to;
-		}
+		
 	}
 
 	Ref<Model> ModelLoader::Create(const std::string& path, int entityID, ModelLoaderFlags flags)
@@ -75,7 +65,7 @@ namespace NL
 		std::vector<std::pair<std::string, std::string>> bonePairs;
 		ProcessNode(scene, &identity, scene->mRootNode, meshes, materials, boneMap, bones, bonePairs, entityID);
 		if (!bonePairs.empty())
-			ProcessBoneHierarchy(boneMap, bones, bonePairs);
+			ProcessBoneHierarchy(boneMap, bones, bonePairs, scene->mRootNode);
 
 		ProcessMaterials(path, scene, materials);
 
@@ -205,6 +195,8 @@ namespace NL
 	{
 		aiMatrix4x4 nodeTransformation = *reinterpret_cast<aiMatrix4x4*>(transform) * node->mTransformation;
 
+		NL_ENGINE_INFO("Mesh count: {0}", node->mNumMeshes);
+
 		// Process all the node's meshes (if any)
 		for (uint32_t i = 0; i < node->mNumMeshes; ++i)
 		{
@@ -213,6 +205,8 @@ namespace NL
 
 			std::vector<uint32_t> indices;
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+
+			NL_ENGINE_INFO("Mesh {0} Vertices count: {1}", i, mesh->mNumVertices);
 
 			bool hasBones = false;
 			if (mesh->mNumBones > 0)
@@ -239,10 +233,10 @@ namespace NL
 					if (aiBone->mNode != nullptr)
 					{
 						// NL_ENGINE_TRACE("aiBone {0} has mNode", boneName);
-						if (node->mParent != nullptr)
+						if (aiBone->mNode->mParent != nullptr)
 						{
 							std::string parentNodeName = std::string(aiBone->mNode->mParent->mName.C_Str());
-							NL_ENGINE_TRACE("  parent node name {0}", parentNodeName);
+							// NL_ENGINE_TRACE("  parent node name {0}", parentNodeName);
 							if (boneMap.find(parentNodeName) != boneMap.end())
 							{
 								boneInfo.parentID = boneMap[parentNodeName];
@@ -252,11 +246,13 @@ namespace NL
 							{
 								bonePairs.push_back(std::make_pair(parentNodeName, boneName));
 							}
-							NL_ENGINE_TRACE("  parent Id {0}", boneInfo.parentID);
+							// NL_ENGINE_TRACE("  parent Id {0}", boneInfo.parentID);
+							// boneInfo.ParentTransformation = Utils::ConvertMatrixToNLMFormat(aiBone->mNode->mParent->mTransformation);
 						}
-						boneInfo.Transformation = Utils::ConvertMatrixToNLMFormat(aiBone->mNode->mTransformation);
+						boneInfo.Transformation = aiBone->mNode->mTransformation;
+						
 					}
-					boneInfo.Offset = Utils::ConvertMatrixToNLMFormat(aiBone->mOffsetMatrix);
+					boneInfo.Offset = aiBone->mOffsetMatrix;
 					// NL_ENGINE_INFO("bone {0} offset: {1}", boneID, nlm::to_string(boneInfo.Offset));
 					boneMap[boneName] = boneID;
 					bones[boneID] = boneInfo;
@@ -275,10 +271,23 @@ namespace NL
 					int vertexID = weights[v].mVertexId;
 					float weight = weights[v].mWeight;
 
+					/*if (weight < 1e-6) continue;
+					int minWeightIndex = 0;
+					for (int k = 1; k < MAX_BONE_INFLUENCE; k++)
+					{
+						if (skinnedVertices[vertexID].Weights[k] < skinnedVertices[vertexID].Weights[minWeightIndex])
+							minWeightIndex = k;
+					}
+					if (skinnedVertices[vertexID].Weights[minWeightIndex] < weight)
+					{
+						skinnedVertices[vertexID].BoneIDs[minWeightIndex] = boneID;
+						skinnedVertices[vertexID].Weights[minWeightIndex] = weight;
+					}*/
+
 					for (int k = 0; k < MAX_BONE_INFLUENCE; k++)
 					{
 						NL_ENGINE_ASSERT(vertexID < skinnedVertices.size(), "");
-						if (skinnedVertices[vertexID].BoneIDs[k] < 0)
+						if (skinnedVertices[vertexID].Weights[k] <= 0)
 						{
 							skinnedVertices[vertexID].BoneIDs[k] = boneID;
 							skinnedVertices[vertexID].Weights[k] = weight;
@@ -288,24 +297,42 @@ namespace NL
 				}
 			}
 
+			// debug
+			/*int id = 4503;
+			if (skinnedVertices.size() > id)
+			{
+				std::cout << "id: " << id << std::endl;
+				for (int k = 0; k < 4; k++)
+				{
+					std::cout << "  boneid: " << skinnedVertices[id].BoneIDs[k] << " boneweight: " << skinnedVertices[id].Weights[k] << std::endl;
+				}
+				std::cout << "  pos: " << nlm::to_string(skinnedVertices[id].Position) << std::endl;
+			}*/
+			//
+
 			if (hasBones)
 			{
 				int cnt = 0;
+				int cnt2 = 0;
 				for (int v = 0; v < skinnedVertices.size(); v++)
 				{
 					bool flag = false;
+					float add = 0.0f;
 					for (int k = 0; k < MAX_BONE_INFLUENCE; k++)
 					{
 						if (skinnedVertices[v].BoneIDs[k] >= 0)
 						{
 							flag = true;
-							break;
 						}
+						add += skinnedVertices[v].Weights[k];
 					}
 					if (!flag)
 						cnt++;
+					if (abs(add - 1.0f) > 0.01f)
+						cnt2++;
 				}
 				NL_ENGINE_WARN("There are {0} vertices that aren't skinned yet!", cnt);
+				NL_ENGINE_WARN("There are {0} vertices that are missing weights!", cnt2);
 			}
 
 			std::string matName = std::string(scene->mMaterials[mesh->mMaterialIndex]->GetName().C_Str());
@@ -340,7 +367,8 @@ namespace NL
 
 	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, int entityID)
 	{
-		aiMatrix4x4 meshTransformation = *reinterpret_cast<aiMatrix4x4*>(transform);
+		// aiMatrix4x4 meshTransformation = *reinterpret_cast<aiMatrix4x4*>(transform);
+		aiMatrix4x4 meshTransformation = aiMatrix4x4();
 
 		for (uint32_t i = 0; i < mesh->mNumVertices; ++i)
 		{
@@ -377,7 +405,8 @@ namespace NL
 
 	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<SkinnedVertex>& vertices, std::vector<uint32_t>& indices, int entityID)
 	{
-		aiMatrix4x4 meshTransformation = *reinterpret_cast<aiMatrix4x4*>(transform);
+		//aiMatrix4x4 meshTransformation = *reinterpret_cast<aiMatrix4x4*>(transform);
+		aiMatrix4x4 meshTransformation = aiMatrix4x4();
 
 		for (uint32_t i = 0; i < mesh->mNumVertices; ++i)
 		{
@@ -396,7 +425,7 @@ namespace NL
 					nlm::vec3(tangent.x, tangent.y, tangent.z),
 					nlm::vec3(bitangent.x, bitangent.y, bitangent.z),
 					entityID,
-					nlm::ivec4(-1, -1, -1, -1),
+					nlm::ivec4(0, 0, 0, 0),
 					nlm::vec4(0.0f, 0.0f, 0.0f, 0.0f)
 				}
 			);
@@ -414,7 +443,7 @@ namespace NL
 
 	}
 
-	void ModelLoader::ProcessBoneHierarchy(std::unordered_map<std::string, int>& boneMap, std::map<int, BoneInfo>& bones, std::vector<std::pair<std::string, std::string>>& bonePairs)
+	void ModelLoader::ProcessBoneHierarchy(std::unordered_map<std::string, int>& boneMap, std::map<int, BoneInfo>& bones, std::vector<std::pair<std::string, std::string>>& bonePairs, const aiNode* node)
 	{
 		for (auto& pair : bonePairs)
 		{
@@ -426,5 +455,34 @@ namespace NL
 				bones[parentId].Childrens.insert(childId);
 			}
 		}
+
+		for (auto& pair : bones)
+		{
+			auto& bone = pair.second;
+			if (bone.parentID == -1)
+			{
+				ProcessBonePreRotate(bone.Name, node, bone.RootPreRotation);
+			}
+		}
+	}
+
+	void ModelLoader::ProcessBonePreRotate(const std::string& rootName, const aiNode* sceneRoot, aiMatrix4x4& matrix)
+	{
+		const aiNode* root = sceneRoot->FindNode(aiString(rootName));
+
+		root = root->mParent;
+		if (root)
+		{
+			matrix = root->mTransformation;
+			root = root->mParent;
+		}
+
+		while (root != nullptr)
+		{
+			matrix = root->mTransformation * matrix;
+			root = root->mParent;
+		}
+
+		NL_ENGINE_TRACE("Process bone prerotate! bone: {0}, matrix: {1}", rootName, nlm::to_string(Utils::ConvertMatrixToNLMFormat(matrix)));
 	}
 }

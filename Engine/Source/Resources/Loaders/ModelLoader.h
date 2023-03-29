@@ -59,7 +59,10 @@ namespace NL
 		static void ProcessBoneHierarchy(
 			std::unordered_map<std::string, int>& boneMap,
 			std::map<int, BoneInfo>& bones,
-			std::vector<std::pair<std::string, std::string>>& bonePairs
+			std::vector<std::pair<std::string, std::string>>& bonePairs,
+			const aiNode* node
 		);
+
+		static void ProcessBonePreRotate(const std::string& rootName, const aiNode* node, aiMatrix4x4& matrix);
 	};
 }

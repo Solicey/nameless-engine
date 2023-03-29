@@ -25,6 +25,7 @@ namespace NL
 		virtual void SetUniformFloat3(const std::string& name, const nlm::vec3& value) = 0;
 		virtual void SetUniformFloat4(const std::string& name, const nlm::vec4& value) = 0;
 		virtual void SetUniformMat4(const std::string& name, const nlm::mat4& value) = 0;
+		virtual void SetUniformMat4Array(const std::string& name, const std::vector<nlm::mat4>& values) = 0;
 		virtual const std::vector<ShaderProperty>& GetShaderProperties() const = 0;
 
 		// Should ONLY be called by ShaderLibrary, call ShaderLibrary instead

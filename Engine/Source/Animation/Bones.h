@@ -4,23 +4,23 @@
 #include "Core/Misc/PtrWrapper.h"
 
 #include <set>
+#include <assimp/matrix4x4.h>
 
 namespace NL
 {
 	struct BoneInfo
 	{
-		nlm::mat4 Offset = nlm::mat4(1.0f);
-		nlm::mat4 Transformation = nlm::mat4(1.0f);
+		aiMatrix4x4 Offset;
+		aiMatrix4x4 Transformation;
+		aiMatrix4x4 RootPreRotation;
+
+		nlm::vec3 Rotation = nlm::vec3(0.0f);
 		std::string Name;
 
 		int parentID = -1;
 		int ID;
 		std::set<int> Childrens;
 
-		nlm::vec3 LocalOffset;
-		nlm::quat LocalRotation;
-		nlm::vec3 WorldPosition;
-		nlm::quat WorldRotation;
 	};
 
 	struct ChainInfo

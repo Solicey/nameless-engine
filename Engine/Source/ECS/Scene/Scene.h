@@ -35,7 +35,8 @@ namespace NL
 
 		bool IsRunning() const { return m_IsRunning; }
 		bool IsPaused() const { return m_IsPaused; }
-		void SetCurrentState(bool isRunning, bool isPaused) { m_IsRunning = isRunning; m_IsPaused = isPaused; }
+		void SetRuntimeViewportState(bool isRunning, bool isPaused) { m_IsRunning = isRunning; m_IsPaused = isPaused; }
+		void ReloadAssembly();
 
 		// nlm::vec2 OnViewportResize(uint32_t width, uint32_t height);
 		

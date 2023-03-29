@@ -10,6 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <assimp/matrix4x4.h>
 
 namespace NL
 {
@@ -90,5 +91,12 @@ namespace NL
 			return true;
 		}
 
+		static nlm::mat4 ConvertMatrixToNLMFormat(const aiMatrix4x4& from)
+		{
+			nlm::mat4 dest;
+			aiMatrix4x4 src = from;
+			memcpy(&dest, &src.Transpose(), 16 * sizeof(float));
+			return dest;
+		}
 	}
 }

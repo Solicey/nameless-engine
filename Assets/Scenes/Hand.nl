@@ -1,17 +1,11 @@
 Scene: Untitled
 Entities:
-  - ID: 10341917573746189653
-    Name: ThumbFingerTarget
-    TransformComponent:
-      Translation: [-7.10918093, 15.1351681, 7.248384]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
   - ID: 1124694664969099408
     Name: Hand
     TransformComponent:
-      Translation: [2.26800942, 0, 6.62940788]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
+      Translation: [0.171784759, 2.38418565e-07, -14.1492653]
+      Rotation: [0.567681074, 1.16229057e-06, 1.57079768]
+      Scale: [0.999957681, 1.00002062, 0.99998796]
     ModelRendererComponent:
       ModelPath: ../Assets/Models/Hand.fbx
       Materials:
@@ -55,17 +49,62 @@ Entities:
     ScriptComponent:
       ClassName: Homework1.Hand
       ScriptFields:
-        - Name: ThumbTipBoneId
+        - Name: ring_distal_phalange
+          Type: Int
+          Data: 12
+        - Name: index_distal_phalange
+          Type: Int
+          Data: 8
+        - Name: ring_intermediate_phalange
+          Type: Int
+          Data: 13
+        - Name: index_intermediate_phalange
+          Type: Int
+          Data: 9
+        - Name: thumb_distal_phalange
           Type: Int
           Data: 2
+        - Name: thumb_intermediate_phalange
+          Type: Int
+          Data: 3
+        - Name: ring_proximal_phalange
+          Type: Int
+          Data: 4
+        - Name: index_proximal_phalange
+          Type: Int
+          Data: 6
+        - Name: thumb_proximal_phalange
+          Type: Int
+          Data: 1
+        - Name: middle_proximal_phalange
+          Type: Int
+          Data: 5
+        - Name: middle_intermediate_phalange
+          Type: Int
+          Data: 11
+        - Name: middle_distal_phalange
+          Type: Int
+          Data: 10
+        - Name: pinky_proximal_phalange
+          Type: Int
+          Data: 7
+        - Name: pinky_intermediate_phalange
+          Type: Int
+          Data: 15
+        - Name: pinky_distal_phalange
+          Type: Int
+          Data: 14
+        - Name: anim_play_speed
+          Type: Float
+          Data: 15
   - ID: 7976935081711616568
     Name: Cam
     TransformComponent:
-      Translation: [-25.7987766, 17.0781498, 21.0965767]
+      Translation: [-26.1467247, 11.4713631, 13.4946222]
       Rotation: [-0.136586666, -0.63990581, -3.7152958e-07]
       Scale: [0.999999821, 1.00000012, 1]
     CameraComponent:
-      FixedAspectRatio: false
+      FixedAspectRatio: true
       ClearColor: [0.192000002, 0.301999986, 0.474999994, 1]
       ProjectionType: 1
       OrthoSize: 10
