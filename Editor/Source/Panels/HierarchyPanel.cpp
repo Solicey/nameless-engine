@@ -53,6 +53,22 @@ namespace NL
 			return isModified;
 		}
 
+		static bool DragFloat3Style1(const std::string& label, float dragIntWidth, nlm::vec3& value)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - dragIntWidth);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+
+			std::string emitLabel = "##" + label;
+			bool isModified = ImGui::DragFloat3(emitLabel.c_str(), nlm::value_ptr(value));
+			ImGui::Columns(1);
+			ImGui::PopItemWidth();
+
+			return isModified;
+		}
+
 		static bool DragFloatStyle1(const std::string& label, float dragFloatWidth, float& value)
 		{
 			ImGui::Columns(2);
@@ -590,6 +606,15 @@ namespace NL
 						instance->SetFieldValue(name, data);
 					}
 				}
+				// Vector3
+				else if (field.Type == ScriptFieldType::Vector3)
+				{
+					nlm::vec3 data = instance->GetFieldValue<nlm::vec3>(name);
+					if (DrawVec3Control(name, data))
+					{
+						instance->SetFieldValue(name, data);
+					}
+				}
 			}
 		}
 		// Editor
@@ -627,6 +652,18 @@ namespace NL
 						instance->SetFieldValue(name, data);
 					}
 				}
+				// Vector3
+				else if (field.Type == ScriptFieldType::Vector3)
+				{
+					nlm::vec3 data = flag ? instance->GetFieldValue<nlm::vec3>(name) : fieldInstances[name].GetValue<nlm::vec3>();
+					if (DrawVec3Control(name, data))
+					{
+						ScriptFieldInstance& fieldInstance = fieldInstances[name];
+						fieldInstance.Field = field;
+						fieldInstance.SetValue(data);
+						instance->SetFieldValue(name, data);
+					}
+				}
 			}
 		}
 
@@ -641,8 +678,10 @@ namespace NL
 
 	}
 
-	void HierarchyPanel::DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue, float columnWidth)
+	bool HierarchyPanel::DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue, float columnWidth)
 	{
+		bool valueChanged = false;
+
 		ImGuiIO& io = ImGui::GetIO();
 		auto boldFont = io.Fonts->Fonts[0];
 
@@ -666,12 +705,15 @@ namespace NL
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
 		ImGui::PushFont(boldFont);
 		if (ImGui::Button("X", buttonSize))
+		{
+			valueChanged = true;
 			values.x = resetValue;
+		}
 		ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
 		ImGui::SameLine();
-		ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.2f");
+		valueChanged |= ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.2f");
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
@@ -680,12 +722,15 @@ namespace NL
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.2f, 0.7f, 0.2f, 1.0f });
 		ImGui::PushFont(boldFont);
 		if (ImGui::Button("Y", buttonSize))
+		{
+			valueChanged = true;
 			values.y = resetValue;
+		}
 		ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
 		ImGui::SameLine();
-		ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.2f");
+		valueChanged |= ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.2f");
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
@@ -694,12 +739,15 @@ namespace NL
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{ 0.1f, 0.25f, 0.8f, 1.0f });
 		ImGui::PushFont(boldFont);
 		if (ImGui::Button("Z", buttonSize))
+		{
+			valueChanged = true;
 			values.z = resetValue;
+		}
 		ImGui::PopFont();
 		ImGui::PopStyleColor(3);
 
 		ImGui::SameLine();
-		ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.2f");
+		valueChanged |= ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.2f");
 		ImGui::PopItemWidth();
 
 		ImGui::PopStyleVar();
@@ -707,6 +755,8 @@ namespace NL
 		ImGui::Columns(1);
 
 		ImGui::PopID();
+
+		return valueChanged;
 	}
 
 	void HierarchyPanel::DrawShaderProperties(Ref<Material> mat)
@@ -847,7 +897,7 @@ namespace NL
 			ImGui::PopStyleVar(2);
 
 			ImGui::SameLine(contentRegionAvailable.x - lineHeight * 0.5f);
-			if (ImGui::Button("+", ImVec2{ lineHeight, lineHeight }))
+			if (ImGui::Button("...", ImVec2{ lineHeight, lineHeight }))
 			{
 				ImGui::OpenPopup("ComponentSettings");
 			}

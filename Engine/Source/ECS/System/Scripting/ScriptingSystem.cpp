@@ -19,6 +19,7 @@ namespace NL
 
 	void ScriptingSystem::OnStopRuntime()
 	{
+		//ScriptEngine::GetInstance().OnStopRuntime();
 	}
 
 	void ScriptingSystem::OnUpdateRuntime(TimeStep ts, Entity cameraEntity)
