@@ -144,8 +144,8 @@ namespace NL
 		switch (spec.TextureFormat)
 		{
 		case FramebufferTextureFormat::RedInteger:
-			glClearTexImage(m_ColorAttachments[attachmentIndex], 0, GL_R32I, GL_INT, &value);
-			// glClearBufferiv(GL_COLOR, attachmentIndex, &value);
+			// glClearTexImage(m_ColorAttachments[attachmentIndex], 0, GL_R32I, GL_INT, &value);
+			glClearBufferiv(GL_COLOR, attachmentIndex, &value);
 			break;
 		case FramebufferTextureFormat::RGBA8:
 			glClearTexImage(m_ColorAttachments[attachmentIndex], 0, GL_RGBA8, GL_INT, &value);

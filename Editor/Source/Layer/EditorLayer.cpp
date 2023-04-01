@@ -119,12 +119,12 @@ namespace NL
 
         // Framebuffer preparation
         m_Framebuffer->Bind();
-        m_Framebuffer->ClearAttachment(1, -1);
 
         Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.75f });
         Renderer::Clear();
 
         // Clear entity ID attachment to -1
+        m_Framebuffer->ClearAttachment(1, -1);
 
 		//NL_TRACE("Delta Time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
 
@@ -168,7 +168,7 @@ namespace NL
                 int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
                 // NL_ENGINE_INFO("pixelData {0}", pixelData);
                 // Bugs to fix...
-                m_EntityHovered = (pixelData == -1 || pixelData > 114514) ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
+                m_EntityHovered = (pixelData == -1) ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
                 m_ViewportHovered = true;
             }
             else
