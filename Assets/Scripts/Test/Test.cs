@@ -51,7 +51,7 @@ namespace Test
 
         void OnUpdateEditor(float ts)
         {
-            Console.WriteLine($"Player.OnUpdateEditor: {ts}");
+            // Console.WriteLine($"Player.OnUpdateEditor: {ts}");
         }
     }
 }

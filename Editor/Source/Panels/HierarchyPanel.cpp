@@ -1,7 +1,6 @@
 #include "HierarchyPanel.h"
 
 #include "Layer/EditorLayer.h"
-#include "Scripting/ScriptEngine.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -573,17 +572,15 @@ namespace NL
 
 			NL_ENGINE_TRACE("Entity Script Class Modified");
 
-			// Modify Script Class
-			component.HasInstantiate = false;
-
 			return;
 		}
 
 		Ref<ScriptInstance> instance = ScriptEngine::GetInstance().GetScriptInstance(entity.GetID());
 
+		NL_ASSERT(scene != nullptr, "");
+
 		// If this is Runtime Scene and not pausing
-		if (scene != nullptr && scene->IsRunning() && instance)
-		// if (component.HasInstantiate)
+		if (scene->IsPlaying() && instance)
 		{
 			const auto& fields = instance->GetScriptClass()->GetFields();
 			for (const auto& [name, field] : fields)
@@ -618,7 +615,7 @@ namespace NL
 			}
 		}
 		// Editor
-		else if (component.HasInstantiate && instance)
+		else if (scene->IsEditor() && instance)
 		{
 			Ref<ScriptClass> entityClass = ScriptEngine::GetInstance().GetEntityClass(component.ClassName);
 			const auto& fields = entityClass->GetFields();

@@ -62,7 +62,7 @@ namespace NL
 	{
 	}
 
-	void RenderSystem::OnStopRuntime()
+	void RenderSystem::OnStopRuntime(Scene* editorScene)
 	{
 	}
 
@@ -101,6 +101,10 @@ namespace NL
 		}
 
 		Renderer::EndScene();
+	}
+
+	void RenderSystem::OnStartEditor()
+	{
 	}
 
 	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera)

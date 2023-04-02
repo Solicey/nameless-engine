@@ -186,6 +186,8 @@ namespace NL
 
 	void ScriptEngine::ReloadAssembly()
 	{
+		m_EntityInstances.clear();
+
 		mono_domain_set(mono_get_root_domain(), false);
 
 		mono_domain_unload(m_AppDomain);
@@ -208,10 +210,8 @@ namespace NL
 		m_Scene = scene;
 	}
 
-	void ScriptEngine::OnStopRuntime()
+	void ScriptEngine::ClearAllInstances()
 	{
-		m_Scene = nullptr;
-		//m_Scene.reset();
 		m_EntityInstances.clear();
 	}
 
@@ -251,32 +251,51 @@ namespace NL
 		}
 	}
 
-	void ScriptEngine::OnUpdateRuntime(Entity entity, TimeStep ts)
+	void ScriptEngine::OnDeleteEntity(Entity entity)
+	{
+		ID entityID = entity.GetID();
+		if (m_EntityInstances.find(entityID) != m_EntityInstances.end())
+		{
+			m_EntityInstances.erase(entityID);
+		}
+	}
+
+	bool ScriptEngine::OnUpdateRuntime(Entity entity, TimeStep ts)
 	{
 		ID entityID = entity.GetID();
 		if (m_EntityInstances.find(entityID) != m_EntityInstances.end())
 		{
 			Ref<ScriptInstance> instance = m_EntityInstances[entityID];
 			instance->CallOnUpdateRuntime((float)ts);
+			return true;
 		}
 		else
 		{
-			NL_ENGINE_ERROR("Could not find Script Instance for entity {0}", entityID);
+			return false;
+			// NL_ENGINE_ERROR("Could not find Script Instance for entity {0}", entityID);
 		}
 	}
 
-	void ScriptEngine::OnUpdateEditor(Entity entity, TimeStep ts)
+	bool ScriptEngine::OnUpdateEditor(Entity entity, TimeStep ts)
 	{
 		ID entityID = entity.GetID();
 		if (m_EntityInstances.find(entityID) != m_EntityInstances.end())
 		{
 			Ref<ScriptInstance> instance = m_EntityInstances[entityID];
 			instance->CallOnUpdateEditor((float)ts);
+			return true;
 		}
 		else
 		{
+			return false;
 			// NL_ENGINE_ERROR("Could not find Script Instance for entity {0}", entityID);
 		}
+	}
+
+	bool ScriptEngine::ContainsInstance(Entity entity)
+	{
+		ID entityID = entity.GetID();
+		return m_EntityInstances.find(entityID) != m_EntityInstances.end();
 	}
 
 	void ScriptEngine::LoadAssemblyClasses()

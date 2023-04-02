@@ -91,7 +91,7 @@ namespace NL
 
         // Scripting
         ScriptEngine::GetInstance().Init();
-        ScriptEngine::GetInstance().SetSceneContext(m_EditorScene.get());
+        m_EditorScene->OnStartEditor();
 	}
 
 	void EditorLayer::OnDetach()
@@ -269,7 +269,6 @@ namespace NL
             {
                 if (ImGui::MenuItem("Reload Assembly", "Ctrl+R", false, IsEditorMode()))
                 {
-                    m_EditorScene->ReloadAssembly();
                     ScriptEngine::GetInstance().ReloadAssembly();
                 }
 
@@ -551,7 +550,6 @@ namespace NL
             {
                 if (IsEditorMode())
                 {
-                    m_EditorScene->ReloadAssembly();
                     ScriptEngine::GetInstance().ReloadAssembly();
                 }
             }
@@ -622,9 +620,10 @@ namespace NL
             m_EditorScene->m_Registry.clear();
         m_EditorScene = CreateRef<Scene>();
 
+        m_EditorScene->OnStartEditor();
+
         // Switch Scene Context
         m_HierarchyPanel->SetSceneContext(m_EditorScene);
-        ScriptEngine::GetInstance().SetSceneContext(m_EditorScene.get());
 
         m_EditorScenePath = "";
 
@@ -666,9 +665,10 @@ namespace NL
             m_EditorScene = newScene;            
             m_EditorScenePath = path;
 
+            m_EditorScene->OnStartEditor();
+
             // Switch Scene Context
             m_HierarchyPanel->SetSceneContext(m_EditorScene);
-            ScriptEngine::GetInstance().SetSceneContext(m_EditorScene.get());
 
             Application::GetInstance().SetWindowTitle("Nameless Editor - " + path.substr(path.find_last_of("/\\") + 1));
             
@@ -721,27 +721,18 @@ namespace NL
         m_RuntimeScene = Scene::Copy(m_EditorScene);
         m_RuntimeScene->OnStartRuntime();
 
-        // Shift Scene Context
         m_HierarchyPanel->SetSceneContext(m_RuntimeScene);
-        ScriptEngine::GetInstance().SetSceneContext(m_RuntimeScene.get());
-
-        m_RuntimeScene->SetRuntimeViewportState(true, false);
-        // UpdateRuntimeAspect();
-        // m_RuntimeScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-
-        // m_ShowHierarchy = m_IsMaximizeOnPlay;
     }
     
     void EditorLayer::OnSceneStop()
     {
         m_ViewportMode = ViewportMode::Editor;
 
-        m_RuntimeScene->OnStopRuntime();
+        m_RuntimeScene->OnStopRuntime(m_EditorScene.get());
         m_RuntimeScene.reset();
         m_RuntimeCameraEntity = {};
 
         m_HierarchyPanel->SetSceneContext(m_EditorScene);
-        ScriptEngine::GetInstance().SetSceneContext(m_EditorScene.get());
     }
 
     void EditorLayer::UpdateRuntimeAspect()

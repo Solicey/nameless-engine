@@ -103,17 +103,19 @@ namespace NL
 
     void Scene::OnStartRuntime()
     {
+        m_SceneState = SceneState::Play;
         for (auto& system : m_Systems)
         {
             system->OnStartRuntime();
         }
     }
 
-    void Scene::OnStopRuntime()
+    void Scene::OnStopRuntime(Scene* editorScene)
     {
+        m_SceneState = SceneState::Editor;
         for (auto& system : m_Systems)
         {
-            system->OnStopRuntime();
+            system->OnStopRuntime(editorScene);
         }
 
         m_Registry.clear();
@@ -124,6 +126,14 @@ namespace NL
         for (auto& system : m_Systems)
         {
             system->OnUpdateRuntime(ts, cameraEntity);
+        }
+    }
+
+    void Scene::OnStartEditor()
+    {
+        for (auto& system : m_Systems)
+        {
+            system->OnStartEditor();
         }
     }
 
@@ -165,16 +175,6 @@ namespace NL
                 cameraComponent.mCamera.SetAspectRatio(width, height);
         }
     }*/
-
-    void Scene::ReloadAssembly()
-    {
-        auto view = m_Registry.view<ScriptComponent>();
-        for (auto e : view)
-        {
-            Entity entity = { e, this };
-            entity.GetComponent<ScriptComponent>().HasInstantiate = false;
-        }
-    }
 
 #pragma region OnComponentAdded
 

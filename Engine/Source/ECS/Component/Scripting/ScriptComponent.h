@@ -13,6 +13,5 @@ namespace NL
 
 		std::string ClassName;
 		bool ScriptClassExists = false;
-		bool HasInstantiate = false;
 	};
 }
