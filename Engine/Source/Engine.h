@@ -8,7 +8,7 @@
 #include "Core/Misc/TimeStep.h"
 #include "Core/Misc/PtrWrapper.h"
 #include "Core/Misc/Directives.h"
-#include "Core/Misc/ConfigManager.h"
+#include "Core/Misc/PathConfig.h"
 
 #include "Camera/Camera.h"
 #include "Camera/EditorCamera.h"
@@ -40,8 +40,6 @@
 #include "Renderer/Renderer.h"
 #include "Renderer/VertexArray.h"
 #include "Renderer/Framebuffer.h"
-#include "Renderer/PostProcessing.h"
-#include "Renderer/RenderPass.h"
 
 #include "Scripting/ScriptEngine.h"
 #include "Scripting/ScriptGlue.h"

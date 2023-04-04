@@ -7,32 +7,39 @@ namespace NL
 	class OpenGLFramebuffer : public Framebuffer
 	{
 	public:
-		OpenGLFramebuffer(uint32_t width, uint32_t height, int samples);
+		OpenGLFramebuffer(const FramebufferSpecification& spec);
+		virtual ~OpenGLFramebuffer();
 
 		virtual void Bind() override;
+
 		virtual void Unbind() override;
+
 		virtual void Resize(uint32_t width, uint32_t height) override;
 
-		virtual uint32_t GetWidth() const override { return m_Width; }
-		virtual uint32_t GetHeight() const override { return m_Height; }
-		virtual int GetSamples() const override { return m_Samples; }
+		virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) override;
 
-		virtual uint32_t GetRendererID() const { return m_RendererID; }
-		virtual uint32_t GetColorTextureID() const { return m_ColorTexID; }
-		virtual uint32_t GetEntityRenderBufferID() const { return m_EntityBufID; }
-		virtual uint32_t GetDepthStencilBufferID() const { return m_DepthBufID; }
+		virtual void ClearAttachment(uint32_t attachmentIndex, int value) override;
 
-		virtual void ClearEntityRenderBuffer(int color) override;
-		virtual int ReadEntityRenderBuffer(int x, int y) override;
+		virtual const FramebufferSpecification& GetSpecification() const override;
+
+		virtual uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const override;
+
+		virtual uint32_t GetDepthAttachmentRendererID() const override;
 
 	private:
-		uint32_t m_Width;
-		uint32_t m_Height;
-		int m_Samples;
+		/*
+		* ÖØÐÂ°ó¶¨Framebuffer
+		*/
+		void Invalidate();
 
+	private:
 		uint32_t m_RendererID;
-		uint32_t m_ColorTexID;
-		uint32_t m_EntityBufID;
-		uint32_t m_DepthBufID;
+		FramebufferSpecification m_Specification;
+
+		std::vector<FramebufferTextureSpecification> m_ColorAttachmentSpecifications;
+		std::vector<uint32_t> m_ColorAttachments;
+
+		FramebufferTextureSpecification m_DepthAttachmentSpecification = FramebufferTextureFormat::None;
+		uint32_t m_DepthAttachment = 0;
 	};
 }

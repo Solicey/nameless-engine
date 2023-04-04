@@ -7,7 +7,7 @@
 
 namespace NL
 {
-	Ref<Framebuffer> Framebuffer::Create(uint32_t width, uint32_t height, int samples)
+	Ref<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec)
 	{
 		switch (RendererAPI::GetCurrent())
 		{
@@ -15,7 +15,7 @@ namespace NL
 			NL_ENGINE_ASSERT(false, "RendererAPI::None is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLFramebuffer>(width, height, samples);
+			return CreateRef<OpenGLFramebuffer>(spec);
 		}
 
 		NL_ENGINE_ASSERT(false, "Unknown RendererAPI!");

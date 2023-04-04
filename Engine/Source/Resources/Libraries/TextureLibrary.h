@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Resources/Libraries/Library.h"
-#include "Core/Misc/ConfigManager.h"
+#include "Core/Misc/PathConfig.h"
 #include "Resources/Texture.h"
 
 namespace NL

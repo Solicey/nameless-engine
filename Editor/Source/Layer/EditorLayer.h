@@ -51,7 +51,6 @@ namespace NL
 
 		EditorCamera m_EditorCamera;
 		Ref<Scene> m_EditorScene;
-		Ref<RenderPass> m_EditorRenderPass;
 
 		Entity m_RuntimeCameraEntity = {};
 		Ref<Scene> m_RuntimeScene;

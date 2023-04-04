@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Resources/Libraries/Library.h"
-#include "Core/Misc/ConfigManager.h"
+#include "Core/Misc/PathConfig.h"
 #include "Resources/Shader.h"
 
 namespace NL
@@ -11,7 +11,7 @@ namespace NL
 	{
 	public:
 		Library(Singleton::token);
-		void TraverseShadersFolder(const std::filesystem::path& path = ConfigManager::GetInstance().GetShadersFolder());
+		void TraverseShadersFolder(const std::filesystem::path& path = PathConfig::GetInstance().GetShadersFolder());
 		Ref<Shader> LoadShader(const std::string& name);
 		const std::unordered_map<std::string, std::filesystem::path>& GetShaderNameMap()
 		{

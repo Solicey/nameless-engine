@@ -2,10 +2,12 @@
 
 #include "ShaderLibrary.h"
 
+#include "Core/Misc/PathConfig.h"
+
 namespace NL
 {
 	Library<Shader>::Library(Singleton::token)
-		: m_ShadersFolder(ConfigManager::GetInstance().GetShadersFolder())
+		: m_ShadersFolder(PathConfig::GetInstance().GetShadersFolder())
 	{
 		// Add("Unlit", Shader::Create());
 		TraverseShadersFolder(m_ShadersFolder);
