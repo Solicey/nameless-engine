@@ -124,6 +124,7 @@ namespace NL
 	{
 		NL_ENGINE_ASSERT(attachmentIndex < m_ColorAttachments.size(), "Attachment index invalid!");
 
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_RendererID);
 		glReadBuffer(GL_COLOR_ATTACHMENT0 + attachmentIndex);
 		int pixelData;
 		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
@@ -131,6 +132,7 @@ namespace NL
 		// There may be bugs...
 		//if (pixelData > 0 && pixelData < 1)
 			//return -1;
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 		return pixelData;
 	}
 
@@ -153,6 +155,11 @@ namespace NL
 		}
 	}
 
+	uint32_t OpenGLFramebuffer::GetRendererID() const
+	{
+		return m_RendererID;
+	}
+
 	const FramebufferSpecification& OpenGLFramebuffer::GetSpecification() const
 	{
 		return m_Specification;
@@ -161,12 +168,24 @@ namespace NL
 	uint32_t OpenGLFramebuffer::GetColorAttachmentRendererID(uint32_t index) const
 	{
 		NL_ENGINE_ASSERT(index < m_ColorAttachments.size(), "Attachment index invalid!");
+		
 		return m_ColorAttachments[index];
 	}
 
 	uint32_t OpenGLFramebuffer::GetDepthAttachmentRendererID() const
 	{
 		return m_DepthAttachment;
+	}
+
+	void OpenGLFramebuffer::ColorBlit(uint32_t attachmentIndex, Ref<Framebuffer>& dst)
+	{
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_RendererID);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dst->GetRendererID());
+		glNamedFramebufferReadBuffer(m_RendererID, GL_COLOR_ATTACHMENT0 + attachmentIndex);
+		glNamedFramebufferDrawBuffer(dst->GetRendererID(), GL_COLOR_ATTACHMENT0 + attachmentIndex);
+		glBlitFramebuffer(0, 0, m_Specification.Width, m_Specification.Height, 0, 0, m_Specification.Width, m_Specification.Height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	}
 
 	void OpenGLFramebuffer::Invalidate()

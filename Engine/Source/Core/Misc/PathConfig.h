@@ -16,8 +16,6 @@ namespace NL
 		PathConfig& operator = (const PathConfig&) = delete;
 
 	public:
-		void Clear();
-
 		const std::filesystem::path& GetAssetsFolder() const;
 		const std::filesystem::path& GetModelsFolder() const;
 		const std::filesystem::path& GetShadersFolder() const;

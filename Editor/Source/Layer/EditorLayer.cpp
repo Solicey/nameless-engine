@@ -45,12 +45,20 @@ namespace NL
 
 	void EditorLayer::OnAttach()
 	{
+        // Multisample framebuffer Setup
+        FramebufferSpecification msSpec;
+        msSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::Depth };
+        msSpec.Width = 1280;
+        msSpec.Height = 720;
+        msSpec.Samples = 4;
+        m_MultisampledFramebuffer = Framebuffer::Create(msSpec);
+
         // Framebuffer Setup
-        FramebufferSpecification fbSpec;
-        fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::Depth };
-        fbSpec.Width = 1280;
-        fbSpec.Height = 720;
-        m_Framebuffer = Framebuffer::Create(fbSpec);
+        FramebufferSpecification spec;
+        spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger };
+        spec.Width = 1280;
+        spec.Height = 720;
+        m_Framebuffer = Framebuffer::Create(spec);
 
 		// m_EditorCamera = EditorCamera(Camera::ProjectionType::Orthographic, 10.0f, 1280, 720, 0.1f, 1000.0f);
 		m_EditorCamera = EditorCamera(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
@@ -101,10 +109,11 @@ namespace NL
 	void EditorLayer::OnUpdate(TimeStep ts)
 	{
         // Resize
-        if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
+        if (FramebufferSpecification spec = m_MultisampledFramebuffer->GetSpecification();
             m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
             (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
         {
+            m_MultisampledFramebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             // Camera Controller
             m_EditorCamera.SetAspectRatio(m_ViewportSize.x, m_ViewportSize.y);
@@ -118,13 +127,13 @@ namespace NL
         }
 
         // Framebuffer preparation
-        m_Framebuffer->Bind();
+        m_MultisampledFramebuffer->Bind();
 
         Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.75f });
         Renderer::Clear();
 
         // Clear entity ID attachment to -1
-        m_Framebuffer->ClearAttachment(1, -1);
+        m_MultisampledFramebuffer->ClearAttachment(1, -1);
 
 		//NL_TRACE("Delta Time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
 
@@ -165,9 +174,11 @@ namespace NL
             int mouseY = (int)my;
             if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
             {
+                // Blit
+                m_MultisampledFramebuffer->ColorBlit(1, m_Framebuffer);
                 int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
+                
                 // NL_ENGINE_INFO("pixelData {0}", pixelData);
-                // Bugs to fix...
                 m_EntityHovered = (pixelData == -1) ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
                 m_ViewportHovered = true;
             }
@@ -177,7 +188,7 @@ namespace NL
             }
         }
 
-        m_Framebuffer->Unbind();
+        m_MultisampledFramebuffer->Unbind();
 
 	}
 
@@ -422,7 +433,9 @@ namespace NL
             m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
             // Update Viewport Image
+            m_MultisampledFramebuffer->ColorBlit(0, m_Framebuffer);
             uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+
             // uint64_t textureID = Library<Texture2D>::GetInstance().Get("../Assets/Models/nanosuit/arm_dif.png")->GetRendererID();
             if (!IsEditorMode())
             {

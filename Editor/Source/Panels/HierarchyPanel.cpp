@@ -404,7 +404,7 @@ namespace NL
 		ImGui::SameLine();
 		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 		ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
-		if (ImGui::Button("...", buttonSize))
+		if (ImGui::Button("+", buttonSize))
 		{
 			std::string filepath = Application::GetInstance().OpenFileDialogue(L"Model(*.obj;*.fbx;*.dae;*.gltf)\0*.obj;*.fbx;*.dae;*.gltf\0\0");
 			size_t pos = filepath.find("Models");

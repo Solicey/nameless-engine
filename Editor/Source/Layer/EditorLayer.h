@@ -59,6 +59,7 @@ namespace NL
 		std::string m_EditorScenePath = "";
 
 		// Viewport framebuffer
+		Ref<Framebuffer> m_MultisampledFramebuffer;
 		Ref<Framebuffer> m_Framebuffer;
 
 		// Viewport variables
