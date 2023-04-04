@@ -398,21 +398,22 @@ namespace NL
 		ImGui::NextColumn();
 
 		std::string modelPath = component.Path;
-		// NL_ENGINE_INFO("Draw Model Renderer Component modelPath: {0}", modelPath);
+		// NL_INFO("Draw Model Renderer Component modelPath: {0}", modelPath);
 		ImGui::Text(std::string_view(modelPath.c_str() + modelPath.find("Assets")).data());
 
 		ImGui::SameLine();
 		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 		ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
-		if (ImGui::Button("...", buttonSize))
+		if (ImGui::Button("+", buttonSize))
 		{
+			NL_INFO("Press model select button!");
 			std::string filepath = Application::GetInstance().OpenFileDialogue(L"Model(*.obj;*.fbx;*.dae;*.gltf)\0*.obj;*.fbx;*.dae;*.gltf\0\0");
 			size_t pos = filepath.find("Models");
 			std::filesystem::path path;
 			if (pos != std::string::npos)
 			{
 				filepath = filepath.substr(pos);
-				path = PathConfig::GetInstance().GetAssetsFolder() / filepath.c_str();
+				path = ConfigManager::GetInstance().GetAssetsFolder() / filepath.c_str();
 				NL_ENGINE_INFO("New model path: {0}", path);
 			}
 			else if (!filepath.empty())

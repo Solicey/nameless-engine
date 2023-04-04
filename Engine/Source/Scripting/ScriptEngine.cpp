@@ -4,7 +4,7 @@
 #include "Scripting/ScriptGlue.h"
 
 #include "Core/Log/Log.h"
-#include "Core/Misc/PathConfig.h"
+#include "Core/Misc/ConfigManager.h"
 
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/tabledefs.h>
@@ -128,7 +128,7 @@ namespace NL
 
 		// all C# scripts in assets folder will be put into one app assembly
 		// this may be temporary
-		std::filesystem::path appPath = PathConfig::GetInstance().GetScriptsFolder() / "Binaries/CSharpScripts.dll";
+		std::filesystem::path appPath = ConfigManager::GetInstance().GetScriptsFolder() / "Binaries/CSharpScripts.dll";
 		m_AppAssemblyFilepath = appPath.string();
 		status = LoadAppAssembly(m_AppAssemblyFilepath);
 		if (!status)

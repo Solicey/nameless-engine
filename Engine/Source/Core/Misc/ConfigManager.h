@@ -7,23 +7,23 @@
 
 namespace NL
 {
-	class PathConfig final : public Singleton<PathConfig>
+	class ConfigManager final : public Singleton<ConfigManager>
 	{
 	public:
-		PathConfig(token);
-		~PathConfig() = default;
-		PathConfig(const PathConfig&) = delete;
-		PathConfig& operator = (const PathConfig&) = delete;
+		ConfigManager(token);
+		~ConfigManager() = default;
+		ConfigManager(const ConfigManager&) = delete;
+		ConfigManager& operator = (const ConfigManager&) = delete;
 
 	public:
-		void Clear();
-
 		const std::filesystem::path& GetAssetsFolder() const;
 		const std::filesystem::path& GetModelsFolder() const;
 		const std::filesystem::path& GetShadersFolder() const;
 		const std::filesystem::path& GetMaterialsFolder() const;
 		const std::filesystem::path& GetScriptsFolder() const;
 		const std::filesystem::path& GetFontsFolder() const;
+		float GetViewportInitWidth() const { return m_ViewportInitWidth; }
+		float GetViewportInitHeight() const { return m_ViewportInitHeight; }
 
 	private:
 		std::filesystem::path m_AssetsFolder;
@@ -32,5 +32,8 @@ namespace NL
 		std::filesystem::path m_MaterialsFolder;
 		std::filesystem::path m_ScriptsFolder;
 		std::filesystem::path m_FontsFolder;
+
+		float m_ViewportInitWidth = 1280;
+		float m_ViewportInitHeight = 720;
 	};
 }

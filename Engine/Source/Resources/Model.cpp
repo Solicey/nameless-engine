@@ -51,22 +51,13 @@ namespace NL
 	void Model::CalculateFinalBoneMatrixRecursively(int boneId, const aiMatrix4x4& parentTransform, const aiMatrix4x4& invRootTransform)
 	{
 		const auto& bone = m_Bones[boneId];
-		// NL_ENGINE_INFO("final. bone Id {0}, angles: {1}, originalAngles: {2}", boneId, nlm::to_string(bone.Rotation), nlm::to_string(bone.OriginalRotation));
-		// nlm::quat q = nlm::quat(bone.OriginalRotation);
+
 		aiMatrix4x4 rotation;
 		auto trans = nlm::transpose(nlm::mat4_cast(nlm::quat(bone.Rotation)));
 		memcpy(&rotation, &trans, 16 * sizeof(float));
 
 		aiMatrix4x4 worldTransform = parentTransform * bone.Transformation * rotation;
 		m_FinalBoneMatrices[boneId] = Utils::ConvertMatrixToNLMFormat(invRootTransform * worldTransform * bone.Offset);
-
-		// NL_ENGINE_TRACE("invRootTransform[{0}] = {1}", boneId, nlm::to_string(invRootTransform));
-		/*NL_ENGINE_TRACE("Transformation[{0}] = {1}", boneId, nlm::to_string(Utils::ConvertMatrixToNLMFormat(bone.Transformation)));
-		NL_ENGINE_TRACE("boneMod[{0}] = {1}", boneId, nlm::to_string(Utils::ConvertMatrixToNLMFormat(rotation)));
-		NL_ENGINE_TRACE("parentTransform[{0}] = {1}", boneId, nlm::to_string(Utils::ConvertMatrixToNLMFormat(parentTransform)));
-		NL_ENGINE_TRACE("globalTransform[{0}] = {1}", boneId, nlm::to_string(Utils::ConvertMatrixToNLMFormat(worldTransform)));
-		NL_ENGINE_TRACE("Offset[{0}] = {1}", boneId, nlm::to_string(Utils::ConvertMatrixToNLMFormat(bone.Offset)));
-		NL_ENGINE_TRACE("finalBoneMatrix[{0}] = {1}", boneId, nlm::to_string(m_FinalBoneMatrices[boneId]));*/
 
 		for (int childId : bone.Childrens)
 		{

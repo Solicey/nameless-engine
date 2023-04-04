@@ -46,48 +46,24 @@ namespace NL
 	void EditorLayer::OnAttach()
 	{
         // Framebuffer Setup
-        FramebufferSpecification fbSpec;
-        fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::Depth };
-        fbSpec.Width = 1280;
-        fbSpec.Height = 720;
-        m_Framebuffer = Framebuffer::Create(fbSpec);
+        m_Framebuffer = Framebuffer::Create(ConfigManager::GetInstance().GetViewportInitWidth(), ConfigManager::GetInstance().GetViewportInitHeight(), 1);
+
+        // PostProcessing & Render pass
+        // RenderPassSpecification spec = { m_Framebuffer };
+        // m_EditorRenderPass = CreateRef<RenderPass>();
+        // m_EditorRenderPass->AddPostprocessing(PostProcessingType::MSAA);  // default
 
 		// m_EditorCamera = EditorCamera(Camera::ProjectionType::Orthographic, 10.0f, 1280, 720, 0.1f, 1000.0f);
 		m_EditorCamera = EditorCamera(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
 		m_EditorScene = CreateRef<Scene>();
 
-        /*Entity eCam = m_EditorScene->CreateEntity("Camera");
-        eCam.AddComponent<ModelRendererComponent>("../Assets/Models/Camera.obj",
-            (int)(uint32_t)(eCam),
-            ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
-        eCam.GetComponent<TransformComponent>().SetTranslation(0, 1, 0);
-
-		Entity eBox = m_EditorScene->CreateEntity("Box");
-		eBox.AddComponent<ModelRendererComponent>("../Assets/Models/Box.obj", 
-            (int)(uint32_t)(eBox),
-            ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
-
-        Entity eSphere = m_EditorScene->CreateEntity("Sphere");
-        eSphere.AddComponent<ModelRendererComponent>("../Assets/Models/Sphere.obj",
-            (int)(uint32_t)(eSphere),
-            ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
-        eSphere.GetComponent<TransformComponent>().SetTranslation(0, -1, 0);*/
-
         // Hierarchy
         m_HierarchyPanel = CreateRef<HierarchyPanel>(m_EditorScene);
         m_HierarchyPanel->SetUpdateRuntimeCameraCallback([this]() { EditorLayer::UpdateRuntimeAspect(); });
 
-
-        // Test mono
-        /*auto& scripting = ScriptEngine::GetInstance();
-        MonoAssembly* assembly = scripting.LoadCSharpAssembly("../ScriptCore/Scripts/ScriptCore.dll");
-        MonoClass* testClass = scripting.GetClassInAssembly(assembly, "TestNamespace", "TestClass");
-        MonoObject* testClassInstance = scripting.Instantiate(testClass);
-        scripting.CallMethod(testClassInstance, "PrintFloatVar");*/
-
         // Icons
-        m_PlayButton = Texture2D::Create(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/PlayButton.png");
-        m_StopButton = Texture2D::Create(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/StopButton.png");
+        m_PlayButton = Texture2D::Create(ConfigManager::GetInstance().GetAssetsFolder().string() + "/Icons/PlayButton.png");
+        m_StopButton = Texture2D::Create(ConfigManager::GetInstance().GetAssetsFolder().string() + "/Icons/StopButton.png");
 
         // Scripting
         ScriptEngine::GetInstance().Init();
@@ -101,9 +77,8 @@ namespace NL
 	void EditorLayer::OnUpdate(TimeStep ts)
 	{
         // Resize
-        if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
-            m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
-            (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
+        if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
+            (m_Framebuffer->GetWidth() != m_ViewportSize.x || m_Framebuffer->GetHeight() != m_ViewportSize.y))
         {
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             // Camera Controller
@@ -124,7 +99,7 @@ namespace NL
         Renderer::Clear();
 
         // Clear entity ID attachment to -1
-        m_Framebuffer->ClearAttachment(1, -1);
+        m_Framebuffer->ClearEntityRenderBuffer(-1);
 
 		//NL_TRACE("Delta Time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
 
@@ -165,8 +140,8 @@ namespace NL
             int mouseY = (int)my;
             if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
             {
-                int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
-                // NL_ENGINE_INFO("pixelData {0}", pixelData);
+                int pixelData = m_Framebuffer->ReadEntityRenderBuffer(mouseX, mouseY);
+                NL_ENGINE_INFO("pixelData {0}", pixelData);
                 // Bugs to fix...
                 m_EntityHovered = (pixelData == -1) ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
                 m_ViewportHovered = true;
@@ -393,7 +368,7 @@ namespace NL
             ImGui::PopStyleVar();
             ImGui::PopStyleColor(3);
 
-            //
+            // Calculate viewport bounds
 
             auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
             auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
@@ -422,13 +397,16 @@ namespace NL
             m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
             // Update Viewport Image
-            uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
-            // uint64_t textureID = Library<Texture2D>::GetInstance().Get("../Assets/Models/nanosuit/arm_dif.png")->GetRendererID();
-            if (!IsEditorMode())
+            uint64_t colorTexID = m_Framebuffer->GetColorTextureID();
+            if (IsEditorMode())
+            {
+                // colorTexID = m_EditorRenderPass->ExecuteAndReturnFinalTex(m_Framebuffer);
+            }
+            else
             {
                 ImGui::SetCursorPos(ImVec2{ ImGui::GetWindowContentRegionMin().x + (m_ViewportSize.x - m_RuntimeAspect.x) / 2.0f, ImGui::GetWindowContentRegionMin().y + (m_ViewportSize.y - m_RuntimeAspect.y) / 2.0f });
             }
-            ImGui::Image(reinterpret_cast<void*>(textureID), IsEditorMode() ? ImVec2{m_ViewportSize.x, m_ViewportSize.y} : ImVec2{m_RuntimeAspect.x, m_RuntimeAspect.y}, ImVec2{0, 1}, ImVec2{1, 0});
+            ImGui::Image(reinterpret_cast<void*>(colorTexID), IsEditorMode() ? ImVec2{m_ViewportSize.x, m_ViewportSize.y} : ImVec2{m_RuntimeAspect.x, m_RuntimeAspect.y}, ImVec2{0, 1}, ImVec2{1, 0});
 
             // Gizmos
             if (IsEditorMode())

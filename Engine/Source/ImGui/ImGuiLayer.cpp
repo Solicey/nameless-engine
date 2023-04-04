@@ -2,7 +2,7 @@
 
 #include "ImGuiLayer.h"
 
-#include "Core/Misc/PathConfig.h"
+#include "Core/Misc/ConfigManager.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
 #include "Renderer/RendererAPI.h"
@@ -42,7 +42,7 @@ namespace NL
     void ImGuiLayer::SetNamelessStyle()
     {
         ImGuiIO& io = ImGui::GetIO(); (void)io;
-        std::string fontsFolder = PathConfig::GetInstance().GetFontsFolder().string() + "/Karla-Regular.ttf";
+        std::string fontsFolder = ConfigManager::GetInstance().GetFontsFolder().string() + "/Karla-Regular.ttf";
         NL_ENGINE_TRACE("Fonts folder: {0}", fontsFolder);
         ImFont* font = io.Fonts->AddFontFromFileTTF(fontsFolder.c_str(), 22.0f, NULL, io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
 
