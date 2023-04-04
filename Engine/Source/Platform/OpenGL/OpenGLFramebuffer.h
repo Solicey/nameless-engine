@@ -19,11 +19,11 @@ namespace NL
 
 		virtual uint32_t GetRendererID() const { return m_RendererID; }
 		virtual uint32_t GetColorTextureID() const { return m_ColorTexID; }
-		virtual uint32_t GetEntityTextureID() const { return m_EntityTexID; }
+		virtual uint32_t GetEntityRenderBufferID() const { return m_EntityBufID; }
 		virtual uint32_t GetDepthStencilBufferID() const { return m_DepthBufID; }
 
-		virtual void ClearEntityTexture(int color) override;
-		virtual int ReadEntityTexture(int x, int y) override;
+		virtual void ClearEntityRenderBuffer(int color) override;
+		virtual int ReadEntityRenderBuffer(int x, int y) override;
 
 	private:
 		uint32_t m_Width;
@@ -32,7 +32,7 @@ namespace NL
 
 		uint32_t m_RendererID;
 		uint32_t m_ColorTexID;
-		uint32_t m_EntityTexID;
+		uint32_t m_EntityBufID;
 		uint32_t m_DepthBufID;
 	};
 }

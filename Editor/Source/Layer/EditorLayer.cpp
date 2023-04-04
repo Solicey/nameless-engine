@@ -95,11 +95,11 @@ namespace NL
         // Framebuffer preparation
         m_Framebuffer->Bind();
 
-        Renderer::SetClearColor({ 0.0f, 0.0f, 0.0f, 0.0f });
+        Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.75f });
         Renderer::Clear();
 
         // Clear entity ID attachment to -1
-        m_Framebuffer->ClearEntityTexture(-1);
+        m_Framebuffer->ClearEntityRenderBuffer(-1);
 
 		//NL_TRACE("Delta Time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
 
@@ -140,7 +140,7 @@ namespace NL
             int mouseY = (int)my;
             if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
             {
-                int pixelData = m_Framebuffer->ReadEntityTexture(mouseX, mouseY);
+                int pixelData = m_Framebuffer->ReadEntityRenderBuffer(mouseX, mouseY);
                 NL_ENGINE_INFO("pixelData {0}", pixelData);
                 // Bugs to fix...
                 m_EntityHovered = (pixelData == -1) ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
