@@ -19,10 +19,10 @@ namespace NL
 
 		virtual uint32_t GetRendererID() const = 0;
 		virtual uint32_t GetColorTextureID() const = 0;
-		virtual uint32_t GetEntityRenderBufferID() const = 0;
+		virtual uint32_t GetEntityTextureID() const = 0;
 		virtual uint32_t GetDepthStencilBufferID() const = 0;
 
-		virtual void ClearEntityRenderBuffer(int color) = 0;
-		virtual int ReadEntityRenderBuffer(int x, int y) = 0;
+		virtual void ClearEntityTexture(int color) = 0;
+		virtual int ReadEntityTexture(int x, int y) = 0;
 	};
 }
