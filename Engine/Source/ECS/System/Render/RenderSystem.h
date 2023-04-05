@@ -18,6 +18,6 @@ namespace NL
 		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera) override;
 
 	private:
-		// Ref<Shader> m_TestShader;
+		// Ref<Shader> m_GrayScaleShader;
 	};
 }

@@ -62,6 +62,10 @@ namespace NL
 		Ref<Framebuffer> m_MultisampledFramebuffer;
 		Ref<Framebuffer> m_Framebuffer;
 
+		// Post-processing
+		std::vector<PostProcessingType> m_EditorPostProcessingQueue;
+		Ref<PostProcessing> m_PostProcessing;
+
 		// Viewport variables
 		bool m_ShowViewport;
 		nlm::vec2 m_ViewportSize = { 0.0f, 0.0f };

@@ -53,7 +53,7 @@ namespace NL
 			}
 		)";
 
-		// m_TestShader = Shader::Create("Test Shader", PathConfig::GetInstance().GetShadersFolder() / "Debug/NormalTest.glsl");
+		// m_GrayScaleShader = Shader::Create("Test Shader", PathConfig::GetInstance().GetShadersFolder() / "Debug/NormalTest.glsl");
 
 		Library<Shader>::GetInstance();
 	}

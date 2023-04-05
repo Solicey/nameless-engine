@@ -54,6 +54,8 @@ namespace NL
 		virtual ~Framebuffer() = default;
 
 		virtual void Bind() = 0;
+		// For post-processing
+		virtual void BindOneColorOnly(uint32_t attachmentIndex) = 0;
 		virtual void Unbind() = 0;
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) = 0;
@@ -66,6 +68,7 @@ namespace NL
 		virtual uint32_t GetDepthAttachmentRendererID() const = 0;
 
 		virtual void ColorBlit(uint32_t attachmentIndex, Ref<Framebuffer>& dst) = 0;
+		virtual void ColorBlit(uint32_t srcAttachmentIndex, Ref<Framebuffer>& dst, uint32_t dstAttachmentIndex) = 0;
 
 		static Ref<Framebuffer> Create(const FramebufferSpecification& spec);
 	};
