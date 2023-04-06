@@ -137,11 +137,11 @@ namespace NL
         }
     }
 
-    void Scene::OnUpdateEditor(TimeStep ts, EditorCamera& camera)
+    void Scene::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity)
     {
         for (auto& system : m_Systems)
         {
-            system->OnUpdateEditor(ts, camera);
+            system->OnUpdateEditor(ts, camera, selectedEntity);
         }
     }
 

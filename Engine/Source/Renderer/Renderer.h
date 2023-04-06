@@ -24,7 +24,8 @@ namespace NL
 			const Ref<VertexArray>& vertexArray,
 			const Ref<Material>& mat,
 			const nlm::mat4& transform = nlm::mat4(1.0f),
-			const std::vector<nlm::mat4>& finalMatrices = {});
+			const std::vector<nlm::mat4>& finalMatrices = {}, 
+			bool isSelected = false);
 
 		static void Submit(
 			const Ref<VertexArray>& vertexArray,
@@ -36,7 +37,8 @@ namespace NL
 			const nlm::mat4& transform = nlm::mat4(1.0f));
 
 		static void DrawModel(const Ref<Model>& model,
-			const nlm::mat4& transform = nlm::mat4(1.0f));
+			const nlm::mat4& transform = nlm::mat4(1.0f),
+			bool isSelected = false);
 
 		static void OnWindowResize(unsigned int width, unsigned int height);
 

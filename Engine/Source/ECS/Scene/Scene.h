@@ -35,7 +35,7 @@ namespace NL
 		void OnUpdateRuntime(TimeStep ts, Entity cameraEntity);
 
 		void OnStartEditor();
-		void OnUpdateEditor(TimeStep ts, EditorCamera& camera);
+		void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity);
 
 		Entity GetEntityWithID(ID id);
 		Entity FindEntityByName(std::string_view name);

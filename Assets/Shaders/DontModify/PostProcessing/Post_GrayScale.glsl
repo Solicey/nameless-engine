@@ -1,4 +1,6 @@
-// post-processing test shader
+// Gray scale shader
+// For post-processing only, don't use it on entities
+// You don't need to expose any properties
 
 #prop
 #end
@@ -9,7 +11,7 @@
 layout (location = 0) in vec2 a_Position;
 layout (location = 1) in vec2 a_TexCoords;
 
-out vec2 v_TexCoords;
+layout (location = 0) out vec2 v_TexCoords;
 			
 void main()
 {
@@ -20,9 +22,9 @@ void main()
 #type fragment
 #version 450 core
 
-out vec4 color;
+layout (location = 0) in vec2 v_TexCoords;
 
-in vec2 v_TexCoords;
+layout (location = 0) out vec4 color;
 
 uniform sampler2D u_ColorTex;
 

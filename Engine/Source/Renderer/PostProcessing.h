@@ -12,8 +12,8 @@ namespace NL
 	enum class PostProcessingType
 	{
 		None,
+		EditorOutline,
 		GrayScale,
-
 	};
 
 	class PostProcessing
@@ -26,9 +26,6 @@ namespace NL
 	protected:
 		// Ping-pong texturing
 		Ref<Framebuffer> m_FBO;
-		// tex0 & tex1 are color tex
-		uint32_t m_Tex0;
-		uint32_t m_Tex1;
 
 		Ref<VertexArray> m_QuadVAO;
 		Ref<VertexBuffer> m_QuadVBO;

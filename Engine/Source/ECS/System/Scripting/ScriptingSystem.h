@@ -14,7 +14,7 @@ namespace NL
 		virtual void OnUpdateRuntime(TimeStep ts, Entity cameraEntity) override;
 
 		virtual void OnStartEditor() override;
-		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera) override;
+		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity) override;
 
 	private:
 

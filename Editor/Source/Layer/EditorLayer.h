@@ -89,5 +89,7 @@ namespace NL
 		// Runtime Settings
 		bool m_IsMaximizeOnPlay = true;
 
+		// Editor Settings
+
 	};
 }

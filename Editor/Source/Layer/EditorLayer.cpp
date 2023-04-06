@@ -47,7 +47,7 @@ namespace NL
 	{
         // Multisample framebuffer Setup
         FramebufferSpecification msSpec;
-        msSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::Depth };
+        msSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
         msSpec.Width = 1280;
         msSpec.Height = 720;
         msSpec.Samples = 4;
@@ -55,14 +55,14 @@ namespace NL
 
         // Framebuffer Setup
         FramebufferSpecification spec;
-        spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger };
+        spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::RGBA8 };
         spec.Width = 1280;
         spec.Height = 720;
         m_Framebuffer = Framebuffer::Create(spec);
 
         // Post-processing
         m_PostProcessing = PostProcessing::Create();
-        m_EditorPostProcessingQueue = { PostProcessingType::GrayScale };
+        m_EditorPostProcessingQueue = { PostProcessingType::EditorOutline };
 
 		// m_EditorCamera = EditorCamera(Camera::ProjectionType::Orthographic, 10.0f, 1280, 720, 0.1f, 1000.0f);
 		m_EditorCamera = EditorCamera(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
@@ -124,7 +124,7 @@ namespace NL
                 m_EditorCamera.OnUpdate(ts);
             }
 
-            m_EditorScene->OnUpdateEditor(ts, m_EditorCamera);
+            m_EditorScene->OnUpdateEditor(ts, m_EditorCamera, m_HierarchyPanel->GetSelectedEntity());
 
             // TODO: Get editor camera post-processing options.
         }
@@ -145,6 +145,10 @@ namespace NL
             // TODO: Get runtime camera post-processing options.
         }
         m_MultisampledFramebuffer->Unbind();
+
+        // Color Blit 
+        m_MultisampledFramebuffer->ColorBlit(0, m_Framebuffer);
+        m_MultisampledFramebuffer->ColorBlit(2, m_Framebuffer);
 
         // Check Hovered Entity
 
@@ -416,7 +420,6 @@ namespace NL
             m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
             // Update Viewport Image
-            m_MultisampledFramebuffer->ColorBlit(0, m_Framebuffer);
             uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
 
             // uint64_t textureID = Library<Texture2D>::GetInstance().Get("../Assets/Models/nanosuit/arm_dif.png")->GetRendererID();

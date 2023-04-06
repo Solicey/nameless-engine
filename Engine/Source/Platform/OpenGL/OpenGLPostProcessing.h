@@ -14,8 +14,20 @@ namespace NL
 	private:
 		void Init();
 		void GrayScale(uint32_t src, uint32_t dst);
+		void EditorOutline(uint32_t src, uint32_t dst, uint32_t entityTex);
 
 	private:
 		Ref<Shader> m_GrayScaleShader;
+		Ref<Shader> m_EditorOutlineShader;
+
+		// tex0 & tex1 are color tex
+		uint32_t m_Tex0;
+		uint32_t m_Tex1;
+
+		union EntityID
+		{
+			int intID;
+			float floatID;
+		};
 	};
 }

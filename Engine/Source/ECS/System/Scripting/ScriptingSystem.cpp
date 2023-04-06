@@ -66,7 +66,7 @@ namespace NL
 		}
 	}
 
-	void ScriptingSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera)
+	void ScriptingSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity)
 	{
 		auto view = m_Scene->m_Registry.view<ScriptComponent>();
 		for (auto e : view)

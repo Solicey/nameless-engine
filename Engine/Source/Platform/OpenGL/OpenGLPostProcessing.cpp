@@ -16,7 +16,7 @@ namespace NL
     uint32_t OpenGLPostProcessing::ExecutePostProcessingQueue(const std::vector<PostProcessingType>& queue, Ref<Framebuffer>& srcFramebuffer)
     {
         // uint32_t srcColorTex = srcFramebuffer->GetColorAttachmentRendererID(0);
-        // uint32_t srcEntityIDTex = srcFramebuffer->GetColorAttachmentRendererID(1);
+        uint32_t entityIDTex = srcFramebuffer->GetColorAttachmentRendererID(2);
         
         const auto& srcSpec = srcFramebuffer->GetSpecification();
         const auto& spec = m_FBO->GetSpecification();
@@ -42,6 +42,11 @@ namespace NL
             case PostProcessingType::GrayScale:
             {
                 GrayScale(srcAttachment, dstAttachment);
+                break;
+            }
+            case PostProcessingType::EditorOutline:
+            {
+                EditorOutline(srcAttachment, dstAttachment, entityIDTex);
                 break;
             }
             default:
@@ -90,6 +95,8 @@ namespace NL
 
         // Load shaders
         m_GrayScaleShader = Library<Shader>::GetInstance().LoadShader("Post_GrayScale.glsl");
+        // m_EditorOutlineShader_1 = Library<Shader>::GetInstance().LoadShader("Post_EditorOutline_1.glsl");
+        m_EditorOutlineShader = Library<Shader>::GetInstance().LoadShader("Post_EditorOutline.glsl");
 	}
 
     void OpenGLPostProcessing::GrayScale(uint32_t srcAttachment, uint32_t dstAttachment)
@@ -107,11 +114,40 @@ namespace NL
         glBindTexture(GL_TEXTURE_2D, srcTex);
 
         m_QuadVAO->Bind();
-
         Renderer::DrawIndices(m_QuadVAO);
-
         m_QuadVAO->Unbind();
+
         m_GrayScaleShader->Unbind();
+        m_FBO->Unbind();
+        glEnable(GL_DEPTH_TEST);
+    }
+
+    void OpenGLPostProcessing::EditorOutline(uint32_t srcAttachment, uint32_t dstAttachment, uint32_t entityTex)
+    {
+        uint32_t srcTex = m_FBO->GetColorAttachmentRendererID(srcAttachment);
+
+        m_FBO->BindOneColorOnly(dstAttachment);
+        glDisable(GL_DEPTH_TEST);
+        m_EditorOutlineShader->Bind();
+
+        m_EditorOutlineShader->SetUniformInt("u_ScreenWidth", m_FBO->GetSpecification().Width);
+        m_EditorOutlineShader->SetUniformInt("u_ScreenHeight", m_FBO->GetSpecification().Height);
+
+        // Bind entity tex
+        m_EditorOutlineShader->SetUniformInt("u_EntityTex", 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, entityTex);
+
+        // Bind color tex
+        m_EditorOutlineShader->SetUniformInt("u_ColorTex", 1);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, srcTex);     
+
+        m_QuadVAO->Bind();
+        Renderer::DrawIndices(m_QuadVAO);
+        m_QuadVAO->Unbind();
+
+        m_EditorOutlineShader->Unbind();
         m_FBO->Unbind();
         glEnable(GL_DEPTH_TEST);
     }

@@ -18,7 +18,7 @@ namespace NL
 		virtual void OnUpdateRuntime(TimeStep ts, Entity cameraEntity) = 0;
 
 		virtual void OnStartEditor() = 0;
-		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera) = 0;
+		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity) = 0;
 
 	protected:
 		Scene* m_Scene = nullptr;

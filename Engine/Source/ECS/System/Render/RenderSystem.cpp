@@ -107,7 +107,7 @@ namespace NL
 	{
 	}
 
-	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera)
+	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity)
 	{
 		Renderer::BeginScene(camera);
 
@@ -121,7 +121,7 @@ namespace NL
 
 			if (model.mModel != nullptr)
 			{
-				Renderer::DrawModel(model.mModel, transform.GetTransform());
+				Renderer::DrawModel(model.mModel, transform.GetTransform(), selectedEntity == entity);
 			}
 		}
 
@@ -136,7 +136,7 @@ namespace NL
 
 			if (camera.Gizmos != nullptr)
 			{
-				Renderer::DrawModel(camera.Gizmos, transform.GetTransform() * nlm::scale(nlm::mat4(1.0f), nlm::vec3(1.0f, 1.0f, -1.0f)));
+				Renderer::DrawModel(camera.Gizmos, transform.GetTransform() * nlm::scale(nlm::mat4(1.0f), nlm::vec3(1.0f, 1.0f, -1.0f)), selectedEntity == entity);
 			}
 		}
 

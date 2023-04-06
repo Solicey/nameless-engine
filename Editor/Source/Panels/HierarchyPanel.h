@@ -24,6 +24,14 @@ namespace NL
 
 		Entity GetSelectedEntity() const { return m_EntitySelected; }
 
+		// entt entity id
+		int GetSelectedEntityId() const
+		{
+			if (m_EntitySelected)
+				return (int)(uint32_t)(m_EntitySelected);
+			return -1;
+		}
+
 	private:
 		void DrawEntityNode(Entity entity);
 		void DrawComponents(Entity entity);

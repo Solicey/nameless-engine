@@ -27,7 +27,7 @@ namespace NL
 	{
 	}
 
-	void Renderer::Submit(const Ref<VertexArray>& vertexArray, const Ref<Material>& material, const nlm::mat4& transform, const std::vector<nlm::mat4>& finalMatrices)
+	void Renderer::Submit(const Ref<VertexArray>& vertexArray, const Ref<Material>& material, const nlm::mat4& transform, const std::vector<nlm::mat4>& finalMatrices, bool isSelected)
 	{
 		NL_ENGINE_ASSERT(material, "Material is nullptr!");
 
@@ -40,6 +40,8 @@ namespace NL
 		// Typical
 		shader->SetUniformMat4("u_ViewProjection", s_SceneData->ViewPositionMatrix);
 		shader->SetUniformMat4("u_Transform", transform);
+		shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
+		
 
 		if (!finalMatrices.empty())
 		{
@@ -106,7 +108,7 @@ namespace NL
 		}
 	}
 
-	void Renderer::DrawModel(const Ref<Model>& model, const nlm::mat4& transform)
+	void Renderer::DrawModel(const Ref<Model>& model, const nlm::mat4& transform, bool isSelected)
 	{
 		const auto& meshes = model->GetMeshes();
 		bool hasBones = model->HasBones();
@@ -115,7 +117,7 @@ namespace NL
 		for (const auto& mesh : meshes)
 		{
 			const auto& material = model->GetMaterial(mesh);
-			Submit(mesh->GetVertexArray(), material, transform, hasBones ? model->GetFinalBoneMatrices() : emptyMatrices);
+			Submit(mesh->GetVertexArray(), material, transform, hasBones ? model->GetFinalBoneMatrices() : emptyMatrices, isSelected);
 		}
 	}
 
