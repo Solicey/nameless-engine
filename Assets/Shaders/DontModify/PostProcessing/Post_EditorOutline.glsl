@@ -63,9 +63,9 @@ void main()
 
 	color = texture(u_ColorTex, v_TexCoords);
 	
-	if (conv > 1.0 && texture(u_EntityTex, v_TexCoords).r < 1.0)
+	if (conv > 1.0)
 	{
-		color = vec4(conv * vec3(1, 0.647, 0) / 2.0, 1.0);
+		color = color + vec4(conv * vec3(1, 0.647, 0) / 2.0, 1.0);
 	}
 
 	// color = texture(u_EntityTex, v_TexCoords);
