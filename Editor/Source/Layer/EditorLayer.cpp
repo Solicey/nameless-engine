@@ -545,6 +545,11 @@ namespace NL
                 else
                     SaveScene();
             }
+            else
+            {
+                if (IsEditorMode() && (m_ViewportFocused || m_ViewportHovered))
+                    m_GuizmoType = ImGuizmo::OPERATION::SCALE;
+            }
             break;
         }
         case Key::R:
@@ -556,20 +561,30 @@ namespace NL
                     ScriptEngine::GetInstance().ReloadAssembly();
                 }
             }
+            else
+            {
+                if (IsEditorMode() && (m_ViewportFocused || m_ViewportHovered))
+                    m_GuizmoType = ImGuizmo::OPERATION::ROTATE;
+            }
             break;
         }
-
+        case Key::T:
+        {
+            if (IsEditorMode() && (m_ViewportFocused || m_ViewportHovered))
+                m_GuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+            break;
+        }
         // Focus
         case Key::F:
         {
-            if (!m_ViewportFocused && !m_ViewportHovered)
-                break;
-
-            Entity selectedEntity = m_HierarchyPanel->GetSelectedEntity();
-            if (selectedEntity)
+            if (IsEditorMode() && (m_ViewportFocused || m_ViewportHovered))
             {
-                // Ought to have transform...
-                m_EditorCamera.SetCenter(selectedEntity.GetComponent<TransformComponent>().Translation);
+                Entity selectedEntity = m_HierarchyPanel->GetSelectedEntity();
+                if (selectedEntity)
+                {
+                    // Ought to have transform...
+                    m_EditorCamera.SetCenter(selectedEntity.GetComponent<TransformComponent>().Translation);
+                }
             }
             break;
         }

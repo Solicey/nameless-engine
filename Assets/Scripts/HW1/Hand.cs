@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NL;
 
-namespace Homework1
+namespace HW1
 {
     public struct RotateInfo
     {
@@ -228,12 +228,12 @@ namespace Homework1
         {
             if (Input.IsKeyDown(KeyCode.D1))
             {
-                Console.WriteLine("Key 1 Pressed!");
+                // Console.WriteLine("Key 1 Pressed!");
                 SetNewPose(Pose.Clear);
             }
             else if (Input.IsKeyDown(KeyCode.D2))
             {
-                Console.WriteLine("Key 2 Pressed!");
+                // Console.WriteLine("Key 2 Pressed!");
                 SetNewPose(Pose.Ye);
             }
         }
