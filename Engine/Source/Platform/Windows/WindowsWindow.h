@@ -32,6 +32,9 @@ namespace NL
 
 		virtual void SetWindowTitle(const std::string& name) override;
 
+		virtual void HideCursor() override;
+		virtual void ShowCursor() override;
+
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();

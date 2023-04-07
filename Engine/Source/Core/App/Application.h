@@ -60,6 +60,9 @@ namespace NL
 			m_Window->SetWindowTitle(title);
 		}
 
+		void HideCursor() { m_Window->HideCursor(); }
+		void ShowCursor() { m_Window->ShowCursor(); }
+
 	private:
 
 		/// <summary>

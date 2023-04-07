@@ -132,6 +132,16 @@ namespace NL
 		glfwSetWindowTitle(m_Window, name.c_str());
 	}
 
+	void WindowsWindow::HideCursor()
+	{
+		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
+
+	void WindowsWindow::ShowCursor()
+	{
+		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+
 	void WindowsWindow::Init(const WindowProps& props)
 	{
 		m_Data.Title = props.Title;

@@ -28,6 +28,7 @@ namespace NL
 		bool OnKeyPressedEvent(KeyPressedEvent& event);
 		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
 		bool OnWindowResizeEvent(WindowResizeEvent& event);
+		bool OnMouseMovedEvent(MouseMovedEvent& event);
 		
 		void NewScene();
 		void OpenScene();
@@ -91,5 +92,7 @@ namespace NL
 
 		// Editor Settings
 
+		// Runtime Viewport Cursor
+		bool m_IsRuntimeViewportFocused = false;
 	};
 }

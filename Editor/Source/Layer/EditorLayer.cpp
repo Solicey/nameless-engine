@@ -191,7 +191,7 @@ namespace NL
 
         // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
         // because it would be confusing to have two docking targets within each others.
-        ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking;
         if (opt_fullscreen)
         {
             const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -213,6 +213,9 @@ namespace NL
         if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
             window_flags |= ImGuiWindowFlags_NoBackground;
 
+        if (!m_IsRuntimeViewportFocused)
+            window_flags |= ImGuiWindowFlags_MenuBar;
+
         // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
         // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
         // all active windows docked into it will lose their parent and become undocked.
@@ -232,6 +235,7 @@ namespace NL
         ImGuiStyle& style = ImGui::GetStyle();
         float minWinSizeX = style.WindowMinSize.x;
         style.WindowMinSize.x = 110.0f;
+        // io.ConfigFlags |= ImGuiConfigFlags_NavEnableSetMousePos;
         if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
         {
             ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
@@ -242,20 +246,20 @@ namespace NL
 
 #pragma region MenuBar
 
-        if (ImGui::BeginMenuBar())
+        if (!m_IsRuntimeViewportFocused && ImGui::BeginMenuBar())
         {
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("New", "Ctrl+N"))
+                if (ImGui::MenuItem("New", "Ctrl+N", false, IsEditorMode()))
                     NewScene();
 
-                if (ImGui::MenuItem("Open", "Ctrl+O"))
+                if (ImGui::MenuItem("Open", "Ctrl+O", false, IsEditorMode()))
                     OpenScene();
 
-                if (ImGui::MenuItem("Save", "Ctrl+S"))
+                if (ImGui::MenuItem("Save", "Ctrl+S", false, IsEditorMode()))
                     SaveScene();
 
-                if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+                if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false, IsEditorMode()))
                     SaveSceneAs();
 
                 if (ImGui::MenuItem("Exit", "Alt+F4", false))
@@ -292,7 +296,7 @@ namespace NL
         if (m_ShowViewport)
         {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-            ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollWithMouse |ImGuiWindowFlags_NoScrollbar);
+            ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
             
             // Toolbar
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
@@ -332,8 +336,9 @@ namespace NL
 
                     ImGui::PopStyleVar();
                 }
+                // Runtime but not focused
                 // Show Runtime Camera
-                else if (m_ViewportMode == ViewportMode::Runtime)
+                else if (!m_IsRuntimeViewportFocused)
                 {
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
                     ImGui::PushItemWidth(menuBarWidth * 0.2f);
@@ -363,27 +368,34 @@ namespace NL
                     ImGui::PopStyleVar();
                     ImGui::PopItemWidth();
                 }
+                else
+                {
+                    ImGui::Text("Press 'Esc' to escape!");
+                }
 
                 // Play & Stop Button
-                Ref<Texture2D> icon = IsEditorMode() ? m_PlayButton : m_StopButton;
-                ImGui::SetCursorPosX((menuBarWidth * 0.5f) - (menuBarHeight * 0.5f));
-                if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(menuBarHeight, menuBarHeight), ImVec2(0, 0), ImVec2(1, 1), 0))
+                if (!m_IsRuntimeViewportFocused)
                 {
-                    if (IsEditorMode())
-                        OnScenePlay();
-                    else
-                        OnSceneStop();
-                }
+                    Ref<Texture2D> icon = IsEditorMode() ? m_PlayButton : m_StopButton;
+                    ImGui::SetCursorPosX((menuBarWidth * 0.5f) - (menuBarHeight * 0.5f));
+                    if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(menuBarHeight, menuBarHeight), ImVec2(0, 0), ImVec2(1, 1), 0))
+                    {
+                        if (IsEditorMode())
+                            OnScenePlay();
+                        else
+                            OnSceneStop();
+                    }
 
-                ImGui::SameLine();
+                    ImGui::SameLine();
 
-                // Maximize On Play
-                ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-                ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - (menuBarHeight * 4.5f));
-                if (ImGui::Checkbox("Maximize", &m_IsMaximizeOnPlay))
-                {
+                    // Maximize On Play
+                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+                    ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - (menuBarHeight * 4.5f));
+                    if (ImGui::Checkbox("Maximize", &m_IsMaximizeOnPlay))
+                    {
+                    }
+                    ImGui::PopStyleVar();
                 }
-                ImGui::PopStyleVar();
 
                 ImGui::EndMenuBar();
             }
@@ -391,7 +403,8 @@ namespace NL
             ImGui::PopStyleVar();
             ImGui::PopStyleColor(3);
 
-            //
+            // FPS
+            // ImGui::Text("FPS: %.1f", io.Framerate);
 
             auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
             auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
@@ -482,6 +495,16 @@ namespace NL
                 }
             }
 
+            // Mouse Cursor Capture
+            /*if (!IsEditorMode() && m_IsRuntimeViewportFocused)
+            {
+                Application::GetInstance().HideCursor();                
+            }
+            else
+            {
+                Application::GetInstance().ShowCursor();
+            }*/
+
             ImGui::End();
             ImGui::PopStyleVar();
         }
@@ -511,6 +534,7 @@ namespace NL
 		dispatcher.Dispatch<KeyPressedEvent>(NL_BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
 		dispatcher.Dispatch<WindowResizeEvent>(NL_BIND_EVENT_FN(EditorLayer::OnWindowResizeEvent));
         dispatcher.Dispatch<MouseButtonPressedEvent>(NL_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressedEvent));
+        dispatcher.Dispatch<MouseMovedEvent>(NL_BIND_EVENT_FN(EditorLayer::OnMouseMovedEvent));
 	}
 
 	bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& event)
@@ -526,19 +550,19 @@ namespace NL
         // Files
         case Key::N:
         {
-            if (control)
+            if (control && IsEditorMode())
                 NewScene();
             break;
         }
         case Key::O:
         {
-            if (control)
+            if (control && IsEditorMode())
                 OpenScene();
             break;
         }
         case Key::S:
         {
-            if (control)
+            if (control && IsEditorMode())
             {
                 if (shift)
                     SaveSceneAs();
@@ -554,7 +578,7 @@ namespace NL
         }
         case Key::R:
         {
-            if (control)
+            if (control && IsEditorMode())
             {
                 if (IsEditorMode())
                 {
@@ -588,6 +612,16 @@ namespace NL
             }
             break;
         }
+        case Key::Escape:
+        {
+            if (!IsEditorMode() && m_IsRuntimeViewportFocused)
+            {
+                m_IsRuntimeViewportFocused = false;
+                Application::GetInstance().ShowCursor();
+                // OnSceneStop();
+            }
+            break;
+        }
         }
 
 		return false;
@@ -600,13 +634,23 @@ namespace NL
         if (event.GetMouseButton() == Mouse::ButtonLeft)
         {
             // !ImGuizmo::IsOver()
-            if (m_ViewportHovered && !(ImGuizmo::IsOver() && m_TRSEntity == m_HierarchyPanel->GetSelectedEntity()))
+            if (IsEditorMode() && m_ViewportHovered && !(ImGuizmo::IsOver() && m_TRSEntity == m_HierarchyPanel->GetSelectedEntity()))
             {
                 m_HierarchyPanel->SetSelectedEntity(m_EntityHovered);
                 // Click a viewport entity
                 if (m_EntityHovered)
                 {
                     NL_TRACE("Viewport select entity: {0}", m_EntityHovered.GetName());
+                }
+            }
+            else if (!IsEditorMode() && !m_IsRuntimeViewportFocused)
+            {
+                auto [mx, my] = ImGui::GetMousePos();
+                if (mx >= m_ViewportBounds[0].x && mx <= m_ViewportBounds[1].x &&
+                    my >= m_ViewportBounds[0].y && my <= m_ViewportBounds[1].y)
+                {
+                    m_IsRuntimeViewportFocused = true;
+                    Application::GetInstance().HideCursor();
                 }
             }
         }
@@ -620,6 +664,12 @@ namespace NL
 
 		return false;
 	}
+
+    bool EditorLayer::OnMouseMovedEvent(MouseMovedEvent& event)
+    {
+        // NL_INFO("Mouse Pos: ({0}, {1})", event.GetX(), event.GetY());
+        return false;
+    }
 
     void EditorLayer::SerializeScene(Ref<Scene> scene, const std::string& path)
     {
