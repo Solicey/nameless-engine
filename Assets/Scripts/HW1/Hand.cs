@@ -87,6 +87,7 @@ namespace HW1
         void OnCreate()
         {
             model = GetComponent<ModelRendererComponent>();
+
             Init();
             // SetNewPose(Pose.Ye);
         }

@@ -29,6 +29,7 @@ namespace NL
 		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
 		bool OnWindowResizeEvent(WindowResizeEvent& event);
 		bool OnMouseMovedEvent(MouseMovedEvent& event);
+		bool OnRuntimeCameraSwitched(RuntimeCameraSwitchedEvent& event);
 		
 		void NewScene();
 		void OpenScene();
@@ -45,6 +46,7 @@ namespace NL
 
 		// TODO: Optimize
 		void UpdateRuntimeAspect();
+
 
 	private:
 

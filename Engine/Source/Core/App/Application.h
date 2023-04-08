@@ -63,6 +63,8 @@ namespace NL
 		void HideCursor() { m_Window->HideCursor(); }
 		void ShowCursor() { m_Window->ShowCursor(); }
 
+		nlm::vec2 GetCursorPos() { return m_Window->GetCursorPos(); }
+
 	private:
 
 		/// <summary>

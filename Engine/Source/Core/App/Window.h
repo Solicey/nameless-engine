@@ -4,6 +4,7 @@
 ´°¿ÚÀà
 */
 
+#include "Core/Math/Math.h"
 #include "Events/Event.h"
 #include "Renderer/GraphicsContext.h"
 
@@ -57,8 +58,11 @@ namespace NL
 		virtual std::string SaveFileDialogue(const WCHAR* filter) = 0;
 
 		virtual void SetWindowTitle(const std::string& name) = 0;
+
 		virtual void HideCursor() = 0;
 		virtual void ShowCursor() = 0;
+
+		virtual nlm::vec2 GetCursorPos() = 0;
 
 		static Scope<Window> Create(const WindowProps& props = WindowProps());
 	};

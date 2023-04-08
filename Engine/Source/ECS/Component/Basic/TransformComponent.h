@@ -25,6 +25,18 @@ namespace NL
             return nlm::toMat4(nlm::quat(Rotation));
         }
 
+        nlm::vec3 GetForward() const 
+        {
+            nlm::vec4 forward = GetRotationMatrix() * nlm::vec4(0, 0, 1, 1);
+            return nlm::vec3(forward);
+        }
+
+        nlm::vec3 GetRight() const
+        {
+            nlm::vec4 right = GetRotationMatrix() * nlm::vec4(-1, 0, 0, 1);
+            return nlm::vec3(right);
+        }
+
         nlm::vec3 GetTranslation() const { return Translation; }
         nlm::vec3 GetRotation() const { return Rotation; }
         nlm::vec3 GetScale() const { return Scale; }

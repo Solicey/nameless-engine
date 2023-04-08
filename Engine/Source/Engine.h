@@ -22,6 +22,7 @@
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
+#include "Events/MiscEvent.h"
 
 #include "Input/Input.h"
 #include "Input/KeyCodes.h"

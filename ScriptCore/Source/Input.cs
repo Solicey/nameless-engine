@@ -12,5 +12,12 @@ namespace NL
         {
             return InternalCalls.Input_IsKeyDown(keycode);
         }
+
+        public static Vector2 GetCursorPos()
+        {
+            Vector2 pos;
+            InternalCalls.Input_GetCursorPos(out pos);
+            return pos;
+        }
     }
 }

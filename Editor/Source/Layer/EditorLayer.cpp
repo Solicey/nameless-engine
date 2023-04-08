@@ -45,6 +45,10 @@ namespace NL
 
 	void EditorLayer::OnAttach()
 	{
+        // Events
+        using EventCallbackFn = std::function<void(Event&)>;
+        ScriptGlue::GetInstance().SetEventCallback(NL_BIND_EVENT_FN(EditorLayer::OnEvent));
+
         // Multisample framebuffer Setup
         FramebufferSpecification msSpec;
         msSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
@@ -371,6 +375,8 @@ namespace NL
                 else
                 {
                     ImGui::Text("Press 'Esc' to escape!");
+                    ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - (menuBarHeight * 3.0f));
+                    ImGui::Text("FPS: %.1f", io.Framerate);
                 }
 
                 // Play & Stop Button
@@ -535,6 +541,9 @@ namespace NL
 		dispatcher.Dispatch<WindowResizeEvent>(NL_BIND_EVENT_FN(EditorLayer::OnWindowResizeEvent));
         dispatcher.Dispatch<MouseButtonPressedEvent>(NL_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressedEvent));
         dispatcher.Dispatch<MouseMovedEvent>(NL_BIND_EVENT_FN(EditorLayer::OnMouseMovedEvent));
+
+        dispatcher.Dispatch<RuntimeCameraSwitchedEvent>(NL_BIND_EVENT_FN(EditorLayer::OnRuntimeCameraSwitched));
+
 	}
 
 	bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& event)
@@ -668,6 +677,15 @@ namespace NL
     bool EditorLayer::OnMouseMovedEvent(MouseMovedEvent& event)
     {
         // NL_INFO("Mouse Pos: ({0}, {1})", event.GetX(), event.GetY());
+        return false;
+    }
+
+    bool EditorLayer::OnRuntimeCameraSwitched(RuntimeCameraSwitchedEvent& event)
+    {
+        // NL_INFO("Runtime Camera Switch!");
+
+        m_RuntimeCameraEntity = event.GetEntity();
+
         return false;
     }
 

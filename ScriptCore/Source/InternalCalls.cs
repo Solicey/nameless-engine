@@ -25,12 +25,30 @@ namespace NL
         internal extern static void TransformComponent_SetTranslation(ulong entityID, ref Vector3 translation);
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void TransformComponent_GetForward(ulong entityID, out Vector3 forward);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void TransformComponent_GetRight(ulong entityID, out Vector3 right);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void TransformComponent_Translate(ulong entityID, ref Vector3 translation);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void TransformComponent_Rotate(ulong entityID, ref Vector3 eulerAngles);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static bool Input_IsKeyDown(KeyCode keycode);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static bool Input_GetCursorPos(out Vector2 pos);
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static void ModelRendererComponent_RecalculateFinalBoneMatrices(ulong entityID);
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         internal extern static void ModelRendererComponent_RotateBone(ulong entityID, Int32 boneId, ref Vector3 eulerAngles);
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        internal extern static void CameraComponent_SetAsRuntimeCamera(ulong entityID);
     }
 }

@@ -44,6 +44,9 @@ namespace NL
 		bool IsPlaying() const { return m_SceneState == SceneState::Play; }
 		bool IsPaused() const { return m_SceneState == SceneState::Pause; }
 
+		static void SetRuntimeCamera(const std::string& str) { s_RuntimeCameraName = str; }
+		static const std::string& GetRuntimeCamera() { return s_RuntimeCameraName; }
+
 	private:
 		template<Component C>
 		void OnComponentAdded(Entity entity, C& component);
@@ -61,5 +64,8 @@ namespace NL
 		std::unordered_map<ID, entt::entity> m_EntityMap;
 		std::vector<Scope<System>> m_Systems;
 		SceneState m_SceneState = SceneState::Editor;
+
+		// Modified by C# Scripts
+		static std::string s_RuntimeCameraName;
 	};
 }
