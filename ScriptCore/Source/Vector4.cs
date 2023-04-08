@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -52,9 +53,26 @@ namespace NL
             return new Vector4(a.X + b.X, a.Y + b.Y, a.Z + b.Z, a.W + b.W);
         }
 
+        public static Vector4 operator -(Vector4 a, Vector4 b)
+        {
+            return new Vector4(a.X - b.X, a.Y - b.Y, a.Z - b.Z, a.W - b.W);
+        }
+
         public static Vector4 operator *(Vector4 vector, float scalar)
         {
             return new Vector4(vector.X * scalar, vector.Y * scalar, vector.Z * scalar, vector.W * scalar);
+        }
+
+        public Vector3 EulerAngles()
+        {
+            Vector3 eulerAngles;
+            InternalCalls.Math_QuatToEulerAngles(ref this, out eulerAngles);
+            return eulerAngles;
+        }
+
+        public void QuatNormalize()
+        {
+            InternalCalls.Math_QuatNormalize(ref this);
         }
     }
 }

@@ -1,55 +1,51 @@
 Scene: Untitled
 Entities:
-  - ID: 2512236796659933535
-    Name: Sphere
+  - ID: 16990954705968512128
+    Name: Box
     TransformComponent:
-      Translation: [-10.5939713, 7.17551756, -2.75045586]
+      Translation: [9.32452965, 0, -0.515009642]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     ModelRendererComponent:
-      ModelPath: ../Assets/Models/Sphere.obj
+      ModelPath: ../Assets/Models/Box.obj
       Materials:
-        - MaterialName: None
+        - MaterialName: Material
           ShaderName: Default.glsl
           ShaderProperties:
             []
       Bones:
         []
-  - ID: 7435904767540507848
-    Name: TrackEnd
+  - ID: 13702378364795044523
+    Name: TrackCamera
     TransformComponent:
-      Translation: [-12.3673229, 0, 8.41509628]
-      Rotation: [0, 0, 0]
+      Translation: [-24.1449738, 2.97122717, -7.6469245]
+      Rotation: [4.67775322e-07, -1.38600397, 1.17922818e-08]
       Scale: [1, 1, 1]
-  - ID: 6196780381642991916
-    Name: TrackBegin
-    TransformComponent:
-      Translation: [8.31302834, 0, 11.193327]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-  - ID: 12758287598739165521
-    Name: CameraController
-    TransformComponent:
-      Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    ScriptComponent:
-      ClassName: HW2.CameraController
-      ScriptFields:
-        []
-  - ID: 7976935081711616568
-    Name: FixedCamera
-    TransformComponent:
-      Translation: [-22.1882839, 8.39671993, 16.9681034]
-      Rotation: [-0.136586666, -0.63990581, -3.7152958e-07]
-      Scale: [0.999999821, 1.00000012, 1]
     CameraComponent:
       FixedAspectRatio: false
       ClearColor: [0.192000002, 0.301999986, 0.474999994, 1]
       ProjectionType: 1
       OrthoSize: 10
-      OrthoFar: 1
-      OrthoNear: -1
+      OrthoFar: 100
+      OrthoNear: 0.00999999978
+      PerspFOV: 0.785398185
+      PerspFar: 1000
+      PerspNear: 0.00999999978
+      ViewportWidth: 1280
+      ViewportHeight: 720
+  - ID: 7963179372585506637
+    Name: FPSCamera
+    TransformComponent:
+      Translation: [-1.10769451, 2.16721606, 13.5970793]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      FixedAspectRatio: false
+      ClearColor: [0.192000002, 0.301999986, 0.474999994, 1]
+      ProjectionType: 1
+      OrthoSize: 10
+      OrthoFar: 100
+      OrthoNear: 0.00999999978
       PerspFOV: 0.785398185
       PerspFar: 1000
       PerspNear: 0.00999999978
@@ -113,67 +109,82 @@ Entities:
         - Name: thumb_distal_rot
           Type: Vector3
           Data: [0, 0, 10]
-  - ID: 7963179372585506637
-    Name: FPSCamera
+  - ID: 7976935081711616568
+    Name: FixedCamera
     TransformComponent:
-      Translation: [-1.10769451, 2.16721606, 13.5970793]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
+      Translation: [-22.1882839, 8.39671993, 16.9681034]
+      Rotation: [-0.136586666, -0.63990581, -3.7152958e-07]
+      Scale: [0.999999821, 1.00000012, 1]
     CameraComponent:
       FixedAspectRatio: false
       ClearColor: [0.192000002, 0.301999986, 0.474999994, 1]
       ProjectionType: 1
       OrthoSize: 10
-      OrthoFar: 100
-      OrthoNear: 0.00999999978
+      OrthoFar: 1
+      OrthoNear: -1
       PerspFOV: 0.785398185
       PerspFar: 1000
       PerspNear: 0.00999999978
       ViewportWidth: 1280
       ViewportHeight: 720
-  - ID: 13702378364795044523
-    Name: TrackCamera
-    TransformComponent:
-      Translation: [-24.1449738, 2.97122717, -7.6469245]
-      Rotation: [-3.14159203, -1.41775656, 3.14159226]
-      Scale: [1, 1, 1]
-    CameraComponent:
-      FixedAspectRatio: false
-      ClearColor: [0.192000002, 0.301999986, 0.474999994, 1]
-      ProjectionType: 1
-      OrthoSize: 10
-      OrthoFar: 100
-      OrthoNear: 0.00999999978
-      PerspFOV: 0.785398185
-      PerspFar: 1000
-      PerspNear: 0.00999999978
-      ViewportWidth: 1280
-      ViewportHeight: 720
-  - ID: 16990954705968512128
-    Name: Box
-    TransformComponent:
-      Translation: [9.32452965, 0, -0.515009642]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    ModelRendererComponent:
-      ModelPath: ../Assets/Models/Box.obj
-      Materials:
-        - MaterialName: Material
-          ShaderName: Default.glsl
-          ShaderProperties:
-            []
-      Bones:
-        []
-  - ID: 2735088576646503286
-    Name: Room
+  - ID: 12758287598739165521
+    Name: CameraController
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
-      Scale: [100, 100, 100]
+      Scale: [1, 1, 1]
+    ScriptComponent:
+      ClassName: HW2.CameraController
+      ScriptFields:
+        - Name: TrackMoveSpeed
+          Type: Float
+          Data: 0.300000012
+  - ID: 6196780381642991916
+    Name: TrackBegin
+    TransformComponent:
+      Translation: [-12.9431667, 6.05935097, 21.578743]
+      Rotation: [0, -0.289854109, 0]
+      Scale: [0.999999583, 1, 0.999999583]
+    CameraComponent:
+      FixedAspectRatio: false
+      ClearColor: [0.192000002, 0.301999986, 0.474999994, 1]
+      ProjectionType: 1
+      OrthoSize: 10
+      OrthoFar: 100
+      OrthoNear: 0.00999999978
+      PerspFOV: 0.785398185
+      PerspFar: 1000
+      PerspNear: 0.00999999978
+      ViewportWidth: 1280
+      ViewportHeight: 720
+  - ID: 7435904767540507848
+    Name: TrackEnd
+    TransformComponent:
+      Translation: [26.5408707, 1.92529178, -31.8772202]
+      Rotation: [3.11949778, 0.983592391, 2.96134067]
+      Scale: [0.999992192, 0.999997973, 0.999994457]
+    CameraComponent:
+      FixedAspectRatio: false
+      ClearColor: [0.192000002, 0.301999986, 0.474999994, 1]
+      ProjectionType: 1
+      OrthoSize: 10
+      OrthoFar: 100
+      OrthoNear: 0.00999999978
+      PerspFOV: 0.785398185
+      PerspFar: 1000
+      PerspNear: 0.00999999978
+      ViewportWidth: 1280
+      ViewportHeight: 720
+  - ID: 2512236796659933535
+    Name: Sphere
+    TransformComponent:
+      Translation: [-10.5939713, 7.17551756, -2.75045586]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
     ModelRendererComponent:
-      ModelPath: ../Assets/Models/Box.obj
+      ModelPath: ../Assets/Models/Sphere.obj
       Materials:
-        - MaterialName: Material
+        - MaterialName: None
           ShaderName: Default.glsl
           ShaderProperties:
             []

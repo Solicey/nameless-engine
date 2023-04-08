@@ -52,9 +52,22 @@ namespace NL
             return new Vector3(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
         }
 
+        public static Vector3 operator -(Vector3 a, Vector3 b)
+        {
+            return new Vector3(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+        }
+
         public static Vector3 operator *(Vector3 vector, float scalar)
         {
             return new Vector3(vector.X * scalar, vector.Y * scalar, vector.Z * scalar);
         }
+
+        public Vector4 Quaternion()
+        {
+            Vector4 quat;
+            InternalCalls.Math_EulerAnglesToQuat(ref this, out quat);
+            return quat;
+        }
+
     }
 }

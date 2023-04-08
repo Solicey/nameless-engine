@@ -123,12 +123,12 @@ namespace NL
         m_MultisampledFramebuffer->Bind();
         if (IsEditorMode())
         {
+            m_EditorScene->OnUpdateEditor(ts, m_EditorCamera, m_HierarchyPanel->GetSelectedEntity());
+
             if (m_ViewportHovered || m_EditorCamera.IsMouseButtonHolding())
             {
                 m_EditorCamera.OnUpdate(ts);
             }
-
-            m_EditorScene->OnUpdateEditor(ts, m_EditorCamera, m_HierarchyPanel->GetSelectedEntity());
 
             // TODO: Get editor camera post-processing options.
         }

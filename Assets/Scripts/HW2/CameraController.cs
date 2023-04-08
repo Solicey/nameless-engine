@@ -12,11 +12,18 @@ namespace HW2
         Fixed, Track, FPS
     }
 
+    public enum TrackCameraState
+    {
+        Pause, ToEnd, ToBegin
+    }
+
     public class CameraController : Entity
     {
         // Exposed
-        public float MouseSensitivity = 10;
-        public float MoveSpeed = 13;
+        public float TrackMoveSpeed = 1;
+
+        public float FpsMouseSensitivity = 20;
+        public float FpsMoveSpeed = 5;
 
         //
 
@@ -24,9 +31,11 @@ namespace HW2
         CameraComponent trackCamera;
         CameraComponent fpsCamera;
 
-        TransformComponent beginTransform;
-        TransformComponent endTransform;
+        TransformComponent trackBeginTransform;
+        TransformComponent trackEndTransform;
+        
         TransformComponent fpsTransform;
+        TransformComponent trackCameraTransform;
 
         CameraType cameraType;
 
@@ -35,18 +44,39 @@ namespace HW2
         float pitchAngle = 0.0f;
         float yawAngle = 0.0f;
 
+        float trackProgress = 0.0f;
+        Vector3 trackDirection = new Vector3();
+        TrackCameraState trackState = TrackCameraState.Pause;
+        Vector4 trackBeginQuat = new Vector4();
+        Vector4 trackEndQuat = new Vector4();
+        Vector4 trackQuatDirection = new Vector4();
+
         void OnCreate()
         {
             fixedCamera = FindEntityByName("FixedCamera")?.GetComponent<CameraComponent>();
             trackCamera = FindEntityByName("TrackCamera")?.GetComponent<CameraComponent>();
             fpsCamera = FindEntityByName("FPSCamera")?.GetComponent<CameraComponent>();
 
-            fixedCamera?.SetAsRuntimeCamera();
-            cameraType = CameraType.Fixed;
+            trackCamera?.SetAsRuntimeCamera();
+            cameraType = CameraType.Track;
 
-            beginTransform = FindEntityByName("TrackBegin")?.GetComponent<TransformComponent>();
-            endTransform = FindEntityByName("TrackEnd")?.GetComponent<TransformComponent>();
+            trackBeginTransform = FindEntityByName("TrackBegin")?.GetComponent<TransformComponent>();
+            trackEndTransform = FindEntityByName("TrackEnd")?.GetComponent<TransformComponent>();
             fpsTransform = FindEntityByName("FPSCamera")?.GetComponent<TransformComponent>();
+            trackCameraTransform = FindEntityByName("TrackCamera")?.GetComponent<TransformComponent>();
+
+            trackDirection = trackEndTransform.Translation - trackBeginTransform.Translation;
+
+            trackBeginQuat = trackBeginTransform.Rotation.Quaternion();
+            trackEndQuat = trackEndTransform.Rotation.Quaternion();
+            trackQuatDirection = trackEndQuat - trackBeginQuat;
+
+            /*Vector3 euler = trackBeginQuat.EulerAngles();
+              Console.WriteLine($"begin euler: {euler.X * 180 / Math.PI}, {euler.Y * 180 / Math.PI}, {euler.Z * 180 / Math.PI}");
+
+              euler = trackEndQuat.EulerAngles();
+              Console.WriteLine($"end euler: {euler.X * 180 / Math.PI}, {euler.Y * 180 / Math.PI}, {euler.Z * 180 / Math.PI}");
+            */
         }
 
         void OnUpdateRuntime(float ts)
@@ -59,7 +89,7 @@ namespace HW2
             }
             else if (cameraType == CameraType.Track)
             {
-
+                TrackCameraUpdate(ts);
             }            
         }
 
@@ -70,22 +100,66 @@ namespace HW2
 
         void InputDetect()
         {
-            if (Input.IsKeyDown(KeyCode.D3))
+            /*if (Input.IsKeyDown(KeyCode.D3))
             {
                 fixedCamera?.SetAsRuntimeCamera();
                 cameraType = CameraType.Fixed;
-            }
-            else if (Input.IsKeyDown(KeyCode.D4))
+
+                trackState = TrackCameraState.Pause;
+            }*/
+            if (Input.IsKeyDown(KeyCode.D3))
             {
                 trackCamera?.SetAsRuntimeCamera();
                 cameraType = CameraType.Track;
             }
-            else if (Input.IsKeyDown(KeyCode.D5))
+            else if (Input.IsKeyDown(KeyCode.D4))
             {
                 fpsCamera?.SetAsRuntimeCamera();
                 cameraType= CameraType.FPS;
                 cursorPosLastFrame = Input.GetCursorPos();
+
+                trackState = TrackCameraState.Pause;
             }
+        }
+
+        void TrackCameraUpdate(float ts)
+        {
+            // ToEnd
+            if (Input.IsKeyDown(KeyCode.D))
+            {
+                trackState = TrackCameraState.ToEnd;
+            }
+            // Pause
+            else if (Input.IsKeyDown(KeyCode.S))
+            {
+                trackState = TrackCameraState.Pause;
+            }
+            // ToBegin
+            else if (Input.IsKeyDown(KeyCode.A))
+            {
+                trackState = TrackCameraState.ToBegin;
+            }
+
+            if (trackState == TrackCameraState.ToEnd)
+            {
+                trackProgress = Math.Min(1.0f, trackProgress + TrackMoveSpeed * ts);
+            }
+            else if (trackState == TrackCameraState.ToBegin)
+            {
+                trackProgress = Math.Max(0.0f, trackProgress - TrackMoveSpeed * ts);
+            }
+
+            // Translation Lerp
+            trackCameraTransform.Translation = trackBeginTransform.Translation + trackDirection * trackProgress;
+
+            // Rotation Quaternion NLerp
+            Vector4 quat = trackBeginQuat + trackQuatDirection * trackProgress;
+            quat.QuatNormalize();
+            Vector3 euler = quat.EulerAngles();
+            trackCameraTransform.Rotation = euler;
+
+            // Console.WriteLine($"quat: {quat.X}, {quat.Y}, {quat.Z}, {quat.W}");
+            // Console.WriteLine($"euler: {euler.X * 180 / Math.PI}, {euler.Y * 180 / Math.PI}, {euler.Z * 180 / Math.PI}");
         }
 
         void FPSCameraUpdate(float ts)
@@ -96,8 +170,9 @@ namespace HW2
             cursorDelta = pos - cursorPosLastFrame;
             cursorPosLastFrame = pos;
 
-            float cursorX = cursorDelta.X * MouseSensitivity * ts;
-            float cursorY = cursorDelta.Y * MouseSensitivity * ts;
+            float cursorX = cursorDelta.X * FpsMouseSensitivity * ts;
+            float cursorY = cursorDelta.Y * FpsMouseSensitivity * ts;
+            
             yawAngle += cursorX;
             pitchAngle += cursorY;
 
@@ -106,10 +181,10 @@ namespace HW2
             else if (pitchAngle < -90f)
                 pitchAngle = -90f;
             if (yawAngle < 0f) yawAngle += 360f;
+            fpsTransform.Rotation = new Vector3(-pitchAngle, -yawAngle, 0f);
 
-            
-            Vector3 eulerAngles = Vector3.Up * -cursorX + Vector3.Right * cursorY;
-            fpsTransform.Rotate(ref eulerAngles);
+            // fpsTransform.Rotate(fpsTransform.Up(), -cursorX);
+            // fpsTransform.Rotate(fpsTransform.Right(), cursorY);
 
             // Translation
             float horizontal = Input.IsKeyDown(KeyCode.A) ? 1f : (Input.IsKeyDown(KeyCode.D) ? -1f : 0f);
@@ -118,8 +193,8 @@ namespace HW2
             Vector3 forward = fpsTransform.Forward();
             Vector3 right = fpsTransform.Right();
 
-            Vector3 deltaTranslation = (forward * vertical + right * horizontal) * MoveSpeed * ts;
-            fpsTransform.Translate(ref deltaTranslation);
+            Vector3 deltaTranslation = (forward * vertical + right * horizontal) * FpsMoveSpeed * ts;
+            fpsTransform.Translate(deltaTranslation);
         }
     }
 }

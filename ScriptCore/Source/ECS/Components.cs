@@ -26,6 +26,19 @@ namespace NL
             }
         }
 
+        public Vector3 Rotation
+        {
+            get
+            {
+                InternalCalls.TransformComponent_GetRotation(Entity.ID, out Vector3 rotation);
+                return rotation;
+            }
+            set
+            {
+                InternalCalls.TransformComponent_SetRotation(Entity.ID, ref value);
+            }
+        }
+
         public Vector3 Forward()
         {
             Vector3 forward;
@@ -40,7 +53,14 @@ namespace NL
             return right;
         }
 
-        public void Translate(ref Vector3 translation)
+        public Vector3 Up()
+        {
+            Vector3 up;
+            InternalCalls.TransformComponent_GetUp(Entity.ID, out up);
+            return up;
+        }
+
+        public void Translate(Vector3 translation)
         {
             InternalCalls.TransformComponent_Translate(Entity.ID, ref translation);
         }
@@ -49,9 +69,14 @@ namespace NL
         /// eulerAngles in degree
         /// </summary>
         /// <param name="eulerAngles"></param>
-        public void Rotate(ref Vector3 eulerAngles)
+        public void Rotate(Vector3 rotateAxis, float angle)
         {
-            InternalCalls.TransformComponent_Rotate(Entity.ID, ref eulerAngles);
+            InternalCalls.TransformComponent_Rotate(Entity.ID, ref rotateAxis, angle);
+        }
+
+        public void LookAt(Vector3 dest)
+        {
+            InternalCalls.TransformComponent_LookAt(Entity.ID, ref dest);
         }
     }
 
