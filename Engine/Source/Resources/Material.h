@@ -23,7 +23,7 @@ namespace NL
 	class Material
 	{
     public:
-        Material() { LoadShader(Library<Shader>::GetInstance().GetDefaultShaderName()); }
+        Material();
 
         void DeleteMaterialTexturesReference()
         {
@@ -42,7 +42,10 @@ namespace NL
             m_TextureMap[type] = texture;
         }
 
+        void AddTexture(const std::string& name, Ref<Texture2D> texture);
+
         const Ref<Texture2D>& GetTexture(TextureType type) { return m_TextureMap[type]; }
+        const Ref<Texture2D>& GetTexture(const std::string& name);
         const std::string& GetShaderName() const { return m_ShaderName; }
         const Ref<Shader>& GetShader() const { return m_Shader; }
         std::vector<ShaderProperty>& GetShaderPropertiesNotConst() { return m_Properties; }
@@ -53,6 +56,10 @@ namespace NL
 
         // void SetShaderName(const std::string& name) { m_ShaderName = name; }
 
+        // called after user change a texture
+        void DeleteOldTextures(Ref<Texture2D> oldTex, Ref<Texture2D> newTex);
+
+
 	private:
         std::string m_Name;
         std::string m_ShaderName;
@@ -60,5 +67,6 @@ namespace NL
         std::vector<ShaderProperty> m_Properties;
         std::unordered_map<TextureType, Ref<Texture2D>, EnumClassHash> m_TextureMap;
         std::unordered_map<TextureType, bool, EnumClassHash> m_UseDefaultTexture;
+        static std::unordered_map<std::string, TextureType> s_String2TexTypeMap;
 	};
 }

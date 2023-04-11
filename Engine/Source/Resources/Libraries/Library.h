@@ -5,6 +5,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <regex>
 
 namespace NL
 {
@@ -15,20 +16,26 @@ namespace NL
 	public:
 		void Add(const std::string& name, const Ref<LibType>& item)
 		{
-			NL_ENGINE_ASSERT(m_Library.find(name) == m_Library.end(), "Item already exists in this library!");
-			m_Library[name] = item;
+			auto path = name;
+			std::regex_replace(path, std::regex("\\\\"), "/");
+			// NL_ENGINE_ASSERT(m_Library.find(name) == m_Library.end(), "Item already exists in this library!");
+			m_Library[path] = item;
 		}
 
 		void Set(const std::string& name, const Ref<LibType>& item)
 		{
-			NL_ENGINE_ASSERT(m_Library.find(name) != m_Library.end(), "Item does NOT exist in this library! Please use Add(...) instead!");
-			m_Library[name] = item;
+			auto path = name;
+			std::regex_replace(path, std::regex("\\\\"), "/");
+			// NL_ENGINE_ASSERT(m_Library.find(name) != m_Library.end(), "Item does NOT exist in this library! Please use Add(...) instead!");
+			m_Library[path] = item;
 		}
 
 		Ref<LibType> Get(const std::string& name)
 		{
+			auto path = name;
+			std::regex_replace(path, std::regex("\\\\"), "/");
 			NL_ENGINE_ASSERT(m_Library.find(name) != m_Library.end(), "Item does NOT exist in this library! Please use Add(...) first!");
-			return m_Library[name];
+			return m_Library[path];
 		}
 
 		bool Contains(const std::string& name)

@@ -21,11 +21,16 @@ namespace NL
 		{
 			if (m_Library.find(name) != m_Library.end())
 			{
-				if (m_Library[name].use_count() <= 1)
+				auto& item = m_Library[name];
+				if (item.use_count() <= 1 && name.compare(m_DefaultShaderName) != 0)
 				{
 					NL_ENGINE_TRACE("Texture {0} reference no more than 1, will be deleted!", name);
-					m_Library[name].reset();
+					item.reset();
 					m_Library.erase(name);
+				}
+				else
+				{
+					NL_ENGINE_TRACE("Texture {0} reference count is {1}, will not be deleted!", name, item.use_count());
 				}
 			}
 		}
@@ -43,7 +48,7 @@ namespace NL
 				{
 					m_Library.erase(iter++);
 				}
-				else if (iter->second.use_count() <= 1)
+				else if (iter->second.use_count() <= 1 && iter->first.compare(m_DefaultShaderName) != 0)
 				{
 					NL_ENGINE_TRACE("Texture {0} reference no more than 1, will be deleted!", iter->first);
 					iter->second.reset();

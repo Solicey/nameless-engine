@@ -32,7 +32,7 @@ namespace NL
 
 		void OnStartRuntime();
 		void OnStopRuntime(Scene* editorScene);
-		void OnUpdateRuntime(TimeStep ts, Entity cameraEntity);
+		void OnUpdateRuntime(TimeStep ts, Entity cameraEntity, bool isRuntimeViewportFocused);
 
 		void OnStartEditor();
 		void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity);

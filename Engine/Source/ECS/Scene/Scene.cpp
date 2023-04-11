@@ -121,8 +121,12 @@ namespace NL
         m_Registry.clear();
     }
 
-    void Scene::OnUpdateRuntime(TimeStep ts, Entity cameraEntity)
+    void Scene::OnUpdateRuntime(TimeStep ts, Entity cameraEntity, bool isRuntimeViewportFocused)
     {
+        if (!isRuntimeViewportFocused)
+            m_SceneState = SceneState::Pause;
+        else m_SceneState = SceneState::Play;
+
         for (auto& system : m_Systems)
         {
             system->OnUpdateRuntime(ts, cameraEntity);

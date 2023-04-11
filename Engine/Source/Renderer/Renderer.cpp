@@ -64,8 +64,8 @@ namespace NL
 				break;
 
 			case ShaderUniformType::Sampler2D:
-				// NL_ENGINE_TRACE("Sampler2D name: {0}", prop.Name);
-				// NL_ENGINE_TRACE("Sampler2D filepath: {0}", std::get<std::string>(prop.Value));
+				//NL_ENGINE_TRACE("Sampler2D name: {0}", prop.Name);
+				//NL_ENGINE_TRACE("Sampler2D filepath: {0}", std::get<std::string>(prop.Value));
 				shader->SetUniformInt(prop.Name.c_str(), cntSampler2D);
 				Library<Texture2D>::GetInstance().Get(std::get<std::string>(prop.Value))->Bind(cntSampler2D);
 				cntSampler2D++;

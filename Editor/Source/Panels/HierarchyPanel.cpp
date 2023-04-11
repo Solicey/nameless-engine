@@ -386,7 +386,7 @@ namespace NL
 #pragma region Draw Model Renderer
 
 		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [](auto& entity, auto& component) {
-			
+
 		const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
 		// NL_ENGINE_TRACE("Default shader name: {0}", Library<Shader>::GetInstance().GetDefaultShaderName());
 		
@@ -404,6 +404,8 @@ namespace NL
 		ImGui::SameLine();
 		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 		ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
+
+		ImGui::PushID("ImportModel");
 		if (ImGui::Button("+", buttonSize))
 		{
 			std::string filepath = Application::GetInstance().OpenFileDialogue(L"Model(*.obj;*.fbx;*.dae;*.gltf)\0*.obj;*.fbx;*.dae;*.gltf\0\0");
@@ -425,6 +427,7 @@ namespace NL
 				component = ModelRendererComponent(path.string(), (uint32_t)entity, component.Flags);
 			}
 		}
+		ImGui::PopID();
 
 		ImGui::Columns(1);
 
@@ -768,6 +771,50 @@ namespace NL
 				{
 					prop.Value = color;
 				}
+				break;
+			case ShaderUniformType::Sampler2D:
+
+				ImGui::PushID(&prop);
+				if (ImGui::TreeNode(prop.Name.c_str()))
+				{
+					const std::string& oldTexPath = std::get<std::string>(prop.Value);
+					Ref<Texture2D> oldTex = Library<Texture2D>::GetInstance().Get(oldTexPath);
+
+					if (ImGui::ImageButton((ImTextureID)oldTex->GetRendererID(), ImVec2(64, 64), ImVec2(0, 0), ImVec2(1, 1), 0))
+					{
+						std::string filepath = Application::GetInstance().OpenFileDialogue(L"Texture2D(*.png)\0*.png\0\0");
+
+						size_t pos = filepath.find("Assets");
+						if (pos != std::string::npos)
+						{
+							filepath = PathConfig::GetInstance().GetAssetsFolder().string() + filepath.substr(pos + 6);
+							Ref<Texture2D> newTex;
+
+							if (Library<Texture2D>::GetInstance().Contains(filepath))
+							{
+								newTex = Library<Texture2D>::GetInstance().Get(filepath);
+							}
+							else
+							{
+								newTex = Texture2D::Create(filepath);
+								Library<Texture2D>::GetInstance().Add(filepath, newTex);
+							}
+
+							oldTex.reset();
+							mat->AddTexture(prop.Name, newTex);
+
+							prop.Value = filepath;
+
+						}
+						else if (!filepath.empty())
+						{
+							NL_ENGINE_ASSERT(false, "Only support textures from Textures Folder!");
+						}
+					}
+
+					ImGui::TreePop();
+				}
+				ImGui::PopID();
 				break;
 
 			default:

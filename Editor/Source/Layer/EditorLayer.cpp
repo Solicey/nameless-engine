@@ -144,7 +144,7 @@ namespace NL
                 }
             }
 
-            m_RuntimeScene->OnUpdateRuntime(ts, m_RuntimeCameraEntity);
+            m_RuntimeScene->OnUpdateRuntime(ts, m_RuntimeCameraEntity, m_IsRuntimeViewportFocused);
 
             // TODO: Get runtime camera post-processing options.
         }
@@ -155,31 +155,30 @@ namespace NL
         m_MultisampledFramebuffer->ColorBlit(2, m_Framebuffer);
 
         // Check Hovered Entity
-
-        if (IsEditorMode())
+        auto [mx, my] = ImGui::GetMousePos();
+        mx -= m_ViewportBounds[0].x;
+        my -= m_ViewportBounds[0].y;
+        nlm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+        my = viewportSize.y - my;
+        int mouseX = (int)mx;
+        int mouseY = (int)my;
+        if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
         {
-            auto [mx, my] = ImGui::GetMousePos();
-            mx -= m_ViewportBounds[0].x;
-            my -= m_ViewportBounds[0].y;
-            nlm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-            my = viewportSize.y - my;
-            int mouseX = (int)mx;
-            int mouseY = (int)my;
-            if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+            if (IsEditorMode())
             {
                 // Blit
                 m_MultisampledFramebuffer->ColorBlit(1, m_Framebuffer);
                 int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
-                
+
                 // NL_ENGINE_INFO("pixelData {0}", pixelData);
                 m_EntityHovered = (pixelData == -1) ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
-                m_ViewportHovered = true;
             }
-            else
-            {
-                m_ViewportHovered = false;
-            }
+            m_ViewportHovered = true;
         }
+        else
+        {
+            m_ViewportHovered = false;
+        }        
 
 	}
 
@@ -638,8 +637,8 @@ namespace NL
 
     bool EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& event)
     {
-        if (!m_ViewportFocused && !m_ViewportHovered)
-            return false;
+        // if (!m_ViewportFocused && !m_ViewportHovered)
+            // return false;
         if (event.GetMouseButton() == Mouse::ButtonLeft)
         {
             // !ImGuizmo::IsOver()
@@ -652,7 +651,7 @@ namespace NL
                     NL_TRACE("Viewport select entity: {0}", m_EntityHovered.GetName());
                 }
             }
-            else if (!IsEditorMode() && !m_IsRuntimeViewportFocused)
+            else if (!IsEditorMode() && m_ViewportHovered && !m_IsRuntimeViewportFocused)
             {
                 auto [mx, my] = ImGui::GetMousePos();
                 if (mx >= m_ViewportBounds[0].x && mx <= m_ViewportBounds[1].x &&

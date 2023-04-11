@@ -240,8 +240,30 @@ namespace NL
 							newProp.Value = prop["Value"].as<nlm::vec3>();
 							break;
 						case ShaderUniformType::Sampler2D:
+						{
 							newProp.Value = prop["Value"].as<std::string>();
+							const std::string& path = std::get<std::string>(newProp.Value);
+
+							Ref<Texture2D> newTex;
+
+							if (Library<Texture2D>::GetInstance().Contains(path))
+							{
+								newTex = Library<Texture2D>::GetInstance().Get(path);
+							}
+							else
+							{
+								newTex = Texture2D::Create(path);
+								Library<Texture2D>::GetInstance().Add(path, newTex);
+							}
+
+							material->AddTexture(newProp.Name, newTex);
+
+							newProp.Value = path;
+
+							// Avoid memory leak
+
 							break;
+						}
 						default:
 							break;
 						}

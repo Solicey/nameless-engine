@@ -27,6 +27,9 @@ namespace NL
 
 	void ScriptingSystem::OnUpdateRuntime(TimeStep ts, Entity cameraEntity)
 	{
+		if (m_Scene->IsPaused())
+			return;
+
 		auto view = m_Scene->m_Registry.view<ScriptComponent>();
 		for (auto e : view)
 		{
