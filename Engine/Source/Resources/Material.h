@@ -42,7 +42,8 @@ namespace NL
             m_TextureMap[type] = texture;
         }
 
-        void AddTexture(const std::string& name, Ref<Texture2D> texture);
+        // Delete old tex to avoid memory leaking
+        void ReplaceTexture(const std::string& name, Ref<Texture2D> texture);
 
         const Ref<Texture2D>& GetTexture(TextureType type) { return m_TextureMap[type]; }
         const Ref<Texture2D>& GetTexture(const std::string& name);

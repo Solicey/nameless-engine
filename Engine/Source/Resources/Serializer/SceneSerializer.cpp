@@ -256,7 +256,7 @@ namespace NL
 								Library<Texture2D>::GetInstance().Add(path, newTex);
 							}
 
-							material->AddTexture(newProp.Name, newTex);
+							material->ReplaceTexture(newProp.Name, newTex);
 
 							newProp.Value = path;
 

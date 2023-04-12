@@ -1,5 +1,6 @@
 #include "nlpch.h"
 
+#include "Core/App/Application.h"
 #include "Core/Misc/Directives.h"
 #include "EditorCamera.h"
 #include "Input/Input.h"
@@ -29,22 +30,25 @@ namespace NL
 
 	void EditorCamera::OnUpdate(TimeStep ts)
 	{
-		nlm::vec2 currMousePosition = Input::GetMousePosition();
+		nlm::vec2 currMousePosition = Application::GetInstance().GetCursorPos(); //Input::GetMousePosition();
 		nlm::vec2 delta = (currMousePosition - m_MousePositionLastFrame) * 0.003f;
 		m_MousePositionLastFrame = currMousePosition;
 
 		if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle))
 		{
+			Application::GetInstance().HideCursor();
 			Pan(delta);
 			m_IsMouseButtonHolding = true;
 		}
 		else if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
 		{
+			Application::GetInstance().HideCursor();
 			Rotate(delta);
 			m_IsMouseButtonHolding = true;
 		}
 		else
 		{
+			Application::GetInstance().ShowCursor();
 			m_IsMouseButtonHolding = false;
 		}
 

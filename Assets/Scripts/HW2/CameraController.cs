@@ -164,9 +164,6 @@ namespace HW2
 
         void FPSCameraUpdate(float ts)
         {
-            Vector3 forward = fpsTransform.Forward();
-            Vector3 right = fpsTransform.Right();
-
             // Rotation
             Vector2 pos = Input.GetCursorPos();
 
@@ -190,6 +187,9 @@ namespace HW2
             // fpsTransform.Rotate(fpsTransform.Right(), cursorY);
 
             // Translation
+            Vector3 forward = fpsTransform.Forward();
+            Vector3 right = fpsTransform.Right();
+
             float horizontal = Input.IsKeyDown(KeyCode.A) ? 1f : (Input.IsKeyDown(KeyCode.D) ? -1f : 0f);
             float vertical = Input.IsKeyDown(KeyCode.W) ? -1f : (Input.IsKeyDown(KeyCode.S) ? 1f : 0f);
 

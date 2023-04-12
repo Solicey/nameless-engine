@@ -24,7 +24,7 @@ namespace NL
 		LoadShader(Library<Shader>::GetInstance().GetDefaultShaderName());
 	}
 
-	void Material::AddTexture(const std::string& name, Ref<Texture2D> texture)
+	void Material::ReplaceTexture(const std::string& name, Ref<Texture2D> texture)
 	{
 		if (s_String2TexTypeMap.contains(name))
 		{

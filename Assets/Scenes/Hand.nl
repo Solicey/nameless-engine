@@ -22,7 +22,7 @@ Entities:
       Rotation: [4.67775322e-07, -1.38600397, 1.17922818e-08]
       Scale: [1, 1, 1]
     CameraComponent:
-      FixedAspectRatio: false
+      FixedAspectRatio: true
       ClearColor: [0.192000002, 0.301999986, 0.474999994, 1]
       ProjectionType: 1
       OrthoSize: 10
@@ -40,7 +40,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     CameraComponent:
-      FixedAspectRatio: false
+      FixedAspectRatio: true
       ClearColor: [0.192000002, 0.301999986, 0.474999994, 1]
       ProjectionType: 1
       OrthoSize: 10
@@ -144,7 +144,10 @@ Entities:
           Data: 0.300000012
         - Name: FpsMouseSensitivity
           Type: Float
-          Data: 6
+          Data: 8
+        - Name: FpsMoveSpeed
+          Type: Float
+          Data: 5
   - ID: 6196780381642991916
     Name: TrackBegin
     TransformComponent:

@@ -116,9 +116,11 @@ namespace NL
 			std::string emitLabel = "##" + label;
 			bool isModified = ImGui::BeginCombo(emitLabel.c_str(), value);
 
-			ImGui::PopItemWidth();
+			// NL_INFO("Combo Modified!");
+			
 			if (!isModified)
 				ImGui::Columns(1);
+			ImGui::PopItemWidth();
 			return isModified;
 		}
 
@@ -307,9 +309,15 @@ namespace NL
 
 		auto& camera = component.mCamera;
 
-		const char* projectionTypeStrings[] = { "Ortho", "Persp" };
+		const char* projectionTypeStrings[] = { "Orthographic", "Perspective" };
 		const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];
-		if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentProjectionTypeString))
+		// if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentProjectionTypeString))
+		ImGui::Columns(2);
+		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - RIGHT_COLUMN_WIDTH);
+		ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+		ImGui::Text("Projection");
+		ImGui::NextColumn();
+		if (ImGui::BeginCombo("##Projection", currentProjectionTypeString))
 		{
 			for (int i = 0; i < 2; i++)
 			{
@@ -319,13 +327,11 @@ namespace NL
 					currentProjectionTypeString = projectionTypeStrings[i];
 					camera.SetProjectionType((Camera::ProjectionType)i);
 				}
-
-				if (isSelected)
-					ImGui::SetItemDefaultFocus();
 			}
 			ImGui::EndCombo();
-			ImGui::Columns(1);
 		}
+		ImGui::PopItemWidth();
+		ImGui::Columns(1);
 
 		if (camera.GetProjectionType() == Camera::ProjectionType::Perspective)
 		{
@@ -801,7 +807,7 @@ namespace NL
 							}
 
 							oldTex.reset();
-							mat->AddTexture(prop.Name, newTex);
+							mat->ReplaceTexture(prop.Name, newTex);
 
 							prop.Value = filepath;
 
