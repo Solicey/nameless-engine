@@ -456,14 +456,14 @@ namespace NL
 			}
 		}
 
-		for (auto& pair : bones)
+		/*for (auto& pair : bones)
 		{
 			auto& bone = pair.second;
 			if (bone.parentID == -1)
 			{
 				ProcessBonePreRotate(bone.Name, node, bone.RootPreRotation);
 			}
-		}
+		}*/
 	}
 
 	void ModelLoader::ProcessBonePreRotate(const std::string& rootName, const aiNode* sceneRoot, aiMatrix4x4& matrix)

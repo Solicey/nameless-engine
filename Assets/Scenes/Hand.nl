@@ -147,7 +147,7 @@ Entities:
           Data: 8
         - Name: FpsMoveSpeed
           Type: Float
-          Data: 5
+          Data: 8
   - ID: 6196780381642991916
     Name: TrackBegin
     TransformComponent:

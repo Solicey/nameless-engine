@@ -92,7 +92,13 @@ namespace NL
 		// Runtime Settings
 		bool m_IsMaximizeOnPlay = true;
 
-		// Editor Settings
+		// Scene Settings
+		/*
+		* Sun
+		* Skybox
+		*	
+		*/
+		bool m_ShowSceneSettings;
 
 		// Runtime Viewport Cursor
 		bool m_IsRuntimeViewportFocused = false;

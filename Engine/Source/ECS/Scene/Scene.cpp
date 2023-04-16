@@ -14,6 +14,12 @@ namespace NL
         m_Systems.emplace_back(CreateScope<ScriptingSystem>(this));
         m_Systems.emplace_back(CreateScope<RenderSystem>(this));
         m_EntityMap.clear();
+        m_SkyboxTextures.resize(6);
+        const std::string& name = Library<Texture2D>::GetInstance().GetDefaultTextureName();
+        for (int i = 0; i < 6; i++)
+        {
+            m_SkyboxTextures[i] = name;
+        }
     }
 
     Scene::~Scene()

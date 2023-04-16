@@ -31,4 +31,26 @@ namespace NL
 		GLenum m_InternalFormat, m_DataFormat;
 		std::string m_Path;
 	};
+
+	class OpenGLTextureCubeMap : public TextureCubeMap
+	{
+	public:
+		OpenGLTextureCubeMap(const std::vector<std::string>& texturePaths);
+		// virtual void AddTexturePath(CubeMapFace faceIndex, const std::string& path) override;
+		virtual void Bind(uint32_t slot = 0) const override;
+		virtual void Unbind() const override;
+
+		virtual uint32_t GetWidth() const override { return m_Width; }
+		virtual uint32_t GetHeight() const override { return m_Height; }
+		virtual uint32_t GetRendererID() const override { return m_RendererID; }
+		// virtual const std::string& GetPath() const override;
+
+		virtual bool IsLoaded() const override { return m_IsLoaded; }
+
+	private:
+		uint32_t m_RendererID;
+		uint32_t m_Width, m_Height;
+		bool m_IsLoaded = false;
+		std::vector<std::string> m_Paths;
+	};
 }

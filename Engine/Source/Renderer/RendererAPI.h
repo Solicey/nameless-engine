@@ -6,6 +6,13 @@
 
 namespace NL
 {
+	enum class DepthComp
+	{
+		EQUAL,
+		LEQUAL,
+		LESS
+	};
+
 	class RendererAPI
 	{
 	public:
@@ -28,6 +35,8 @@ namespace NL
 		virtual void SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height) = 0;
 
 		virtual void DepthTest(bool enable) = 0;
+
+		virtual void DepthFunc(DepthComp comp) = 0;
 
 		inline static API GetCurrent() { return s_API; }
 

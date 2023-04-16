@@ -19,5 +19,7 @@ namespace NL
 
 	private:
 		// Ref<Shader> m_GrayScaleShader;
+		Ref<Shader> m_SkyboxShader;
+		Ref<Model> m_Skybox;
 	};
 }

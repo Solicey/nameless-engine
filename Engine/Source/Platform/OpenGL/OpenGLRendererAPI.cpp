@@ -6,6 +6,24 @@
 
 namespace NL
 {
+	namespace Utils
+	{
+		static GLenum DepthComparison2OpenGLDepthComparison(DepthComp comp)
+		{
+			switch (comp)
+			{
+			case DepthComp::EQUAL:
+				return GL_EQUAL;
+			case DepthComp::LEQUAL:
+				return GL_LEQUAL;
+			case DepthComp::LESS:
+				return GL_LESS;
+			}
+			NL_ENGINE_ASSERT(false, "Unknown Depth Comp");
+			return -1;
+		}
+	}
+
 	void OpenGLRendererAPI::Init()
 	{
 		glEnable(GL_BLEND);
@@ -50,5 +68,10 @@ namespace NL
 	{
 		if (enable) glEnable(GL_DEPTH_TEST);
 		else glDisable(GL_DEPTH_TEST);
+	}
+
+	void OpenGLRendererAPI::DepthFunc(DepthComp comp)
+	{
+		glDepthFunc(Utils::DepthComparison2OpenGLDepthComparison(comp));
 	}
 }

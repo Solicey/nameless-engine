@@ -520,6 +520,7 @@ namespace NL
             m_HierarchyPanel->OnImGuiRender(m_ShowHierarchy, true);
         }
 
+
 #pragma endregion
 
         ImGui::End();

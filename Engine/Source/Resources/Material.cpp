@@ -16,7 +16,8 @@ namespace NL
 			{ "u_Shininess", TextureType::Shininess },
 			{ "u_Lightmap", TextureType::Lightmap },
 			{ "u_Metalness", TextureType::Metalness },
-			{ "u_Roughness", TextureType::Roughness }
+			{ "u_Roughness", TextureType::Roughness },
+			{ "u_Skybox", TextureType::CubeMap },
 	};
 
 	Material::Material()

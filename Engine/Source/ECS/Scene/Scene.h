@@ -67,5 +67,9 @@ namespace NL
 
 		// Modified by C# Scripts
 		static std::string s_RuntimeCameraName;
+
+		// Environment Settings
+		// Default
+		std::vector<std::string> m_SkyboxTextures;
 	};
 }

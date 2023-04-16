@@ -79,6 +79,11 @@ namespace NL
 			s_RendererAPI->DepthTest(enable);
 		}
 
+		inline static void DepthFunc(DepthComp comp)
+		{
+			s_RendererAPI->DepthFunc(comp);
+		}
+
 #pragma endregion
 
 	private:

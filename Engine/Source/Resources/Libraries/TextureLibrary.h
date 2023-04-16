@@ -61,4 +61,24 @@ namespace NL
 	private:
 		const std::string& m_DefaultShaderName = "Default";
 	};
+
+	template <>
+	class Library<TextureCubeMap> : public LibraryBase<Library, TextureCubeMap>
+	{
+	public:
+		Library(Singleton::token)
+		{
+			std::string texturesFolderPath = PathConfig::GetInstance().GetTexturesFolder().string();
+			std::vector<std::string> paths
+			{
+				texturesFolderPath + "/DontModify/DefaultSkybox/right.jpg",
+				texturesFolderPath + "/DontModify/DefaultSkybox/left.jpg",
+				texturesFolderPath + "/DontModify/DefaultSkybox/top.jpg",
+				texturesFolderPath + "/DontModify/DefaultSkybox/bottom.jpg",
+				texturesFolderPath + "/DontModify/DefaultSkybox/front.jpg",
+				texturesFolderPath + "/DontModify/DefaultSkybox/back.jpg"
+			};
+			Add("DefaultSkybox", TextureCubeMap::Create(paths));
+		}
+	};
 }

@@ -35,4 +35,19 @@ namespace NL
 		NL_ENGINE_ASSERT(false, "Unknown RendererAPI!");
 		return nullptr;
 	}
+
+	Ref<TextureCubeMap> TextureCubeMap::Create(const std::vector<std::string>& texturePaths)
+	{
+		switch (RendererAPI::GetCurrent())
+		{
+		case RendererAPI::API::None:
+			NL_ENGINE_ASSERT(false, "RendererAPI::None not supported!");
+			return nullptr;
+		case RendererAPI::API::OpenGL:
+			return CreateRef<OpenGLTextureCubeMap>(texturePaths);
+		}
+
+		NL_ENGINE_ASSERT(false, "Unknown RendererAPI!");
+		return nullptr;
+	}
 }

@@ -12,6 +12,12 @@ namespace NL
 			Orthographic,
 			Perspective
 		};
+		
+		enum class ClearFlagType
+		{
+			Color,
+			Skybox
+		};
 
 	public:
 		Camera() { RecalculateProjectionMatrix(); }
@@ -58,6 +64,8 @@ namespace NL
 		uint32_t GetViewportHeight() const { return m_ViewportHeight; }
 		void SetViewportHeight(uint32_t height) { m_ViewportHeight = height; ReCalculateAspectRatio(); }
 
+		ClearFlagType GetClearFlagType() const { return m_ClearFlagType; }
+		void SetClearFlagType(ClearFlagType type) { m_ClearFlagType = type; }
 
 	private:
 		void RecalculateProjectionMatrix();		
@@ -71,6 +79,7 @@ namespace NL
 		nlm::mat4 m_ProjectionMatrix = nlm::mat4(1.0f);
 
 		ProjectionType m_ProjectionType = ProjectionType::Perspective;
+		ClearFlagType m_ClearFlagType = ClearFlagType::Color;
 
 		float m_OrthographicSize = 10.0f;
 		float m_OrthographicNear = 0.01f, m_OrthographicFar = 100.0f;

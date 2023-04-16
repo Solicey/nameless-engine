@@ -309,7 +309,7 @@ namespace NL
 
 		auto& camera = component.mCamera;
 
-		const char* projectionTypeStrings[] = { "Orthographic", "Perspective" };
+		const char* projectionTypeStrings[] = { "Ortho", "Persp" };
 		const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];
 		// if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentProjectionTypeString))
 		ImGui::Columns(2);
@@ -384,6 +384,30 @@ namespace NL
 				// m_RuntimeCameraUpdateCallback();
 			}
 		}
+
+		// Clear Flags
+		const char* clearFlagStrings[] = { "Color", "Skybox" };
+		const char* currentClearFlagStrings = clearFlagStrings[(int)camera.GetClearFlagType()];
+		ImGui::Columns(2);
+		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - RIGHT_COLUMN_WIDTH);
+		ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+		ImGui::Text("Clear Flags");
+		ImGui::NextColumn();
+		if (ImGui::BeginCombo("##ClearFlags", currentClearFlagStrings))
+		{
+			for (int i = 0; i < 2; i++)
+			{
+				bool isSelected = (currentClearFlagStrings == clearFlagStrings[i]);
+				if (ImGui::Selectable(clearFlagStrings[i], isSelected))
+				{
+					currentClearFlagStrings = clearFlagStrings[i];
+					camera.SetClearFlagType((Camera::ClearFlagType)i);
+				}
+			}
+			ImGui::EndCombo();
+		}
+		ImGui::PopItemWidth();
+		ImGui::Columns(1);
 
 		});
 

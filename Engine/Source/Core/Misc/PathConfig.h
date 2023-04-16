@@ -22,6 +22,7 @@ namespace NL
 		const std::filesystem::path& GetMaterialsFolder() const;
 		const std::filesystem::path& GetScriptsFolder() const;
 		const std::filesystem::path& GetFontsFolder() const;
+		const std::filesystem::path& GetTexturesFolder() const;
 
 	private:
 		std::filesystem::path m_AssetsFolder;
@@ -30,5 +31,6 @@ namespace NL
 		std::filesystem::path m_MaterialsFolder;
 		std::filesystem::path m_ScriptsFolder;
 		std::filesystem::path m_FontsFolder;
+		std::filesystem::path m_TexturesFolder;
 	};
 }

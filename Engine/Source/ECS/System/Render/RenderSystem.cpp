@@ -13,49 +13,11 @@ namespace NL
 	RenderSystem::RenderSystem(Scene* scene)
 		: System(scene)
 	{
-		std::string normalShaderVertexSrc = R"(
-			#version 450 core
+		m_SkyboxShader = Library<Shader>::GetInstance().LoadShader("Skybox.glsl");
+		NL_ENGINE_ASSERT(m_SkyboxShader, "Skybox shader does NOT exists!");
 
-			layout(location = 0) in vec3 a_Position;
-			layout(location = 2) in vec3 a_Normal;
-			layout(location = 5) in int a_EntityID;
-
-			uniform mat4 u_ViewProjection;
-			uniform mat4 u_Transform;
-			
-			layout (location = 0) out vec3 v_Position;
-			layout (location = 1) out vec3 v_Normal;
-			layout (location = 2) out flat int v_EntityID;
-			
-			void main()
-			{
-				v_Position = a_Position;
-				v_Normal = a_Normal;
-				v_EntityID = a_EntityID;
-				gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);
-			}
-		)";
-
-		std::string normalShaderFragmentSrc = R"(
-			#version 450 core
-
-			out vec4 color;
-			out int color2;
-
-			layout (location = 0) in vec3 v_Position;
-			layout (location = 1) in vec3 v_Normal;
-			layout (location = 2) in flat int v_EntityID;
-			
-			void main()
-			{
-				color = vec4(v_Normal.x * 0.5 + 0.5, v_Normal.y * 0.5 + 0.5, v_Normal.z * 0.5 + 0.5, 1.0);
-				color2 = v_EntityID;
-			}
-		)";
-
-		// m_GrayScaleShader = Shader::Create("Test Shader", PathConfig::GetInstance().GetShadersFolder() / "Debug/NormalTest.glsl");
-
-		Library<Shader>::GetInstance();
+		std::string modelsFolder = PathConfig::GetInstance().GetModelsFolder().string();
+		m_Skybox = ModelLoader::Create(modelsFolder + "/DontModify/Skybox.obj", -1, ModelLoaderFlags::Triangulate);
 	}
 
 	void RenderSystem::OnStartRuntime()
@@ -81,8 +43,12 @@ namespace NL
 		auto& camTransform = cameraEntity.GetComponent<TransformComponent>();
 
 		// Camera Clear Color
-		Renderer::SetClearColor(camera.ClearColor);
-		Renderer::Clear();
+		auto clearFlag = camera.mCamera.GetClearFlagType();
+		if (clearFlag == Camera::ClearFlagType::Color)
+		{
+			Renderer::SetClearColor(camera.ClearColor);
+			Renderer::Clear();
+		}
 
 		Renderer::BeginScene(camera.mCamera, camTransform.GetTransform());
 
@@ -100,6 +66,21 @@ namespace NL
 			}
 		}
 
+		if (clearFlag == Camera::ClearFlagType::Skybox)
+		{
+			m_SkyboxShader->Bind();
+
+			Renderer::DepthFunc(DepthComp::LEQUAL);
+
+			// tmp
+			Library<TextureCubeMap>::GetInstance().Get("DefaultSkybox")->Bind(0);
+			m_SkyboxShader->SetUniformInt("u_Skybox", 0);
+			NL_ENGINE_ASSERT(cameraEntity.HasComponent<TransformComponent>(), "Camera does NOT have transform!");
+			Renderer::DrawModel(m_Skybox, m_SkyboxShader, nlm::translate(nlm::mat4(1.0f), cameraEntity.GetComponent<TransformComponent>().GetTranslation()));
+
+			Renderer::DepthFunc(DepthComp::LESS);
+		}
+
 		Renderer::EndScene();
 	}
 
@@ -111,6 +92,7 @@ namespace NL
 	{
 		Renderer::BeginScene(camera);
 
+		// Render Entities
 		auto view = m_Scene->m_Registry.view<TransformComponent, ModelRendererComponent>();
 		for (auto& e : view)
 		{
@@ -138,6 +120,13 @@ namespace NL
 			{
 				Renderer::DrawModel(camera.Gizmos, transform.GetTransform() * nlm::scale(nlm::mat4(1.0f), nlm::vec3(1.0f, 1.0f, -1.0f)), selectedEntity == entity);
 			}
+		}
+
+		// Render Skybox?
+		auto clearFlag = camera.GetClearFlagType();
+		if (clearFlag == Camera::ClearFlagType::Skybox)
+		{
+
 		}
 
 		Renderer::EndScene();
