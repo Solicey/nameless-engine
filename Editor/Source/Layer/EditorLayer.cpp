@@ -50,12 +50,7 @@ namespace NL
         ScriptGlue::GetInstance().SetEventCallback(NL_BIND_EVENT_FN(EditorLayer::OnEvent));
 
         // Multisample framebuffer Setup
-        FramebufferSpecification msSpec;
-        msSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
-        msSpec.Width = 1280;
-        msSpec.Height = 720;
-        msSpec.Samples = 4;
-        m_MultisampledFramebuffer = Framebuffer::Create(msSpec);
+        UpdateFramebuffer();
 
         // Framebuffer Setup
         FramebufferSpecification spec;
@@ -125,10 +120,7 @@ namespace NL
         {
             m_EditorScene->OnUpdateEditor(ts, m_EditorCamera, m_HierarchyPanel->GetSelectedEntity());
 
-            if (m_ViewportHovered || m_EditorCamera.IsMouseButtonHolding())
-            {
-                m_EditorCamera.OnUpdate(ts);
-            }
+            m_EditorCamera.OnUpdate(ts, m_ViewportHovered);
 
             // TODO: Get editor camera post-processing options.
         }
@@ -156,6 +148,7 @@ namespace NL
 
         // Check Hovered Entity
         auto [mx, my] = ImGui::GetMousePos();
+        // NL_ENGINE_INFO("Hovered pos: ({0}, {1})", mx, my);
         mx -= m_ViewportBounds[0].x;
         my -= m_ViewportBounds[0].y;
         nlm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
@@ -184,6 +177,7 @@ namespace NL
 
 	void EditorLayer::OnImGuiRender()
 	{
+        Application::GetInstance().GetImGuiLayer()->BlockEvents(false);
 
 #pragma region Dockspace
 
@@ -283,6 +277,7 @@ namespace NL
             {
                 ImGui::MenuItem("Viewport", NULL, &m_ShowViewport);
                 ImGui::MenuItem("Hierarchy", NULL, &m_ShowHierarchy);
+                ImGui::MenuItem("Scene Settings", NULL, &m_ShowSceneSettings);
                 // ImGui::MenuItem("TRS Toolbar", NULL, &m_ShowTRS);
 
                 ImGui::EndMenu();
@@ -349,6 +344,7 @@ namespace NL
                     auto& runtimeCameraName = m_RuntimeCameraEntity.GetName();
                     if (ImGui::BeginCombo("Runtime Camera", runtimeCameraName.c_str()))
                     {
+                        Application::GetInstance().GetImGuiLayer()->BlockEvents(true);
                         auto camView = m_RuntimeScene->m_Registry.view<CameraComponent>();
                         for (auto entity : camView)
                         {
@@ -431,7 +427,7 @@ namespace NL
             
             m_ViewportFocused = ImGui::IsWindowFocused();
             // m_ViewportHovered = ImGui::IsWindowHovered();
-            Application::GetInstance().GetImGuiLayer()->BlockEvents(false);
+            // Application::GetInstance().GetImGuiLayer()->BlockEvents(false);
 
             ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
             // Update Viewport Size
@@ -443,13 +439,21 @@ namespace NL
             // uint64_t textureID = Library<Texture2D>::GetInstance().Get("../Assets/Models/nanosuit/arm_dif.png")->GetRendererID();
             if (!IsEditorMode())
             {
-                ImGui::SetCursorPos(ImVec2{ ImGui::GetWindowContentRegionMin().x + (m_ViewportSize.x - m_RuntimeAspect.x) / 2.0f, ImGui::GetWindowContentRegionMin().y + (m_ViewportSize.y - m_RuntimeAspect.y) / 2.0f });
+                float xRatio = (m_ViewportSize.x - m_RuntimeAspect.x) / 2.0f;
+                float yRatio = (m_ViewportSize.y - m_RuntimeAspect.y) / 2.0f;
+                ImGui::SetCursorPos(ImVec2{ ImGui::GetWindowContentRegionMin().x + xRatio, ImGui::GetWindowContentRegionMin().y + yRatio });
+                // float dx = (xRatio < 0) ? (-xRatio) / m_RuntimeAspect.x : 0;
+                // float dy = (yRatio < 0) ? (-yRatio) / m_RuntimeAspect.y : 0;
+                // ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_RuntimeAspect.x, m_RuntimeAspect.y }, ImVec2{ 0 + dx, 1 - dy }, ImVec2{ 1 - dx, 0 + dy });
+                // 
+                // Bugs remain... Smaller viewport leading to lower graphic performances...
+                ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_RuntimeAspect.x, m_RuntimeAspect.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
             }
             else
             {
                 textureID = m_PostProcessing->ExecutePostProcessingQueue(m_EditorPostProcessingQueue, m_Framebuffer);
+                ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
             }
-            ImGui::Image(reinterpret_cast<void*>(textureID), IsEditorMode() ? ImVec2{m_ViewportSize.x, m_ViewportSize.y} : ImVec2{m_RuntimeAspect.x, m_RuntimeAspect.y}, ImVec2{0, 1}, ImVec2{1, 0});
 
             // Gizmos
             if (IsEditorMode())
@@ -520,6 +524,54 @@ namespace NL
             m_HierarchyPanel->OnImGuiRender(m_ShowHierarchy, true);
         }
 
+        // Scene Settings
+        if (m_ShowSceneSettings && !(m_IsMaximizeOnPlay && m_ViewportMode == ViewportMode::Runtime))
+        {
+            ImGui::Begin("Scene Settings");
+
+            // Anti-Aliasing
+            bool hasAntiAliasModified = false;
+            if (ImGui::TreeNode("Anti-aliasing"))
+            {
+                if (ImGui::RadioButton("None", (m_AntiAliasingType == AntiAliasingType::None)))
+                {
+                    m_AntiAliasingType = AntiAliasingType::None;
+                    hasAntiAliasModified = true;
+                }
+                ImGui::SameLine();
+                if (ImGui::RadioButton("2x MSAA", (m_AntiAliasingType == AntiAliasingType::MSAA && m_MSAASamples == 2)))
+                {
+                    m_AntiAliasingType = AntiAliasingType::MSAA;
+                    m_MSAASamples = 2;
+                    hasAntiAliasModified = true;
+                }
+                ImGui::SameLine();
+                if (ImGui::RadioButton("4x MSAA", (m_AntiAliasingType == AntiAliasingType::MSAA && m_MSAASamples == 4)))
+                {
+                    m_AntiAliasingType = AntiAliasingType::MSAA;
+                    m_MSAASamples = 4;
+                    hasAntiAliasModified = true;
+                }
+                ImGui::SameLine();
+                if (ImGui::RadioButton("8x MSAA", (m_AntiAliasingType == AntiAliasingType::MSAA && m_MSAASamples == 8)))
+                {
+                    m_AntiAliasingType = AntiAliasingType::MSAA;
+                    m_MSAASamples = 8;
+                    hasAntiAliasModified = true;
+                }
+                ImGui::TreePop();
+            }
+            if (hasAntiAliasModified)
+            {
+                UpdateFramebuffer();
+            }
+
+            // Skybox
+
+            // Runtime PostEffects
+
+            ImGui::End();
+        }
 
 #pragma endregion
 
@@ -531,8 +583,9 @@ namespace NL
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-        if (m_ViewportHovered || m_EditorCamera.IsMouseButtonHolding())
+        if (m_ViewportHovered)
         {
+            // NL_ENGINE_INFO("Editor Camera Event");
             m_EditorCamera.OnEvent(event);
         }
 
@@ -836,5 +889,22 @@ namespace NL
                 cam.mCamera.SetAspectRatio((uint32_t)this->m_ViewportSize.x, (uint32_t)this->m_ViewportSize.y);
             }
         }
+    }
+
+    void EditorLayer::UpdateFramebuffer()
+    {
+        FramebufferSpecification msSpec;
+        msSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
+        msSpec.Width = 1280;
+        msSpec.Height = 720;
+        if (m_AntiAliasingType == AntiAliasingType::None)
+        {
+            msSpec.Samples = 1;
+        }
+        else if (m_AntiAliasingType == AntiAliasingType::MSAA)
+        {
+            msSpec.Samples = m_MSAASamples;
+        }
+        m_MultisampledFramebuffer = Framebuffer::Create(msSpec);
     }
 }

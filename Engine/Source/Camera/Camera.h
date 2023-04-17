@@ -79,7 +79,7 @@ namespace NL
 		nlm::mat4 m_ProjectionMatrix = nlm::mat4(1.0f);
 
 		ProjectionType m_ProjectionType = ProjectionType::Perspective;
-		ClearFlagType m_ClearFlagType = ClearFlagType::Color;
+		ClearFlagType m_ClearFlagType = ClearFlagType::Skybox;
 
 		float m_OrthographicSize = 10.0f;
 		float m_OrthographicNear = 0.01f, m_OrthographicFar = 100.0f;

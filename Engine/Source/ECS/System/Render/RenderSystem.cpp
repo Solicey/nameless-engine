@@ -126,7 +126,16 @@ namespace NL
 		auto clearFlag = camera.GetClearFlagType();
 		if (clearFlag == Camera::ClearFlagType::Skybox)
 		{
+			m_SkyboxShader->Bind();
 
+			Renderer::DepthFunc(DepthComp::LEQUAL);
+
+			// tmp
+			Library<TextureCubeMap>::GetInstance().Get("DefaultSkybox")->Bind(0);
+			m_SkyboxShader->SetUniformInt("u_Skybox", 0);
+			Renderer::DrawModel(m_Skybox, m_SkyboxShader, nlm::translate(nlm::mat4(1.0f), camera.GetPosition()));
+
+			Renderer::DepthFunc(DepthComp::LESS);
 		}
 
 		Renderer::EndScene();

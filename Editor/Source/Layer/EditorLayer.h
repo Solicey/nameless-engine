@@ -12,6 +12,11 @@ namespace NL
 		Editor, Runtime
 	};
 
+	enum class AntiAliasingType
+	{
+		None, MSAA
+	};
+
 	class EditorLayer : public Layer
 	{
 	public:
@@ -47,6 +52,7 @@ namespace NL
 		// TODO: Optimize
 		void UpdateRuntimeAspect();
 
+		void UpdateFramebuffer();
 
 	private:
 
@@ -67,6 +73,7 @@ namespace NL
 
 		// Post-processing
 		std::vector<PostProcessingType> m_EditorPostProcessingQueue;
+		std::vector<PostProcessingType> m_RuntimePostProcessingQueue;
 		Ref<PostProcessing> m_PostProcessing;
 
 		// Viewport variables
@@ -94,11 +101,13 @@ namespace NL
 
 		// Scene Settings
 		/*
-		* Sun
 		* Skybox
-		*	
+		* Anti-Aliasing
+		* Runtime PostProcessing
 		*/
 		bool m_ShowSceneSettings;
+		int m_MSAASamples = 4;
+		AntiAliasingType m_AntiAliasingType = AntiAliasingType::MSAA;
 
 		// Runtime Viewport Cursor
 		bool m_IsRuntimeViewportFocused = false;

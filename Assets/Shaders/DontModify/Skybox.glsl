@@ -27,10 +27,14 @@ void main()
 layout (location = 0) in vec3 v_TexCoords;
 
 layout (location = 0) out vec4 color;
+layout (location = 1) out int color2;
+layout (location = 2) out vec4 color3;
 
 uniform samplerCube u_Skybox;
 			
 void main()
 {
 	color = texture(u_Skybox, v_TexCoords);
+	color2 = -1;
+	color3 = vec4(0.1, 0.1, 0.1, 1);
 }			

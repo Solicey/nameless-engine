@@ -28,22 +28,31 @@ namespace NL
 		RecalculateViewMatrix();
 	}
 
-	void EditorCamera::OnUpdate(TimeStep ts)
+	void EditorCamera::OnUpdate(TimeStep ts, bool m_ViewportHovered)
 	{
 		nlm::vec2 currMousePosition = Application::GetInstance().GetCursorPos(); //Input::GetMousePosition();
+		// NL_ENGINE_INFO("Mouse Position: ({0}, {1})", currMousePosition.x, currMousePosition.y);
 		nlm::vec2 delta = (currMousePosition - m_MousePositionLastFrame) * 0.003f;
 		m_MousePositionLastFrame = currMousePosition;
+
+		if (!m_ViewportHovered && !m_IsMouseButtonHolding)
+		{
+			m_IsMouseButtonHolding = false;
+			return;
+		}
 
 		if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle))
 		{
 			Application::GetInstance().HideCursor();
-			Pan(delta);
+			if (m_IsMouseButtonHolding)
+				Pan(delta);
 			m_IsMouseButtonHolding = true;
 		}
 		else if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
 		{
 			Application::GetInstance().HideCursor();
-			Rotate(delta);
+			if (m_IsMouseButtonHolding)
+				Rotate(delta);
 			m_IsMouseButtonHolding = true;
 		}
 		else
@@ -142,7 +151,7 @@ namespace NL
 		float y = std::min(m_ViewportHeight / 900.0f, 3.0f); // max = 2.4f
 		float yFactor = 0.0366f * (y * y) - 0.1778f * y + 0.3021f;
 
-		return { xFactor, yFactor };
+		return { 2.0 * xFactor, 2.0 * yFactor };
 	}
 
 	float EditorCamera::ZoomSpeed() const
