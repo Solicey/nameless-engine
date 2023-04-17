@@ -13,7 +13,8 @@ namespace NL
 		EditorCamera();
 		EditorCamera(ProjectionType type, float fovOrSize, unsigned int width, unsigned int height, float nearClip, float farClip);
 
-		void OnUpdate(TimeStep ts);
+		// viewportAltered: whether viewport should be altered, usually true when mouse hovering on viewport
+		void OnUpdate(TimeStep ts, bool m_ViewportHovered);
 		void OnEvent(Event& e);
 
 		inline const nlm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
@@ -26,7 +27,7 @@ namespace NL
 		inline nlm::quat GetOrientation() const;
 
 		// For Viewport Interactions
-		bool IsMouseButtonHolding() const { return m_IsMouseButtonHolding; }
+		// bool IsMouseButtonHolding() const { return m_IsMouseButtonHolding; }
 
 		void SetCenter(const nlm::vec3& center);
 

@@ -12,6 +12,8 @@ namespace NL
 
 		virtual void Bind() override;
 
+		virtual void BindOneColorOnly(uint32_t attachmentIndex) override;
+
 		virtual void Unbind() override;
 
 		virtual void Resize(uint32_t width, uint32_t height) override;
@@ -22,9 +24,15 @@ namespace NL
 
 		virtual const FramebufferSpecification& GetSpecification() const override;
 
+		virtual uint32_t GetRendererID() const override;
+
 		virtual uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const override;
 
 		virtual uint32_t GetDepthAttachmentRendererID() const override;
+
+		virtual void ColorBlit(uint32_t attachmentIndex, Ref<Framebuffer>& dst) override;
+
+		virtual void ColorBlit(uint32_t srcAttachmentIndex, Ref<Framebuffer>& dst, uint32_t dstAttachmentIndex) override;
 
 	private:
 		/*

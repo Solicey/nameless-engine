@@ -25,6 +25,37 @@ namespace NL
             return nlm::toMat4(nlm::quat(Rotation));
         }
 
+        nlm::vec3 GetForward() const 
+        {
+            nlm::vec4 forward = GetRotationMatrix() * nlm::vec4(0, 0, 1, 1);
+            return nlm::vec3(forward);
+        }
+
+        nlm::vec3 GetRight() const
+        {
+            nlm::vec4 right = GetRotationMatrix() * nlm::vec4(-1, 0, 0, 1);
+            return nlm::vec3(right);
+        }
+
+        nlm::vec3 GetUp() const
+        {
+            nlm::vec4 up = GetRotationMatrix() * nlm::vec4(0, 1, 0, 1);
+            return nlm::vec3(up);
+        }
+
+        void Rotate(const nlm::vec3& rotateAxis, float angle)
+        {
+            float cos = nlm::cos(angle / 2.0f);
+            float sin = nlm::sin(angle / 2.0f);
+            nlm::quat q = nlm::quat(cos, sin * rotateAxis.x, sin * rotateAxis.y, sin * rotateAxis.z);
+            Rotation = nlm::eulerAngles(nlm::quat_cast(nlm::toMat4(q) * GetRotationMatrix()));
+        }
+
+        void LookAt(const nlm::vec3& dest)
+        {
+            Rotation = nlm::eulerAngles(nlm::quatLookAt(nlm::normalize(dest), GetUp()));
+        }
+
         nlm::vec3 GetTranslation() const { return Translation; }
         nlm::vec3 GetRotation() const { return Rotation; }
         nlm::vec3 GetScale() const { return Scale; }

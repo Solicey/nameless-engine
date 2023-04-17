@@ -1,7 +1,6 @@
 #include "HierarchyPanel.h"
 
 #include "Layer/EditorLayer.h"
-#include "Scripting/ScriptEngine.h"
 
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -117,9 +116,11 @@ namespace NL
 			std::string emitLabel = "##" + label;
 			bool isModified = ImGui::BeginCombo(emitLabel.c_str(), value);
 
-			ImGui::PopItemWidth();
+			// NL_INFO("Combo Modified!");
+			
 			if (!isModified)
 				ImGui::Columns(1);
+			ImGui::PopItemWidth();
 			return isModified;
 		}
 
@@ -310,7 +311,13 @@ namespace NL
 
 		const char* projectionTypeStrings[] = { "Ortho", "Persp" };
 		const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];
-		if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentProjectionTypeString))
+		// if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentProjectionTypeString))
+		ImGui::Columns(2);
+		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - RIGHT_COLUMN_WIDTH);
+		ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+		ImGui::Text("Projection");
+		ImGui::NextColumn();
+		if (ImGui::BeginCombo("##Projection", currentProjectionTypeString))
 		{
 			for (int i = 0; i < 2; i++)
 			{
@@ -320,13 +327,11 @@ namespace NL
 					currentProjectionTypeString = projectionTypeStrings[i];
 					camera.SetProjectionType((Camera::ProjectionType)i);
 				}
-
-				if (isSelected)
-					ImGui::SetItemDefaultFocus();
 			}
 			ImGui::EndCombo();
-			ImGui::Columns(1);
 		}
+		ImGui::PopItemWidth();
+		ImGui::Columns(1);
 
 		if (camera.GetProjectionType() == Camera::ProjectionType::Perspective)
 		{
@@ -380,6 +385,30 @@ namespace NL
 			}
 		}
 
+		// Clear Flags
+		const char* clearFlagStrings[] = { "Color", "Skybox" };
+		const char* currentClearFlagStrings = clearFlagStrings[(int)camera.GetClearFlagType()];
+		ImGui::Columns(2);
+		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - RIGHT_COLUMN_WIDTH);
+		ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+		ImGui::Text("Clear Flags");
+		ImGui::NextColumn();
+		if (ImGui::BeginCombo("##ClearFlags", currentClearFlagStrings))
+		{
+			for (int i = 0; i < 2; i++)
+			{
+				bool isSelected = (currentClearFlagStrings == clearFlagStrings[i]);
+				if (ImGui::Selectable(clearFlagStrings[i], isSelected))
+				{
+					currentClearFlagStrings = clearFlagStrings[i];
+					camera.SetClearFlagType((Camera::ClearFlagType)i);
+				}
+			}
+			ImGui::EndCombo();
+		}
+		ImGui::PopItemWidth();
+		ImGui::Columns(1);
+
 		});
 
 #pragma endregion
@@ -387,7 +416,7 @@ namespace NL
 #pragma region Draw Model Renderer
 
 		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [](auto& entity, auto& component) {
-			
+
 		const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
 		// NL_ENGINE_TRACE("Default shader name: {0}", Library<Shader>::GetInstance().GetDefaultShaderName());
 		
@@ -405,7 +434,9 @@ namespace NL
 		ImGui::SameLine();
 		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
 		ImVec2 buttonSize = { lineHeight + 3.0f, lineHeight };
-		if (ImGui::Button("...", buttonSize))
+
+		ImGui::PushID("ImportModel");
+		if (ImGui::Button("+", buttonSize))
 		{
 			std::string filepath = Application::GetInstance().OpenFileDialogue(L"Model(*.obj;*.fbx;*.dae;*.gltf)\0*.obj;*.fbx;*.dae;*.gltf\0\0");
 			size_t pos = filepath.find("Models");
@@ -426,6 +457,7 @@ namespace NL
 				component = ModelRendererComponent(path.string(), (uint32_t)entity, component.Flags);
 			}
 		}
+		ImGui::PopID();
 
 		ImGui::Columns(1);
 
@@ -573,17 +605,15 @@ namespace NL
 
 			NL_ENGINE_TRACE("Entity Script Class Modified");
 
-			// Modify Script Class
-			component.HasInstantiate = false;
-
 			return;
 		}
 
 		Ref<ScriptInstance> instance = ScriptEngine::GetInstance().GetScriptInstance(entity.GetID());
 
+		NL_ASSERT(scene != nullptr, "");
+
 		// If this is Runtime Scene and not pausing
-		if (scene != nullptr && scene->IsRunning() && instance)
-		// if (component.HasInstantiate)
+		if (scene->IsPlaying() && instance)
 		{
 			const auto& fields = instance->GetScriptClass()->GetFields();
 			for (const auto& [name, field] : fields)
@@ -618,7 +648,7 @@ namespace NL
 			}
 		}
 		// Editor
-		else if (component.HasInstantiate && instance)
+		else if (scene->IsEditor() && instance)
 		{
 			Ref<ScriptClass> entityClass = ScriptEngine::GetInstance().GetEntityClass(component.ClassName);
 			const auto& fields = entityClass->GetFields();
@@ -771,6 +801,50 @@ namespace NL
 				{
 					prop.Value = color;
 				}
+				break;
+			case ShaderUniformType::Sampler2D:
+
+				ImGui::PushID(&prop);
+				if (ImGui::TreeNode(prop.Name.c_str()))
+				{
+					const std::string& oldTexPath = std::get<std::string>(prop.Value);
+					Ref<Texture2D> oldTex = Library<Texture2D>::GetInstance().Get(oldTexPath);
+
+					if (ImGui::ImageButton((ImTextureID)oldTex->GetRendererID(), ImVec2(64, 64), ImVec2(0, 0), ImVec2(1, 1), 0))
+					{
+						std::string filepath = Application::GetInstance().OpenFileDialogue(L"Texture2D(*.png)\0*.png\0\0");
+
+						size_t pos = filepath.find("Assets");
+						if (pos != std::string::npos)
+						{
+							filepath = PathConfig::GetInstance().GetAssetsFolder().string() + filepath.substr(pos + 6);
+							Ref<Texture2D> newTex;
+
+							if (Library<Texture2D>::GetInstance().Contains(filepath))
+							{
+								newTex = Library<Texture2D>::GetInstance().Get(filepath);
+							}
+							else
+							{
+								newTex = Texture2D::Create(filepath);
+								Library<Texture2D>::GetInstance().Add(filepath, newTex);
+							}
+
+							oldTex.reset();
+							mat->ReplaceTexture(prop.Name, newTex);
+
+							prop.Value = filepath;
+
+						}
+						else if (!filepath.empty())
+						{
+							NL_ENGINE_ASSERT(false, "Only support textures from Textures Folder!");
+						}
+					}
+
+					ImGui::TreePop();
+				}
+				ImGui::PopID();
 				break;
 
 			default:

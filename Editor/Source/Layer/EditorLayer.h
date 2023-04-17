@@ -12,6 +12,11 @@ namespace NL
 		Editor, Runtime
 	};
 
+	enum class AntiAliasingType
+	{
+		None, MSAA
+	};
+
 	class EditorLayer : public Layer
 	{
 	public:
@@ -28,6 +33,8 @@ namespace NL
 		bool OnKeyPressedEvent(KeyPressedEvent& event);
 		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
 		bool OnWindowResizeEvent(WindowResizeEvent& event);
+		bool OnMouseMovedEvent(MouseMovedEvent& event);
+		bool OnRuntimeCameraSwitched(RuntimeCameraSwitchedEvent& event);
 		
 		void NewScene();
 		void OpenScene();
@@ -45,6 +52,8 @@ namespace NL
 		// TODO: Optimize
 		void UpdateRuntimeAspect();
 
+		void UpdateFramebuffer();
+
 	private:
 
 		friend class HierarchyPanel;
@@ -59,7 +68,13 @@ namespace NL
 		std::string m_EditorScenePath = "";
 
 		// Viewport framebuffer
+		Ref<Framebuffer> m_MultisampledFramebuffer;
 		Ref<Framebuffer> m_Framebuffer;
+
+		// Post-processing
+		std::vector<PostProcessingType> m_EditorPostProcessingQueue;
+		std::vector<PostProcessingType> m_RuntimePostProcessingQueue;
+		Ref<PostProcessing> m_PostProcessing;
 
 		// Viewport variables
 		bool m_ShowViewport;
@@ -84,5 +99,17 @@ namespace NL
 		// Runtime Settings
 		bool m_IsMaximizeOnPlay = true;
 
+		// Scene Settings
+		/*
+		* Skybox
+		* Anti-Aliasing
+		* Runtime PostProcessing
+		*/
+		bool m_ShowSceneSettings;
+		int m_MSAASamples = 4;
+		AntiAliasingType m_AntiAliasingType = AntiAliasingType::MSAA;
+
+		// Runtime Viewport Cursor
+		bool m_IsRuntimeViewportFocused = false;
 	};
 }

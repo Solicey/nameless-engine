@@ -22,6 +22,7 @@
 #include "Events/ApplicationEvent.h"
 #include "Events/KeyEvent.h"
 #include "Events/MouseEvent.h"
+#include "Events/MiscEvent.h"
 
 #include "Input/Input.h"
 #include "Input/KeyCodes.h"
@@ -40,6 +41,7 @@
 #include "Renderer/Renderer.h"
 #include "Renderer/VertexArray.h"
 #include "Renderer/Framebuffer.h"
+#include "Renderer/PostProcessing.h"
 
 #include "Scripting/ScriptEngine.h"
 #include "Scripting/ScriptGlue.h"

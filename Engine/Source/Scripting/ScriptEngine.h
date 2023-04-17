@@ -158,12 +158,16 @@ namespace NL
 		void ReloadAssembly();
 
 		void SetSceneContext(Scene* scene);
-		void OnStopRuntime();
+		void ClearAllInstances();
 
 		bool EntityClassExists(const std::string& fullClassName);
 		bool OnCreateEntity(Entity entity);
-		void OnUpdateRuntime(Entity entity, TimeStep ts);
-		void OnUpdateEditor(Entity entity, TimeStep ts);
+		void OnDeleteEntity(Entity entity);
+		bool OnUpdateRuntime(Entity entity, TimeStep ts);
+		// Return false if no instance found
+		bool OnUpdateEditor(Entity entity, TimeStep ts);
+
+		bool ContainsInstance(Entity entity);
 
 #pragma region Deprecated
 

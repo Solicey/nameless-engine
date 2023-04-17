@@ -1,29 +1,11 @@
 Scene: Untitled
 Entities:
-  - ID: 2639001638818414215
-    Name: Camera
-    TransformComponent:
-      Translation: [0, 136.747681, 177.126831]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    CameraComponent:
-      FixedAspectRatio: true
-      ClearColor: [0.192000002, 0.301999986, 0.474999994, 1]
-      ProjectionType: 1
-      OrthoSize: 10
-      OrthoFar: 100
-      OrthoNear: 0.00999999978
-      PerspFOV: 0.785398185
-      PerspFar: 1000
-      PerspNear: 0.00999999978
-      ViewportWidth: 1280
-      ViewportHeight: 720
   - ID: 3286707541867758127
     Name: Vampire
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
+      Scale: [0.00999999978, 0.00999999978, 0.00999999978]
     ModelRendererComponent:
       ModelPath: ../Assets/Models/vampire/Vampire.fbx
       Materials:
@@ -244,3 +226,21 @@ Entities:
           Child: mixamorig:F_skirt3
         - Parent: mixamorig:F_skirt3
           Child: mixamorig:F_skirt4
+  - ID: 2639001638818414215
+    Name: Camera
+    TransformComponent:
+      Translation: [0, 136.747681, 177.126831]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      FixedAspectRatio: true
+      ClearColor: [0.192000002, 0.301999986, 0.474999994, 1]
+      ProjectionType: 1
+      OrthoSize: 10
+      OrthoFar: 100
+      OrthoNear: 0.00999999978
+      PerspFOV: 0.785398185
+      PerspFar: 1000
+      PerspNear: 0.00999999978
+      ViewportWidth: 1280
+      ViewportHeight: 720

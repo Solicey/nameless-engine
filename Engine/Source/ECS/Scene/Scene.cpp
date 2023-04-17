@@ -14,6 +14,12 @@ namespace NL
         m_Systems.emplace_back(CreateScope<ScriptingSystem>(this));
         m_Systems.emplace_back(CreateScope<RenderSystem>(this));
         m_EntityMap.clear();
+        m_SkyboxTextures.resize(6);
+        const std::string& name = Library<Texture2D>::GetInstance().GetDefaultTextureName();
+        for (int i = 0; i < 6; i++)
+        {
+            m_SkyboxTextures[i] = name;
+        }
     }
 
     Scene::~Scene()
@@ -103,35 +109,49 @@ namespace NL
 
     void Scene::OnStartRuntime()
     {
+        m_SceneState = SceneState::Play;
         for (auto& system : m_Systems)
         {
             system->OnStartRuntime();
         }
     }
 
-    void Scene::OnStopRuntime()
+    void Scene::OnStopRuntime(Scene* editorScene)
     {
+        m_SceneState = SceneState::Editor;
         for (auto& system : m_Systems)
         {
-            system->OnStopRuntime();
+            system->OnStopRuntime(editorScene);
         }
 
         m_Registry.clear();
     }
 
-    void Scene::OnUpdateRuntime(TimeStep ts, Entity cameraEntity)
+    void Scene::OnUpdateRuntime(TimeStep ts, Entity cameraEntity, bool isRuntimeViewportFocused)
     {
+        if (!isRuntimeViewportFocused)
+            m_SceneState = SceneState::Pause;
+        else m_SceneState = SceneState::Play;
+
         for (auto& system : m_Systems)
         {
             system->OnUpdateRuntime(ts, cameraEntity);
         }
     }
 
-    void Scene::OnUpdateEditor(TimeStep ts, EditorCamera& camera)
+    void Scene::OnStartEditor()
     {
         for (auto& system : m_Systems)
         {
-            system->OnUpdateEditor(ts, camera);
+            system->OnStartEditor();
+        }
+    }
+
+    void Scene::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity)
+    {
+        for (auto& system : m_Systems)
+        {
+            system->OnUpdateEditor(ts, camera, selectedEntity);
         }
     }
 
@@ -165,16 +185,6 @@ namespace NL
                 cameraComponent.mCamera.SetAspectRatio(width, height);
         }
     }*/
-
-    void Scene::ReloadAssembly()
-    {
-        auto view = m_Registry.view<ScriptComponent>();
-        for (auto e : view)
-        {
-            Entity entity = { e, this };
-            entity.GetComponent<ScriptComponent>().HasInstantiate = false;
-        }
-    }
 
 #pragma region OnComponentAdded
 

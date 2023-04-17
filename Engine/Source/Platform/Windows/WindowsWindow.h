@@ -32,6 +32,11 @@ namespace NL
 
 		virtual void SetWindowTitle(const std::string& name) override;
 
+		virtual void HideCursor() override;
+		virtual void ShowCursor() override;
+
+		virtual nlm::vec2 GetCursorPos() override;
+
 	private:
 		virtual void Init(const WindowProps& props);
 		virtual void Shutdown();
@@ -44,6 +49,7 @@ namespace NL
 		{
 			std::string Title;
 			unsigned int Width, Height;
+			nlm::vec2 CursorPos;
 			EventCallbackFn EventCallback;
 			bool VSync;
 		} m_Data;

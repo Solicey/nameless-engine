@@ -2,9 +2,11 @@
 
 #include "ScriptGlue.h"
 
+#include "Core/App/Application.h"
 #include "Scripting/ScriptEngine.h"
 #include "Input/Input.h"
 #include "Input/KeyCodes.h"
+#include "Events/MiscEvent.h"
 
 #include <mono/metadata/object.h>
 #include <mono/metadata/reflection.h>
@@ -67,6 +69,30 @@ namespace NL
 		return entity.GetID();
 	}
 
+	static void Math_EulerAnglesToQuat(nlm::vec3* eulerAngles, nlm::vec4* orientation)
+	{
+		nlm::quat q = nlm::quat(nlm::radians(*eulerAngles));
+		*orientation = nlm::vec4(q.x, q.y, q.z, q.w);
+	}
+
+	static void Math_QuatToEulerAngles(nlm::vec4* orientation, nlm::vec3* eulerAngles)
+	{
+		nlm::quat q = nlm::quat(orientation->w, orientation->x, orientation->y, orientation->z);
+		//nlm::extractEulerAngleYXZ(nlm::toMat4(q), eulerAngles->y, eulerAngles->x, eulerAngles->z);
+		*eulerAngles = nlm::degrees(nlm::eulerAngles(q));
+	}
+
+	static void Math_QuatNormalize(nlm::vec4* orientation)
+	{
+		nlm::quat q = nlm::quat(orientation->w, orientation->x, orientation->y, orientation->z);
+		q = nlm::normalize(q);
+		*orientation = nlm::vec4(q.x, q.y, q.z, q.w);
+	}
+
+	// ! WARNING !
+	// We use radians here, but use degrees in C# Script!
+	// Do all the conversions here!
+
 	static void TransformComponent_GetTranslation(ID entityID, nlm::vec3* outTranslation)
 	{
 		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
@@ -77,6 +103,16 @@ namespace NL
 		*outTranslation = entity.GetComponent<TransformComponent>().Translation;
 	}
 
+	static void TransformComponent_GetRotation(ID entityID, nlm::vec3* outRotation)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		*outRotation = nlm::degrees(entity.GetComponent<TransformComponent>().Rotation);
+	}
+
 	static void TransformComponent_SetTranslation(ID entityID, nlm::vec3* translation)
 	{
 		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
@@ -85,6 +121,97 @@ namespace NL
 		NL_ENGINE_ASSERT(entity, "");
 
 		entity.GetComponent<TransformComponent>().Translation = *translation;
+	}
+
+	static void TransformComponent_SetRotation(ID entityID, nlm::vec3* rotation)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		entity.GetComponent<TransformComponent>().Rotation = nlm::radians(*rotation);
+	}
+
+	static void TransformComponent_GetForward(ID entityID, nlm::vec3* forward)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		if (entity.HasComponent<TransformComponent>())
+		{
+			*forward = entity.GetComponent<TransformComponent>().GetForward();
+		}
+	}
+
+	static void TransformComponent_GetRight(ID entityID, nlm::vec3* right)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		if (entity.HasComponent<TransformComponent>())
+		{
+			*right = entity.GetComponent<TransformComponent>().GetRight();
+		}
+	}
+
+	static void TransformComponent_GetUp(ID entityID, nlm::vec3* up)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		if (entity.HasComponent<TransformComponent>())
+		{
+			*up = entity.GetComponent<TransformComponent>().GetUp();
+		}
+	}
+
+	static void TransformComponent_Translate(ID entityID, nlm::vec3* translation)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		if (entity.HasComponent<TransformComponent>())
+		{
+			auto& comp = entity.GetComponent<TransformComponent>();
+			comp.Translation += *translation;
+		}
+	}
+
+	static void TransformComponent_Rotate(ID entityID, nlm::vec3* rotateAxis, float angle)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		if (entity.HasComponent<TransformComponent>())
+		{
+			auto& comp = entity.GetComponent<TransformComponent>();
+			comp.Rotate(*rotateAxis, nlm::radians(angle));
+		}
+	}
+
+	static void TransformComponent_LookAt(ID entityID, nlm::vec3* dest)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		if (entity.HasComponent<TransformComponent>())
+		{
+			auto& comp = entity.GetComponent<TransformComponent>();
+			comp.LookAt(*dest);
+		}
 	}
 
 	static void ModelRendererComponent_RotateBone(ID entityID, int boneId, nlm::vec3* eulerAngles)
@@ -118,6 +245,26 @@ namespace NL
 	static bool Input_IsKeyDown(KeyCode keycode)
 	{
 		return Input::IsKeyPressed(keycode);
+	}
+
+	static void Input_GetCursorPos(nlm::vec2* pos)
+	{
+		*pos = Application::GetInstance().GetCursorPos();
+		// NL_ENGINE_INFO("Cursor pos: {0}, {1}", (*pos).x, (*pos).y);
+	}
+
+	static void CameraComponent_SetAsRuntimeCamera(ID entityID)
+	{
+		Scene* scene = ScriptEngine::GetInstance().GetSceneContext();
+		NL_ENGINE_ASSERT(scene, "");
+		Entity entity = scene->GetEntityWithID(entityID);
+		NL_ENGINE_ASSERT(entity, "");
+
+		if (entity.HasComponent<CameraComponent>())
+		{
+			RuntimeCameraSwitchedEvent event(entity);
+			ScriptGlue::GetInstance().CallEventCallback(event);
+		}
 	}
 
 	template<typename... Component>
@@ -165,12 +312,33 @@ namespace NL
 		NL_ADD_INTERNAL_CALL(Entity_HasComponent);
 		NL_ADD_INTERNAL_CALL(Entity_FindEntityByName);
 
+		NL_ADD_INTERNAL_CALL(Math_EulerAnglesToQuat);
+		NL_ADD_INTERNAL_CALL(Math_QuatToEulerAngles);
+		NL_ADD_INTERNAL_CALL(Math_QuatNormalize);
+
 		NL_ADD_INTERNAL_CALL(TransformComponent_GetTranslation);
 		NL_ADD_INTERNAL_CALL(TransformComponent_SetTranslation);
+		NL_ADD_INTERNAL_CALL(TransformComponent_GetRotation);
+		NL_ADD_INTERNAL_CALL(TransformComponent_SetRotation);
+		NL_ADD_INTERNAL_CALL(TransformComponent_GetForward);
+		NL_ADD_INTERNAL_CALL(TransformComponent_GetRight);
+		NL_ADD_INTERNAL_CALL(TransformComponent_GetUp);
+		NL_ADD_INTERNAL_CALL(TransformComponent_Translate);
+		NL_ADD_INTERNAL_CALL(TransformComponent_Rotate);
+		NL_ADD_INTERNAL_CALL(TransformComponent_LookAt);
 
 		NL_ADD_INTERNAL_CALL(Input_IsKeyDown);
+		NL_ADD_INTERNAL_CALL(Input_GetCursorPos);
 
 		NL_ADD_INTERNAL_CALL(ModelRendererComponent_RotateBone);
 		NL_ADD_INTERNAL_CALL(ModelRendererComponent_RecalculateFinalBoneMatrices);
+
+		NL_ADD_INTERNAL_CALL(CameraComponent_SetAsRuntimeCamera);
+		
+	}
+
+	void ScriptGlue::SetEventCallback(const EventCallbackFn& callback)
+	{
+		s_EventCallback = callback;
 	}
 }

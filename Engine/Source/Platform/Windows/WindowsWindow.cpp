@@ -132,6 +132,21 @@ namespace NL
 		glfwSetWindowTitle(m_Window, name.c_str());
 	}
 
+	void WindowsWindow::HideCursor()
+	{
+		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
+
+	void WindowsWindow::ShowCursor()
+	{
+		glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+
+	nlm::vec2 WindowsWindow::GetCursorPos()
+	{
+		return m_Data.CursorPos;
+	}
+
 	void WindowsWindow::Init(const WindowProps& props)
 	{
 		m_Data.Title = props.Title;
@@ -238,6 +253,7 @@ namespace NL
 
 		glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double xPos, double yPos) {
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+			data.CursorPos = { (float)xPos, (float)yPos };
 
 			MouseMovedEvent event((float)xPos, (float)yPos);
 			data.EventCallback(event);

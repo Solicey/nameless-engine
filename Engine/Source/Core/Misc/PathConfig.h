@@ -16,14 +16,13 @@ namespace NL
 		PathConfig& operator = (const PathConfig&) = delete;
 
 	public:
-		void Clear();
-
 		const std::filesystem::path& GetAssetsFolder() const;
 		const std::filesystem::path& GetModelsFolder() const;
 		const std::filesystem::path& GetShadersFolder() const;
 		const std::filesystem::path& GetMaterialsFolder() const;
 		const std::filesystem::path& GetScriptsFolder() const;
 		const std::filesystem::path& GetFontsFolder() const;
+		const std::filesystem::path& GetTexturesFolder() const;
 
 	private:
 		std::filesystem::path m_AssetsFolder;
@@ -32,5 +31,6 @@ namespace NL
 		std::filesystem::path m_MaterialsFolder;
 		std::filesystem::path m_ScriptsFolder;
 		std::filesystem::path m_FontsFolder;
+		std::filesystem::path m_TexturesFolder;
 	};
 }

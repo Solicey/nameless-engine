@@ -13,6 +13,11 @@ namespace NL
 	class Entity;
 	class System;
 
+	enum class SceneState
+	{
+		Editor, Play, Pause
+	};
+
 	class Scene
 	{
 	public:
@@ -26,39 +31,21 @@ namespace NL
 		void DestroyEntity(Entity entity);
 
 		void OnStartRuntime();
-		void OnStopRuntime();
-		void OnUpdateRuntime(TimeStep ts, Entity cameraEntity);
-		void OnUpdateEditor(TimeStep ts, EditorCamera& camera);
+		void OnStopRuntime(Scene* editorScene);
+		void OnUpdateRuntime(TimeStep ts, Entity cameraEntity, bool isRuntimeViewportFocused);
+
+		void OnStartEditor();
+		void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity);
 
 		Entity GetEntityWithID(ID id);
 		Entity FindEntityByName(std::string_view name);
 
-		bool IsRunning() const { return m_IsRunning; }
-		bool IsPaused() const { return m_IsPaused; }
-		void SetRuntimeViewportState(bool isRunning, bool isPaused) { m_IsRunning = isRunning; m_IsPaused = isPaused; }
-		void ReloadAssembly();
+		bool IsEditor() const { return m_SceneState == SceneState::Editor; }
+		bool IsPlaying() const { return m_SceneState == SceneState::Play; }
+		bool IsPaused() const { return m_SceneState == SceneState::Pause; }
 
-		// nlm::vec2 OnViewportResize(uint32_t width, uint32_t height);
-		
-		/*std::unordered_map<Entity, Ref<Camera>>& GetRuntimeCameraMapNotConst() { return m_RuntimeCameraMap; }
-		bool ContainRuntimeCamera(const Entity& entity) const
-		{
-			return m_RuntimeCameraMap.contains(entity);
-		}
-		// Should call ContainRuntimeCamera(entity) first
-		Ref<Camera> GetRuntimeCamera(const Entity& entity)
-		{
-			return m_RuntimeCameraMap.at(entity);
-		}
-		Ref<Camera> GetAnyRuntimeCamera()
-		{
-			if (!m_RuntimeCameraMap.empty())
-			{
-				auto iter = m_RuntimeCameraMap.begin();
-				return (*iter).second;
-			}
-			return nullptr;
-		}*/
+		static void SetRuntimeCamera(const std::string& str) { s_RuntimeCameraName = str; }
+		static const std::string& GetRuntimeCamera() { return s_RuntimeCameraName; }
 
 	private:
 		template<Component C>
@@ -76,7 +63,13 @@ namespace NL
 	private:
 		std::unordered_map<ID, entt::entity> m_EntityMap;
 		std::vector<Scope<System>> m_Systems;
-		bool m_IsRunning = false;
-		bool m_IsPaused = false;
+		SceneState m_SceneState = SceneState::Editor;
+
+		// Modified by C# Scripts
+		static std::string s_RuntimeCameraName;
+
+		// Environment Settings
+		// Default
+		std::vector<std::string> m_SkyboxTextures;
 	};
 }

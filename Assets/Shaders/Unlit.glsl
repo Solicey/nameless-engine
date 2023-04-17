@@ -37,18 +37,24 @@ void main()
 #type fragment
 #version 450 core
 
-out vec4 color;
-out int color2;
-
 layout (location = 0) in vec3 v_Position;
 layout (location = 1) in vec2 v_TexCoord;
 layout (location = 2) in vec3 v_Normal;
 layout (location = 3) in flat int v_EntityID;
 
+layout (location = 0) out vec4 color;
+layout (location = 1) out int color2;
+layout (location = 2) out vec4 color3;
+
 uniform vec3 u_Color;
+uniform bool u_IsSelected;
 			
 void main()
 {
 	color = vec4(u_Color, 1.0);
 	color2 = v_EntityID;
+
+	color3 = vec4(0.1, 0.1, 0.1, 1);
+	if (u_IsSelected)
+		color3 = vec4(1, 1, 1, 1);
 }			

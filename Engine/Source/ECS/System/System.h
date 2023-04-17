@@ -14,9 +14,11 @@ namespace NL
 		virtual ~System() = default;
 
 		virtual void OnStartRuntime() = 0;
-		virtual void OnStopRuntime() = 0;
+		virtual void OnStopRuntime(Scene* editorScene) = 0;
 		virtual void OnUpdateRuntime(TimeStep ts, Entity cameraEntity) = 0;
-		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera) = 0;
+
+		virtual void OnStartEditor() = 0;
+		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity) = 0;
 
 	protected:
 		Scene* m_Scene = nullptr;

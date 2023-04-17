@@ -391,7 +391,7 @@ CODE
  - 2022/XX/XX (1.XX) - when multi-viewports are enabled, all positions will be in your natural OS coordinates space. It means that:
                         - reference to hard-coded positions such as in SetNextWindowPos(ImVec2(0,0)) are probably not what you want anymore.
                           you may use GetMainViewport()->Pos to offset hard-coded positions, e.g. SetNextWindowPos(GetMainViewport()->Pos)
-                        - likewise io.MousePos and GetMousePos() will use OS coordinates.
+                        - likewise io.MousePos and GetCursorPos() will use OS coordinates.
                           If you query mouse positions to interact with non-imgui coordinates you will need to offset them, e.g. subtract GetWindowViewport()->Pos.
 
  - 2022/10/26 (1.89) - commented out redirecting OpenPopupContextItem() which was briefly the name of OpenPopupOnItemClick() from 1.77 to 1.79.
@@ -8165,7 +8165,7 @@ bool ImGui::IsRectVisible(const ImVec2& rect_min, const ImVec2& rect_max)
 // - IsMouseHoveringRect() [Internal]
 // - IsMouseDragPastThreshold() [Internal]
 // - IsMouseDragging()
-// - GetMousePos()
+// - GetCursorPos()
 // - GetMousePosOnOpeningCurrentPopup()
 // - IsMousePosValid()
 // - IsAnyMouseDown()

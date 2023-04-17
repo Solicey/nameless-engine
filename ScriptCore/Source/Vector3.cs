@@ -12,6 +12,10 @@ namespace NL
 
         public static Vector3 Zero => new Vector3(0.0f);
 
+        public static Vector3 Up => new Vector3(0.0f, 1.0f, 0.0f);
+
+        public static Vector3 Right => new Vector3(-1.0f, 0.0f, 0.0f);
+
         public Vector3(float scalar)
         {
             X = scalar;
@@ -48,9 +52,22 @@ namespace NL
             return new Vector3(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
         }
 
+        public static Vector3 operator -(Vector3 a, Vector3 b)
+        {
+            return new Vector3(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+        }
+
         public static Vector3 operator *(Vector3 vector, float scalar)
         {
             return new Vector3(vector.X * scalar, vector.Y * scalar, vector.Z * scalar);
         }
+
+        public Vector4 Quaternion()
+        {
+            Vector4 quat;
+            InternalCalls.Math_EulerAnglesToQuat(ref this, out quat);
+            return quat;
+        }
+
     }
 }

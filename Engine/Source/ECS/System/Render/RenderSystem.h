@@ -11,11 +11,15 @@ namespace NL
 		RenderSystem(Scene* scene);
 
 		virtual void OnStartRuntime() override;
-		virtual void OnStopRuntime() override;
+		virtual void OnStopRuntime(Scene* editorScene) override;
 		virtual void OnUpdateRuntime(TimeStep ts, Entity cameraEntity) override;
-		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera) override;
+
+		virtual void OnStartEditor() override;
+		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity) override;
 
 	private:
-		// Ref<Shader> m_TestShader;
+		// Ref<Shader> m_GrayScaleShader;
+		Ref<Shader> m_SkyboxShader;
+		Ref<Model> m_Skybox;
 	};
 }

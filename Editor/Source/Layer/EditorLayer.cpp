@@ -45,45 +45,31 @@ namespace NL
 
 	void EditorLayer::OnAttach()
 	{
+        // Events
+        using EventCallbackFn = std::function<void(Event&)>;
+        ScriptGlue::GetInstance().SetEventCallback(NL_BIND_EVENT_FN(EditorLayer::OnEvent));
+
+        // Multisample framebuffer Setup
+        UpdateFramebuffer();
+
         // Framebuffer Setup
-        FramebufferSpecification fbSpec;
-        fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::Depth };
-        fbSpec.Width = 1280;
-        fbSpec.Height = 720;
-        m_Framebuffer = Framebuffer::Create(fbSpec);
+        FramebufferSpecification spec;
+        spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::RGBA8 };
+        spec.Width = 1280;
+        spec.Height = 720;
+        m_Framebuffer = Framebuffer::Create(spec);
+
+        // Post-processing
+        m_PostProcessing = PostProcessing::Create();
+        m_EditorPostProcessingQueue = { PostProcessingType::EditorOutline };
 
 		// m_EditorCamera = EditorCamera(Camera::ProjectionType::Orthographic, 10.0f, 1280, 720, 0.1f, 1000.0f);
 		m_EditorCamera = EditorCamera(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
 		m_EditorScene = CreateRef<Scene>();
 
-        /*Entity eCam = m_EditorScene->CreateEntity("Camera");
-        eCam.AddComponent<ModelRendererComponent>("../Assets/Models/Camera.obj",
-            (int)(uint32_t)(eCam),
-            ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
-        eCam.GetComponent<TransformComponent>().SetTranslation(0, 1, 0);
-
-		Entity eBox = m_EditorScene->CreateEntity("Box");
-		eBox.AddComponent<ModelRendererComponent>("../Assets/Models/Box.obj", 
-            (int)(uint32_t)(eBox),
-            ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
-
-        Entity eSphere = m_EditorScene->CreateEntity("Sphere");
-        eSphere.AddComponent<ModelRendererComponent>("../Assets/Models/Sphere.obj",
-            (int)(uint32_t)(eSphere),
-            ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace);
-        eSphere.GetComponent<TransformComponent>().SetTranslation(0, -1, 0);*/
-
         // Hierarchy
         m_HierarchyPanel = CreateRef<HierarchyPanel>(m_EditorScene);
         m_HierarchyPanel->SetUpdateRuntimeCameraCallback([this]() { EditorLayer::UpdateRuntimeAspect(); });
-
-
-        // Test mono
-        /*auto& scripting = ScriptEngine::GetInstance();
-        MonoAssembly* assembly = scripting.LoadCSharpAssembly("../ScriptCore/Scripts/ScriptCore.dll");
-        MonoClass* testClass = scripting.GetClassInAssembly(assembly, "TestNamespace", "TestClass");
-        MonoObject* testClassInstance = scripting.Instantiate(testClass);
-        scripting.CallMethod(testClassInstance, "PrintFloatVar");*/
 
         // Icons
         m_PlayButton = Texture2D::Create(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/PlayButton.png");
@@ -91,7 +77,7 @@ namespace NL
 
         // Scripting
         ScriptEngine::GetInstance().Init();
-        ScriptEngine::GetInstance().SetSceneContext(m_EditorScene.get());
+        m_EditorScene->OnStartEditor();
 	}
 
 	void EditorLayer::OnDetach()
@@ -101,10 +87,11 @@ namespace NL
 	void EditorLayer::OnUpdate(TimeStep ts)
 	{
         // Resize
-        if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
+        if (FramebufferSpecification spec = m_MultisampledFramebuffer->GetSpecification();
             m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
             (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
         {
+            m_MultisampledFramebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             // Camera Controller
             m_EditorCamera.SetAspectRatio(m_ViewportSize.x, m_ViewportSize.y);
@@ -118,24 +105,24 @@ namespace NL
         }
 
         // Framebuffer preparation
-        m_Framebuffer->Bind();
-        m_Framebuffer->ClearAttachment(1, -1);
-
+        m_MultisampledFramebuffer->Bind();
         Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.75f });
         Renderer::Clear();
+        m_MultisampledFramebuffer->Unbind();
 
         // Clear entity ID attachment to -1
+        m_MultisampledFramebuffer->ClearAttachment(1, -1);
 
 		//NL_TRACE("Delta Time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
 
+        m_MultisampledFramebuffer->Bind();
         if (IsEditorMode())
         {
-            if (m_ViewportHovered || m_EditorCamera.IsMouseButtonHolding())
-            {
-                m_EditorCamera.OnUpdate(ts);
-            }
+            m_EditorScene->OnUpdateEditor(ts, m_EditorCamera, m_HierarchyPanel->GetSelectedEntity());
 
-            m_EditorScene->OnUpdateEditor(ts, m_EditorCamera);
+            m_EditorCamera.OnUpdate(ts, m_ViewportHovered);
+
+            // TODO: Get editor camera post-processing options.
         }
         else
         {
@@ -149,40 +136,48 @@ namespace NL
                 }
             }
 
-            m_RuntimeScene->OnUpdateRuntime(ts, m_RuntimeCameraEntity);
+            m_RuntimeScene->OnUpdateRuntime(ts, m_RuntimeCameraEntity, m_IsRuntimeViewportFocused);
+
+            // TODO: Get runtime camera post-processing options.
         }
+        m_MultisampledFramebuffer->Unbind();
+
+        // Color Blit 
+        m_MultisampledFramebuffer->ColorBlit(0, m_Framebuffer);
+        m_MultisampledFramebuffer->ColorBlit(2, m_Framebuffer);
 
         // Check Hovered Entity
-
-        if (IsEditorMode())
+        auto [mx, my] = ImGui::GetMousePos();
+        // NL_ENGINE_INFO("Hovered pos: ({0}, {1})", mx, my);
+        mx -= m_ViewportBounds[0].x;
+        my -= m_ViewportBounds[0].y;
+        nlm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+        my = viewportSize.y - my;
+        int mouseX = (int)mx;
+        int mouseY = (int)my;
+        if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
         {
-            auto [mx, my] = ImGui::GetMousePos();
-            mx -= m_ViewportBounds[0].x;
-            my -= m_ViewportBounds[0].y;
-            nlm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
-            my = viewportSize.y - my;
-            int mouseX = (int)mx;
-            int mouseY = (int)my;
-            if (mouseX >= 0 && mouseY >= 0 && mouseX < (int)viewportSize.x && mouseY < (int)viewportSize.y)
+            if (IsEditorMode())
             {
+                // Blit
+                m_MultisampledFramebuffer->ColorBlit(1, m_Framebuffer);
                 int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
-                // NL_ENGINE_INFO("pixelData {0}", pixelData);
-                // Bugs to fix...
-                m_EntityHovered = (pixelData == -1 || pixelData > 114514) ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
-                m_ViewportHovered = true;
-            }
-            else
-            {
-                m_ViewportHovered = false;
-            }
-        }
 
-        m_Framebuffer->Unbind();
+                // NL_ENGINE_INFO("pixelData {0}", pixelData);
+                m_EntityHovered = (pixelData == -1) ? Entity() : Entity((entt::entity)pixelData, m_EditorScene.get());
+            }
+            m_ViewportHovered = true;
+        }
+        else
+        {
+            m_ViewportHovered = false;
+        }        
 
 	}
 
 	void EditorLayer::OnImGuiRender()
 	{
+        Application::GetInstance().GetImGuiLayer()->BlockEvents(false);
 
 #pragma region Dockspace
 
@@ -193,7 +188,7 @@ namespace NL
 
         // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
         // because it would be confusing to have two docking targets within each others.
-        ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDocking;
         if (opt_fullscreen)
         {
             const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -215,6 +210,9 @@ namespace NL
         if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
             window_flags |= ImGuiWindowFlags_NoBackground;
 
+        if (!m_IsRuntimeViewportFocused)
+            window_flags |= ImGuiWindowFlags_MenuBar;
+
         // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
         // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
         // all active windows docked into it will lose their parent and become undocked.
@@ -234,6 +232,7 @@ namespace NL
         ImGuiStyle& style = ImGui::GetStyle();
         float minWinSizeX = style.WindowMinSize.x;
         style.WindowMinSize.x = 110.0f;
+        // io.ConfigFlags |= ImGuiConfigFlags_NavEnableSetMousePos;
         if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
         {
             ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
@@ -244,20 +243,20 @@ namespace NL
 
 #pragma region MenuBar
 
-        if (ImGui::BeginMenuBar())
+        if (!m_IsRuntimeViewportFocused && ImGui::BeginMenuBar())
         {
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("New", "Ctrl+N"))
+                if (ImGui::MenuItem("New", "Ctrl+N", false, IsEditorMode()))
                     NewScene();
 
-                if (ImGui::MenuItem("Open", "Ctrl+O"))
+                if (ImGui::MenuItem("Open", "Ctrl+O", false, IsEditorMode()))
                     OpenScene();
 
-                if (ImGui::MenuItem("Save", "Ctrl+S"))
+                if (ImGui::MenuItem("Save", "Ctrl+S", false, IsEditorMode()))
                     SaveScene();
 
-                if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+                if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S", false, IsEditorMode()))
                     SaveSceneAs();
 
                 if (ImGui::MenuItem("Exit", "Alt+F4", false))
@@ -269,7 +268,6 @@ namespace NL
             {
                 if (ImGui::MenuItem("Reload Assembly", "Ctrl+R", false, IsEditorMode()))
                 {
-                    m_EditorScene->ReloadAssembly();
                     ScriptEngine::GetInstance().ReloadAssembly();
                 }
 
@@ -279,6 +277,7 @@ namespace NL
             {
                 ImGui::MenuItem("Viewport", NULL, &m_ShowViewport);
                 ImGui::MenuItem("Hierarchy", NULL, &m_ShowHierarchy);
+                ImGui::MenuItem("Scene Settings", NULL, &m_ShowSceneSettings);
                 // ImGui::MenuItem("TRS Toolbar", NULL, &m_ShowTRS);
 
                 ImGui::EndMenu();
@@ -295,7 +294,7 @@ namespace NL
         if (m_ShowViewport)
         {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-            ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollWithMouse |ImGuiWindowFlags_NoScrollbar);
+            ImGui::Begin("Viewport", nullptr, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar);
             
             // Toolbar
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
@@ -335,8 +334,9 @@ namespace NL
 
                     ImGui::PopStyleVar();
                 }
+                // Runtime but not focused
                 // Show Runtime Camera
-                else if (m_ViewportMode == ViewportMode::Runtime)
+                else if (!m_IsRuntimeViewportFocused)
                 {
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
                     ImGui::PushItemWidth(menuBarWidth * 0.2f);
@@ -344,6 +344,7 @@ namespace NL
                     auto& runtimeCameraName = m_RuntimeCameraEntity.GetName();
                     if (ImGui::BeginCombo("Runtime Camera", runtimeCameraName.c_str()))
                     {
+                        Application::GetInstance().GetImGuiLayer()->BlockEvents(true);
                         auto camView = m_RuntimeScene->m_Registry.view<CameraComponent>();
                         for (auto entity : camView)
                         {
@@ -366,27 +367,36 @@ namespace NL
                     ImGui::PopStyleVar();
                     ImGui::PopItemWidth();
                 }
+                else
+                {
+                    ImGui::Text("Press 'Esc' to escape!");
+                    ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - (menuBarHeight * 3.0f));
+                    ImGui::Text("FPS: %.1f", io.Framerate);
+                }
 
                 // Play & Stop Button
-                Ref<Texture2D> icon = IsEditorMode() ? m_PlayButton : m_StopButton;
-                ImGui::SetCursorPosX((menuBarWidth * 0.5f) - (menuBarHeight * 0.5f));
-                if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(menuBarHeight, menuBarHeight), ImVec2(0, 0), ImVec2(1, 1), 0))
+                if (!m_IsRuntimeViewportFocused)
                 {
-                    if (IsEditorMode())
-                        OnScenePlay();
-                    else
-                        OnSceneStop();
-                }
+                    Ref<Texture2D> icon = IsEditorMode() ? m_PlayButton : m_StopButton;
+                    ImGui::SetCursorPosX((menuBarWidth * 0.5f) - (menuBarHeight * 0.5f));
+                    if (ImGui::ImageButton((ImTextureID)icon->GetRendererID(), ImVec2(menuBarHeight, menuBarHeight), ImVec2(0, 0), ImVec2(1, 1), 0))
+                    {
+                        if (IsEditorMode())
+                            OnScenePlay();
+                        else
+                            OnSceneStop();
+                    }
 
-                ImGui::SameLine();
+                    ImGui::SameLine();
 
-                // Maximize On Play
-                ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-                ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - (menuBarHeight * 4.5f));
-                if (ImGui::Checkbox("Maximize", &m_IsMaximizeOnPlay))
-                {
+                    // Maximize On Play
+                    ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+                    ImGui::SetCursorPosX(ImGui::GetWindowContentRegionMax().x - (menuBarHeight * 4.5f));
+                    if (ImGui::Checkbox("Maximize", &m_IsMaximizeOnPlay))
+                    {
+                    }
+                    ImGui::PopStyleVar();
                 }
-                ImGui::PopStyleVar();
 
                 ImGui::EndMenuBar();
             }
@@ -394,7 +404,8 @@ namespace NL
             ImGui::PopStyleVar();
             ImGui::PopStyleColor(3);
 
-            //
+            // FPS
+            // ImGui::Text("FPS: %.1f", io.Framerate);
 
             auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
             auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
@@ -416,7 +427,7 @@ namespace NL
             
             m_ViewportFocused = ImGui::IsWindowFocused();
             // m_ViewportHovered = ImGui::IsWindowHovered();
-            Application::GetInstance().GetImGuiLayer()->BlockEvents(false);
+            // Application::GetInstance().GetImGuiLayer()->BlockEvents(false);
 
             ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
             // Update Viewport Size
@@ -424,12 +435,25 @@ namespace NL
 
             // Update Viewport Image
             uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+
             // uint64_t textureID = Library<Texture2D>::GetInstance().Get("../Assets/Models/nanosuit/arm_dif.png")->GetRendererID();
             if (!IsEditorMode())
             {
-                ImGui::SetCursorPos(ImVec2{ ImGui::GetWindowContentRegionMin().x + (m_ViewportSize.x - m_RuntimeAspect.x) / 2.0f, ImGui::GetWindowContentRegionMin().y + (m_ViewportSize.y - m_RuntimeAspect.y) / 2.0f });
+                float xRatio = (m_ViewportSize.x - m_RuntimeAspect.x) / 2.0f;
+                float yRatio = (m_ViewportSize.y - m_RuntimeAspect.y) / 2.0f;
+                ImGui::SetCursorPos(ImVec2{ ImGui::GetWindowContentRegionMin().x + xRatio, ImGui::GetWindowContentRegionMin().y + yRatio });
+                // float dx = (xRatio < 0) ? (-xRatio) / m_RuntimeAspect.x : 0;
+                // float dy = (yRatio < 0) ? (-yRatio) / m_RuntimeAspect.y : 0;
+                // ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_RuntimeAspect.x, m_RuntimeAspect.y }, ImVec2{ 0 + dx, 1 - dy }, ImVec2{ 1 - dx, 0 + dy });
+                // 
+                // Bugs remain... Smaller viewport leading to lower graphic performances...
+                ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_RuntimeAspect.x, m_RuntimeAspect.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
             }
-            ImGui::Image(reinterpret_cast<void*>(textureID), IsEditorMode() ? ImVec2{m_ViewportSize.x, m_ViewportSize.y} : ImVec2{m_RuntimeAspect.x, m_RuntimeAspect.y}, ImVec2{0, 1}, ImVec2{1, 0});
+            else
+            {
+                textureID = m_PostProcessing->ExecutePostProcessingQueue(m_EditorPostProcessingQueue, m_Framebuffer);
+                ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+            }
 
             // Gizmos
             if (IsEditorMode())
@@ -480,6 +504,16 @@ namespace NL
                 }
             }
 
+            // Mouse Cursor Capture
+            /*if (!IsEditorMode() && m_IsRuntimeViewportFocused)
+            {
+                Application::GetInstance().HideCursor();                
+            }
+            else
+            {
+                Application::GetInstance().ShowCursor();
+            }*/
+
             ImGui::End();
             ImGui::PopStyleVar();
         }
@@ -488,6 +522,55 @@ namespace NL
         if (m_ShowHierarchy && !(m_IsMaximizeOnPlay && m_ViewportMode == ViewportMode::Runtime))
         {
             m_HierarchyPanel->OnImGuiRender(m_ShowHierarchy, true);
+        }
+
+        // Scene Settings
+        if (m_ShowSceneSettings && !(m_IsMaximizeOnPlay && m_ViewportMode == ViewportMode::Runtime))
+        {
+            ImGui::Begin("Scene Settings");
+
+            // Anti-Aliasing
+            bool hasAntiAliasModified = false;
+            if (ImGui::TreeNode("Anti-aliasing"))
+            {
+                if (ImGui::RadioButton("None", (m_AntiAliasingType == AntiAliasingType::None)))
+                {
+                    m_AntiAliasingType = AntiAliasingType::None;
+                    hasAntiAliasModified = true;
+                }
+                ImGui::SameLine();
+                if (ImGui::RadioButton("2x MSAA", (m_AntiAliasingType == AntiAliasingType::MSAA && m_MSAASamples == 2)))
+                {
+                    m_AntiAliasingType = AntiAliasingType::MSAA;
+                    m_MSAASamples = 2;
+                    hasAntiAliasModified = true;
+                }
+                ImGui::SameLine();
+                if (ImGui::RadioButton("4x MSAA", (m_AntiAliasingType == AntiAliasingType::MSAA && m_MSAASamples == 4)))
+                {
+                    m_AntiAliasingType = AntiAliasingType::MSAA;
+                    m_MSAASamples = 4;
+                    hasAntiAliasModified = true;
+                }
+                ImGui::SameLine();
+                if (ImGui::RadioButton("8x MSAA", (m_AntiAliasingType == AntiAliasingType::MSAA && m_MSAASamples == 8)))
+                {
+                    m_AntiAliasingType = AntiAliasingType::MSAA;
+                    m_MSAASamples = 8;
+                    hasAntiAliasModified = true;
+                }
+                ImGui::TreePop();
+            }
+            if (hasAntiAliasModified)
+            {
+                UpdateFramebuffer();
+            }
+
+            // Skybox
+
+            // Runtime PostEffects
+
+            ImGui::End();
         }
 
 #pragma endregion
@@ -500,8 +583,9 @@ namespace NL
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-        if (m_ViewportHovered || m_EditorCamera.IsMouseButtonHolding())
+        if (m_ViewportHovered)
         {
+            // NL_ENGINE_INFO("Editor Camera Event");
             m_EditorCamera.OnEvent(event);
         }
 
@@ -509,6 +593,10 @@ namespace NL
 		dispatcher.Dispatch<KeyPressedEvent>(NL_BIND_EVENT_FN(EditorLayer::OnKeyPressedEvent));
 		dispatcher.Dispatch<WindowResizeEvent>(NL_BIND_EVENT_FN(EditorLayer::OnWindowResizeEvent));
         dispatcher.Dispatch<MouseButtonPressedEvent>(NL_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressedEvent));
+        dispatcher.Dispatch<MouseMovedEvent>(NL_BIND_EVENT_FN(EditorLayer::OnMouseMovedEvent));
+
+        dispatcher.Dispatch<RuntimeCameraSwitchedEvent>(NL_BIND_EVENT_FN(EditorLayer::OnRuntimeCameraSwitched));
+
 	}
 
 	bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& event)
@@ -524,51 +612,75 @@ namespace NL
         // Files
         case Key::N:
         {
-            if (control)
+            if (control && IsEditorMode())
                 NewScene();
             break;
         }
         case Key::O:
         {
-            if (control)
+            if (control && IsEditorMode())
                 OpenScene();
             break;
         }
         case Key::S:
         {
-            if (control)
+            if (control && IsEditorMode())
             {
                 if (shift)
                     SaveSceneAs();
                 else
                     SaveScene();
             }
+            else
+            {
+                if (IsEditorMode() && (m_ViewportFocused || m_ViewportHovered))
+                    m_GuizmoType = ImGuizmo::OPERATION::SCALE;
+            }
             break;
         }
         case Key::R:
         {
-            if (control)
+            if (control && IsEditorMode())
             {
                 if (IsEditorMode())
                 {
-                    m_EditorScene->ReloadAssembly();
                     ScriptEngine::GetInstance().ReloadAssembly();
+                }
+            }
+            else
+            {
+                if (IsEditorMode() && (m_ViewportFocused || m_ViewportHovered))
+                    m_GuizmoType = ImGuizmo::OPERATION::ROTATE;
+            }
+            break;
+        }
+        case Key::T:
+        {
+            if (IsEditorMode() && (m_ViewportFocused || m_ViewportHovered))
+                m_GuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+            break;
+        }
+        // Focus
+        case Key::F:
+        {
+            if (IsEditorMode() && (m_ViewportFocused || m_ViewportHovered))
+            {
+                Entity selectedEntity = m_HierarchyPanel->GetSelectedEntity();
+                if (selectedEntity)
+                {
+                    // Ought to have transform...
+                    m_EditorCamera.SetCenter(selectedEntity.GetComponent<TransformComponent>().Translation);
                 }
             }
             break;
         }
-
-        // Focus
-        case Key::F:
+        case Key::Escape:
         {
-            if (!m_ViewportFocused && !m_ViewportHovered)
-                break;
-
-            Entity selectedEntity = m_HierarchyPanel->GetSelectedEntity();
-            if (selectedEntity)
+            if (!IsEditorMode() && m_IsRuntimeViewportFocused)
             {
-                // Ought to have transform...
-                m_EditorCamera.SetCenter(selectedEntity.GetComponent<TransformComponent>().Translation);
+                m_IsRuntimeViewportFocused = false;
+                Application::GetInstance().ShowCursor();
+                // OnSceneStop();
             }
             break;
         }
@@ -579,18 +691,28 @@ namespace NL
 
     bool EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& event)
     {
-        if (!m_ViewportFocused && !m_ViewportHovered)
-            return false;
+        // if (!m_ViewportFocused && !m_ViewportHovered)
+            // return false;
         if (event.GetMouseButton() == Mouse::ButtonLeft)
         {
             // !ImGuizmo::IsOver()
-            if (m_ViewportHovered && !(ImGuizmo::IsOver() && m_TRSEntity == m_HierarchyPanel->GetSelectedEntity()))
+            if (IsEditorMode() && m_ViewportHovered && !(ImGuizmo::IsOver() && m_TRSEntity == m_HierarchyPanel->GetSelectedEntity()))
             {
                 m_HierarchyPanel->SetSelectedEntity(m_EntityHovered);
                 // Click a viewport entity
                 if (m_EntityHovered)
                 {
                     NL_TRACE("Viewport select entity: {0}", m_EntityHovered.GetName());
+                }
+            }
+            else if (!IsEditorMode() && m_ViewportHovered && !m_IsRuntimeViewportFocused)
+            {
+                auto [mx, my] = ImGui::GetMousePos();
+                if (mx >= m_ViewportBounds[0].x && mx <= m_ViewportBounds[1].x &&
+                    my >= m_ViewportBounds[0].y && my <= m_ViewportBounds[1].y)
+                {
+                    m_IsRuntimeViewportFocused = true;
+                    Application::GetInstance().HideCursor();
                 }
             }
         }
@@ -604,6 +726,21 @@ namespace NL
 
 		return false;
 	}
+
+    bool EditorLayer::OnMouseMovedEvent(MouseMovedEvent& event)
+    {
+        // NL_INFO("Mouse Pos: ({0}, {1})", event.GetX(), event.GetY());
+        return false;
+    }
+
+    bool EditorLayer::OnRuntimeCameraSwitched(RuntimeCameraSwitchedEvent& event)
+    {
+        // NL_INFO("Runtime Camera Switch!");
+
+        m_RuntimeCameraEntity = event.GetEntity();
+
+        return false;
+    }
 
     void EditorLayer::SerializeScene(Ref<Scene> scene, const std::string& path)
     {
@@ -622,9 +759,10 @@ namespace NL
             m_EditorScene->m_Registry.clear();
         m_EditorScene = CreateRef<Scene>();
 
+        m_EditorScene->OnStartEditor();
+
         // Switch Scene Context
         m_HierarchyPanel->SetSceneContext(m_EditorScene);
-        ScriptEngine::GetInstance().SetSceneContext(m_EditorScene.get());
 
         m_EditorScenePath = "";
 
@@ -666,9 +804,10 @@ namespace NL
             m_EditorScene = newScene;            
             m_EditorScenePath = path;
 
+            m_EditorScene->OnStartEditor();
+
             // Switch Scene Context
             m_HierarchyPanel->SetSceneContext(m_EditorScene);
-            ScriptEngine::GetInstance().SetSceneContext(m_EditorScene.get());
 
             Application::GetInstance().SetWindowTitle("Nameless Editor - " + path.substr(path.find_last_of("/\\") + 1));
             
@@ -721,27 +860,18 @@ namespace NL
         m_RuntimeScene = Scene::Copy(m_EditorScene);
         m_RuntimeScene->OnStartRuntime();
 
-        // Shift Scene Context
         m_HierarchyPanel->SetSceneContext(m_RuntimeScene);
-        ScriptEngine::GetInstance().SetSceneContext(m_RuntimeScene.get());
-
-        m_RuntimeScene->SetRuntimeViewportState(true, false);
-        // UpdateRuntimeAspect();
-        // m_RuntimeScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-
-        // m_ShowHierarchy = m_IsMaximizeOnPlay;
     }
     
     void EditorLayer::OnSceneStop()
     {
         m_ViewportMode = ViewportMode::Editor;
 
-        m_RuntimeScene->OnStopRuntime();
+        m_RuntimeScene->OnStopRuntime(m_EditorScene.get());
         m_RuntimeScene.reset();
         m_RuntimeCameraEntity = {};
 
         m_HierarchyPanel->SetSceneContext(m_EditorScene);
-        ScriptEngine::GetInstance().SetSceneContext(m_EditorScene.get());
     }
 
     void EditorLayer::UpdateRuntimeAspect()
@@ -759,5 +889,22 @@ namespace NL
                 cam.mCamera.SetAspectRatio((uint32_t)this->m_ViewportSize.x, (uint32_t)this->m_ViewportSize.y);
             }
         }
+    }
+
+    void EditorLayer::UpdateFramebuffer()
+    {
+        FramebufferSpecification msSpec;
+        msSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
+        msSpec.Width = 1280;
+        msSpec.Height = 720;
+        if (m_AntiAliasingType == AntiAliasingType::None)
+        {
+            msSpec.Samples = 1;
+        }
+        else if (m_AntiAliasingType == AntiAliasingType::MSAA)
+        {
+            msSpec.Samples = m_MSAASamples;
+        }
+        m_MultisampledFramebuffer = Framebuffer::Create(msSpec);
     }
 }

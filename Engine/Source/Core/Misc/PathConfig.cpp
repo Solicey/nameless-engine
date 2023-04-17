@@ -15,6 +15,7 @@ namespace NL
 		m_ScriptsFolder = m_AssetsFolder / "Scripts";
 		m_ShadersFolder = m_AssetsFolder / "Shaders";
 		m_FontsFolder = m_AssetsFolder / "Fonts";
+		m_TexturesFolder = m_AssetsFolder / "Textures";
 	}
 
 	const std::filesystem::path& PathConfig::GetAssetsFolder() const
@@ -51,5 +52,11 @@ namespace NL
 	{
 		NL_ENABLE_ASSERTS(std::filesystem::exists(m_FontsFolder), "Fonts folder does NOT exist!");
 		return m_FontsFolder;
+	}
+
+	const std::filesystem::path& PathConfig::GetTexturesFolder() const
+	{
+		NL_ENABLE_ASSERTS(std::filesystem::exists(m_TexturesFolder), "Textures folder does NOT exist!");
+		return m_TexturesFolder;
 	}
 }

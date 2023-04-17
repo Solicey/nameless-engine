@@ -12,6 +12,7 @@ namespace NL
 	public:
 		Library(Singleton::token);
 		void TraverseShadersFolder(const std::filesystem::path& path = PathConfig::GetInstance().GetShadersFolder());
+		// Don't use Library Class's Get() directly, use LoadShader instead
 		Ref<Shader> LoadShader(const std::string& name);
 		const std::unordered_map<std::string, std::filesystem::path>& GetShaderNameMap()
 		{
