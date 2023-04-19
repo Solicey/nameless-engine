@@ -27,7 +27,7 @@ namespace NL
 		inline nlm::quat GetOrientation() const;
 
 		// For Viewport Interactions
-		// bool IsMouseButtonHolding() const { return m_IsMouseButtonHolding; }
+		bool IsMouseButtonHolding() const { return m_IsMouseButtonHolding; }
 
 		void SetCenter(const nlm::vec3& center);
 
