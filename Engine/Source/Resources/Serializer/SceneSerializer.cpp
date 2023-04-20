@@ -138,11 +138,17 @@ namespace NL
 		break;                                         \
 	}
 {
-	void SceneSerializer::Serialize(const std::string& path)
+	void SceneSerializer::Serialize(const std::string& path, const std::unordered_map<std::string, int>& customInt)
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene" << YAML::Value << "Untitled";
+
+		for (auto& pair : customInt)
+		{
+			out << YAML::Key << pair.first << YAML::Value << pair.second;
+		}
+
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 		m_Scene->m_Registry.each([&](auto entityID)
 		{
@@ -162,7 +168,7 @@ namespace NL
 		fout << out.c_str();
 	}
 
-	bool SceneSerializer::Deserialize(const std::string& path)
+	bool SceneSerializer::Deserialize(const std::string& path, std::unordered_map<std::string, int>& customInt)
 	{
 		YAML::Node data;
 		try
@@ -179,6 +185,11 @@ namespace NL
 
 		std::string sceneName = data["Scene"].as<std::string>();
 		NL_ENGINE_TRACE("Deserializing scene '{0}'", sceneName);
+
+		for (auto& pair : customInt)
+		{
+			pair.second = data[pair.first].as<int>();
+		}
 
 		auto entities = data["Entities"];
 		if (!entities)
@@ -297,7 +308,8 @@ namespace NL
 					cameraComponent["OrthoNear"].as<float>(),
 					cameraComponent["OrthoFar"].as<float>(),
 					cameraComponent["ViewportWidth"].as<uint32_t>(),
-					cameraComponent["ViewportHeight"].as<uint32_t>()
+					cameraComponent["ViewportHeight"].as<uint32_t>(),
+					cameraComponent["ClearFlagType"].as<int>()
 				);
 			}
 
@@ -475,6 +487,7 @@ namespace NL
 			out << YAML::Key << "PerspNear" << YAML::Value << cam.GetPerspectiveNear();
 			out << YAML::Key << "ViewportWidth" << YAML::Value << cam.GetViewportWidth();
 			out << YAML::Key << "ViewportHeight" << YAML::Value << cam.GetViewportHeight();
+			out << YAML::Key << "ClearFlagType" << YAML::Value << (int)cam.GetClearFlagType();
 
 			out << YAML::EndMap; // CameraComponent
 		}

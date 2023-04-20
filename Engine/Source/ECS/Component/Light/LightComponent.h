@@ -1,0 +1,25 @@
+#pragma once
+
+#include "ECS/Component/Component.h"
+#include "Core/Math/Math.h"
+
+namespace NL
+{
+	enum class LightType
+	{
+		Directional, Point
+	};
+
+	class LightComponent : public ComponentBase
+	{
+	public:
+		LightComponent() = default;
+		LightComponent(const LightComponent&) = default;
+		LightComponent(LightType type, const nlm::vec3& color, float intensity)
+			: Type(type), Color(color), Intensity(intensity) {}
+
+		LightType Type;
+		nlm::vec3 Color;
+		float Intensity;
+	};
+}

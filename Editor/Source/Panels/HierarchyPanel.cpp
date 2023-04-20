@@ -20,6 +20,22 @@ namespace NL
 			return isExpanded;
 		}
 
+		static bool ColorEdit4Style1(const std::string& label, float color4Width, nlm::vec4& color)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - color4Width);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+
+			std::string emitLabel = "##" + label;
+			bool isModified = ImGui::ColorEdit4(emitLabel.c_str(), nlm::value_ptr(color), ImGuiColorEditFlags_NoInputs);
+			ImGui::Columns(1);
+			ImGui::PopItemWidth();
+
+			return isModified;
+		}
+
 		static bool DragFloatStyle1(const std::string& label, float dragFloatWidth, float& value, float speed, float min, float max, const std::string& format = "%.2f")
 		{
 			ImGui::Columns(2);
@@ -408,6 +424,16 @@ namespace NL
 		}
 		ImGui::PopItemWidth();
 		ImGui::Columns(1);
+
+		if (camera.GetClearFlagType() == Camera::ClearFlagType::Color)
+		{
+			/*if (ImGui::TreeNode("Clear Color"))
+			{
+				ImGui::ColorEdit4("##", nlm::value_ptr(component.ClearColor), ImGuiColorEditFlags_NoInputs);
+				ImGui::TreePop();
+			}*/
+			Utils::ColorEdit4Style1("Clear Color", RIGHT_COLUMN_WIDTH, component.ClearColor);
+		}
 
 		});
 

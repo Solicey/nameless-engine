@@ -12,8 +12,8 @@ namespace NL
 			Orthographic,
 			Perspective
 		};
-		
-		enum class ClearFlagType
+
+		enum class ClearFlagType : int
 		{
 			Color,
 			Skybox
@@ -22,7 +22,7 @@ namespace NL
 	public:
 		Camera() { RecalculateProjectionMatrix(); }
 		virtual ~Camera() = default;
-		Camera(int type, float pFov, float pNear, float pFar, float oSize, float oNear, float oFar, uint32_t width, uint32_t height) : m_ProjectionType((ProjectionType)type), m_PerspectiveFOV(pFov), m_PerspectiveNear(pNear), m_PerspectiveFar(pFar), m_OrthographicSize(oSize), m_OrthographicFar(oFar), m_OrthographicNear(oNear), m_ViewportWidth(width), m_ViewportHeight(height) { ReCalculateAspectRatio();  RecalculateProjectionMatrix(); }
+		Camera(int type, float pFov, float pNear, float pFar, float oSize, float oNear, float oFar, uint32_t width, uint32_t height, int clearFlagType) : m_ProjectionType((ProjectionType)type), m_PerspectiveFOV(pFov), m_PerspectiveNear(pNear), m_PerspectiveFar(pFar), m_OrthographicSize(oSize), m_OrthographicFar(oFar), m_OrthographicNear(oNear), m_ViewportWidth(width), m_ViewportHeight(height), m_ClearFlagType((ClearFlagType)clearFlagType) { ReCalculateAspectRatio();  RecalculateProjectionMatrix(); }
 
 		void SetOrthographic(float size, float nearClip, float farClip);
 		void SetPerspective(float verticalFOV, float nearClip, float farClip);

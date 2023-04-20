@@ -566,6 +566,22 @@ namespace NL
                 UpdateFramebuffer();
             }
 
+            // Editor Camera Clear Flag
+            if (ImGui::TreeNode("Viewport Clear Flag"))
+            {
+                Camera::ClearFlagType type = m_EditorCamera.GetClearFlagType();
+                if (ImGui::RadioButton("Color", (type == Camera::ClearFlagType::Color)))
+                {
+                    m_EditorCamera.SetClearFlagType(Camera::ClearFlagType::Color);
+                }
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Skybox", (type == Camera::ClearFlagType::Skybox)))
+                {
+                    m_EditorCamera.SetClearFlagType(Camera::ClearFlagType::Skybox);
+                }
+                ImGui::TreePop();
+            }
+
             // Skybox
 
             // Runtime PostEffects
@@ -745,7 +761,12 @@ namespace NL
     void EditorLayer::SerializeScene(Ref<Scene> scene, const std::string& path)
     {
         SceneSerializer serializer(scene);
-        serializer.Serialize(path);
+        std::unordered_map<std::string, int> sceneSettingsInt = {
+            {"AntiAliasingType", (int)m_AntiAliasingType},
+            {"MSAASamples", m_MSAASamples},
+            {"EditorCameraClearFlag", (int)m_EditorCamera.GetClearFlagType()}
+        };
+        serializer.Serialize(path, sceneSettingsInt);
     }
 
     void EditorLayer::NewScene()
@@ -796,7 +817,12 @@ namespace NL
 
         Ref<Scene> newScene = CreateRef<Scene>();
         SceneSerializer serializer(newScene);
-        if (serializer.Deserialize(path))
+        std::unordered_map<std::string, int> sceneSettingsInt = {
+            {"AntiAliasingType", (int)m_AntiAliasingType},
+            {"MSAASamples", m_MSAASamples},
+            {"EditorCameraClearFlag", (int)m_EditorCamera.GetClearFlagType()}
+        };
+        if (serializer.Deserialize(path, sceneSettingsInt))
         {
             if (m_EditorScene)
                 m_EditorScene->m_Registry.clear();
@@ -811,6 +837,10 @@ namespace NL
 
             Application::GetInstance().SetWindowTitle("Nameless Editor - " + path.substr(path.find_last_of("/\\") + 1));
             
+            // Reset Scene Settings
+            m_AntiAliasingType = (AntiAliasingType)sceneSettingsInt.at("AntiAliasingType");
+            m_MSAASamples = sceneSettingsInt.at("MSAASamples");
+            m_EditorCamera.SetClearFlagType((Camera::ClearFlagType)sceneSettingsInt.at("EditorCameraClearFlag"));
         }
     }
 

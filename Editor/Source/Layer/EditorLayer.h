@@ -12,7 +12,7 @@ namespace NL
 		Editor, Runtime
 	};
 
-	enum class AntiAliasingType
+	enum class AntiAliasingType : int
 	{
 		None, MSAA
 	};
@@ -60,6 +60,7 @@ namespace NL
 
 		EditorCamera m_EditorCamera;
 		Ref<Scene> m_EditorScene;
+		// ClearFlagType m_EditorCameraClearFlagType = ClearFlagType::Skybox;
 
 		Entity m_RuntimeCameraEntity = {};
 		Ref<Scene> m_RuntimeScene;

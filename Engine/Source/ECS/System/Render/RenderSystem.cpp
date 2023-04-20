@@ -123,8 +123,9 @@ namespace NL
 		}
 
 		// Render Skybox?
-		auto clearFlag = camera.GetClearFlagType();
-		if (clearFlag == Camera::ClearFlagType::Skybox)
+		//auto clearFlag = camera.GetClearFlagType();
+		//if (clearFlag == Camera::ClearFlagType::Skybox)
+		if (camera.GetClearFlagType() == Camera::ClearFlagType::Skybox)
 		{
 			m_SkyboxShader->Bind();
 
