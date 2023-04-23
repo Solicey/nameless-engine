@@ -54,10 +54,10 @@ namespace NL
 		// Load default shader
 		// NL_ENGINE_TRACE("Material init: {0}", Library<Shader>::GetInstance().GetDefaultShaderName());
 		m_ShaderName = name;
-		m_Shader = Library<Shader>::GetInstance().LoadShader(m_ShaderName);
+		m_Shader = Library<Shader>::GetInstance().Fetch(m_ShaderName);
 		if (m_Shader == nullptr)
 		{
-			m_Shader = Library<Shader>::GetInstance().LoadShader(Library<Shader>::GetInstance().GetDefaultShaderName());
+			m_Shader = Library<Shader>::GetInstance().Fetch(Library<Shader>::GetInstance().GetDefaultShaderName());
 			NL_ENGINE_WARN("Couldn't find shader '{0}', use default instead", name);
 		}
 		// Load properties

@@ -101,9 +101,9 @@ namespace NL
 
 							NL_ENGINE_INFO("Load Texture: {0}, Type: {1}", texPath, type);
 
-							Ref<Texture2D> tex;
+							Ref<Texture2D> tex = Library<Texture2D>::GetInstance().Fetch(texPath);
 
-							if (Library<Texture2D>::GetInstance().Contains(texPath))
+							/*if (Library<Texture2D>::GetInstance().Contains(texPath))
 							{
 								tex = Library<Texture2D>::GetInstance().Get(texPath);
 							}
@@ -111,7 +111,7 @@ namespace NL
 							{
 								tex = Texture2D::Create(texPath);
 								Library<Texture2D>::GetInstance().Add(texPath, tex);
-							}
+							}*/
 
 							switch (type)
 							{

@@ -225,6 +225,12 @@ namespace NL
 
     }
 
+    template<>
+    void Scene::OnComponentAdded<LightComponent>(Entity entity, LightComponent& component)
+    {
+
+    }
+
 #pragma endregion
 
 #pragma region OnComponentRemoved
@@ -265,6 +271,13 @@ namespace NL
     {
        
     }
+
+    template<>
+    void Scene::OnComponentRemoved<LightComponent>(Entity entity, LightComponent& component)
+    {
+
+    }
+
 
 #pragma endregion
 }

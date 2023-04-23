@@ -12,17 +12,33 @@ namespace NL
 	public:
 		Library(Singleton::token)
 		{
-			Add(m_DefaultShaderName, Texture2D::Create(128, 128));
+			Add(m_DefaultTextureName, Texture2D::Create(128, 128));
 		}
 
-		const std::string& GetDefaultTextureName() const { return m_DefaultShaderName; }
+		// Use this function instead of Add or Get 
+		Ref<Texture2D> Fetch(const std::string& texPath)
+		{
+			Ref<Texture2D> tex;
+			if (Library<Texture2D>::GetInstance().Contains(texPath))
+			{
+				tex = Library<Texture2D>::GetInstance().Get(texPath);
+			}
+			else
+			{
+				tex = Texture2D::Create(texPath);
+				Library<Texture2D>::GetInstance().Add(texPath, tex);
+			}
+			return tex;
+		}
+
+		const std::string& GetDefaultTextureName() const { return m_DefaultTextureName; }
 
 		void Delete(const std::string& name)
 		{
 			if (m_Library.find(name) != m_Library.end())
 			{
 				auto& item = m_Library[name];
-				if (item.use_count() <= 1 && name.compare(m_DefaultShaderName) != 0)
+				if (item.use_count() <= 1 && name.compare(m_DefaultTextureName) != 0)
 				{
 					NL_ENGINE_TRACE("Texture {0} reference no more than 1, will be deleted!", name);
 					item.reset();
@@ -48,7 +64,7 @@ namespace NL
 				{
 					m_Library.erase(iter++);
 				}
-				else if (iter->second.use_count() <= 1 && iter->first.compare(m_DefaultShaderName) != 0)
+				else if (iter->second.use_count() <= 1 && iter->first.compare(m_DefaultTextureName) != 0)
 				{
 					NL_ENGINE_TRACE("Texture {0} reference no more than 1, will be deleted!", iter->first);
 					iter->second.reset();
@@ -59,7 +75,7 @@ namespace NL
 		}
 
 	private:
-		const std::string& m_DefaultShaderName = "Default";
+		const std::string& m_DefaultTextureName = "Default";
 	};
 
 	template <>
@@ -79,6 +95,13 @@ namespace NL
 				texturesFolderPath + "/DontModify/DefaultSkybox/back.jpg"
 			};
 			Add("DefaultSkybox", TextureCubeMap::Create(paths));
+		}
+
+		Ref<TextureCubeMap> FetchDefault()
+		{
+			if (Contains("DefaultSkybox"))
+				return Get("DefaultSkybox");
+			else return nullptr;
 		}
 	};
 }

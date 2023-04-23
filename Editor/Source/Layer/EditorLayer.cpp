@@ -72,8 +72,8 @@ namespace NL
         m_HierarchyPanel->SetUpdateRuntimeCameraCallback([this]() { EditorLayer::UpdateRuntimeAspect(); });
 
         // Icons
-        m_PlayButton = Texture2D::Create(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/PlayButton.png");
-        m_StopButton = Texture2D::Create(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/StopButton.png");
+        m_PlayButton = Library<Texture2D>::GetInstance().Fetch(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/PlayButton.png");
+        m_StopButton = Library<Texture2D>::GetInstance().Fetch(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/StopButton.png");
 
         // Scripting
         ScriptEngine::GetInstance().Init();

@@ -7,6 +7,7 @@ namespace NL
 {
 	Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
 	Scope<RendererAPI> Renderer::s_RendererAPI = RendererAPI::Create();
+	PointLightShadingData Renderer::s_PointLightDatas[MAX_LIGHT_COUNT] = {};
 
 	void Renderer::BeginScene(OrthographicCamera& camera)
 	{
@@ -41,7 +42,21 @@ namespace NL
 		shader->SetUniformMat4("u_ViewProjection", s_SceneData->ViewPositionMatrix);
 		shader->SetUniformMat4("u_Transform", transform);
 		shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
-		
+
+		// Lights
+		for (int i = 0; i < MAX_LIGHT_COUNT; i++)
+		{
+			const auto& point = s_PointLightDatas[i];
+			if (point.IsValid)
+			{
+				shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Color", point.Color);
+				shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Position", point.Position);
+			}
+			else
+			{
+				shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Color", nlm::vec3{ -1.0f });
+			}
+		}
 
 		if (!finalMatrices.empty())
 		{
@@ -67,7 +82,8 @@ namespace NL
 				//NL_ENGINE_TRACE("Sampler2D name: {0}", prop.Name);
 				//NL_ENGINE_TRACE("Sampler2D filepath: {0}", std::get<std::string>(prop.Value));
 				shader->SetUniformInt(prop.Name.c_str(), cntSampler2D);
-				Library<Texture2D>::GetInstance().Get(std::get<std::string>(prop.Value))->Bind(cntSampler2D);
+				// std::get<std::string>(prop.Value)
+				Library<Texture2D>::GetInstance().Fetch(std::get<std::string>(prop.Value))->Bind(cntSampler2D);
 				cntSampler2D++;
 				break;
 

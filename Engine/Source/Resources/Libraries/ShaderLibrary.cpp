@@ -35,7 +35,7 @@ namespace NL
 		}
 	}
 
-	Ref<Shader> Library<Shader>::LoadShader(const std::string& name)
+	Ref<Shader> Library<Shader>::Fetch(const std::string& name)
 	{
 		NL_ENGINE_TRACE("Load shader: {0}", name);
 		if (m_ShaderNameMap.contains(name))

@@ -12,6 +12,15 @@
 
 namespace NL
 {
+#define MAX_LIGHT_COUNT 4
+
+	struct PointLightShadingData
+	{
+		nlm::vec3 Position;
+		nlm::vec3 Color;
+		bool IsValid = false;
+	};
+
 	class Renderer
 	{
 	public:
@@ -41,6 +50,12 @@ namespace NL
 			bool isSelected = false);
 
 		static void OnWindowResize(unsigned int width, unsigned int height);
+
+		static void SetPointLightData(const PointLightShadingData data[MAX_LIGHT_COUNT])
+		{
+			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
+				s_PointLightDatas[i] = data[i];
+		}
 
 		struct SceneData
 		{
@@ -89,5 +104,7 @@ namespace NL
 	private:
 		static Scope<SceneData> s_SceneData;
 		static Scope<RendererAPI> s_RendererAPI;
+
+		static PointLightShadingData s_PointLightDatas[MAX_LIGHT_COUNT];
 	};
 }

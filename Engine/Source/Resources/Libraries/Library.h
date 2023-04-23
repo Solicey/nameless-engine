@@ -13,7 +13,7 @@ namespace NL
 	template <template <typename> typename Derived, typename LibType>
 	class LibraryBase : public Singleton<Derived<LibType>>
 	{
-	public:
+	protected:
 		void Add(const std::string& name, const Ref<LibType>& item)
 		{
 			auto path = name;

@@ -19,7 +19,7 @@ namespace NL
 			: Type(type), Color(color), Intensity(intensity) {}
 
 		LightType Type;
-		nlm::vec3 Color;
-		float Intensity;
+		nlm::vec3 Color = nlm::vec3(1.0f, 1.0f, 1.0f);
+		float Intensity = 1.0f;
 	};
 }

@@ -255,9 +255,9 @@ namespace NL
 							newProp.Value = prop["Value"].as<std::string>();
 							const std::string& path = std::get<std::string>(newProp.Value);
 
-							Ref<Texture2D> newTex;
+							Ref<Texture2D> newTex = Library<Texture2D>::GetInstance().Fetch(path);
 
-							if (Library<Texture2D>::GetInstance().Contains(path))
+							/*if (Library<Texture2D>::GetInstance().Contains(path))
 							{
 								newTex = Library<Texture2D>::GetInstance().Get(path);
 							}
@@ -265,7 +265,7 @@ namespace NL
 							{
 								newTex = Texture2D::Create(path);
 								Library<Texture2D>::GetInstance().Add(path, newTex);
-							}
+							}*/
 
 							material->ReplaceTexture(newProp.Name, newTex);
 
@@ -313,6 +313,14 @@ namespace NL
 				);
 			}
 
+			auto lightComponent = entity["LightComponent"];
+			if (lightComponent)
+			{
+				auto& comp = deserializedEntity.AddComponent<LightComponent>();
+				comp.Type = (LightType)lightComponent["LightType"].as<int>();
+				comp.Color = lightComponent["Color"].as<nlm::vec3>();
+				comp.Intensity = lightComponent["Intensity"].as<float>();
+			}
 
 			// Always at the bottom!!!!
 			auto scriptComponent = entity["ScriptComponent"];
@@ -490,6 +498,20 @@ namespace NL
 			out << YAML::Key << "ClearFlagType" << YAML::Value << (int)cam.GetClearFlagType();
 
 			out << YAML::EndMap; // CameraComponent
+		}
+
+		// Light Component
+		if (entity.HasComponent<LightComponent>())
+		{
+			out << YAML::Key << "LightComponent";
+			out << YAML::BeginMap; // LightComponent
+
+			auto& comp = entity.GetComponent<LightComponent>();
+			out << YAML::Key << "LightType" << YAML::Value << (int)comp.Type;
+			out << YAML::Key << "Color" << YAML::Value << comp.Color;
+			out << YAML::Key << "Intensity" << YAML::Value << comp.Intensity;
+
+			out << YAML::EndMap; // LightComponent
 		}
 
 		if (entity.HasComponent<ScriptComponent>())

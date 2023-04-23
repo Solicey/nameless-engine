@@ -20,6 +20,22 @@ namespace NL
 			return isExpanded;
 		}
 
+		static bool ColorEdit3Style1(const std::string& label, float color3Width, nlm::vec3& color)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - color3Width);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+
+			std::string emitLabel = "##" + label;
+			bool isModified = ImGui::ColorEdit3(emitLabel.c_str(), nlm::value_ptr(color), ImGuiColorEditFlags_NoInputs);
+			ImGui::Columns(1);
+			ImGui::PopItemWidth();
+
+			return isModified;
+		}
+
 		static bool ColorEdit4Style1(const std::string& label, float color4Width, nlm::vec4& color)
 		{
 			ImGui::Columns(2);
@@ -299,6 +315,7 @@ namespace NL
 			InspectorAddComponent<TransformComponent>("Transform");
 			InspectorAddComponent<CameraComponent>("Camera");
 			InspectorAddComponent<ModelRendererComponent>("Model Renderer");
+			InspectorAddComponent<LightComponent>("Light");
 			InspectorAddComponent<ScriptComponent>("Scripting");
 
 			ImGui::EndPopup();
@@ -327,7 +344,7 @@ namespace NL
 
 		const char* projectionTypeStrings[] = { "Ortho", "Persp" };
 		const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];
-		// if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentProjectionTypeString))
+		// if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentLightTypeString))
 		ImGui::Columns(2);
 		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - RIGHT_COLUMN_WIDTH);
 		ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
@@ -610,6 +627,46 @@ namespace NL
 
 #pragma endregion
 
+#pragma region Draw Lighting
+
+		DrawComponent<LightComponent>("Light", entity, [scene = m_Scene](auto& entity, auto& component) {
+
+		// Light Type Begin
+		const char* lightTypeStrings[] = { "Dir", "Point" };
+		const char* currentLightTypeString = lightTypeStrings[(int)component.Type];
+		// if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentLightTypeString))
+		ImGui::Columns(2);
+		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - RIGHT_COLUMN_WIDTH);
+		ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+		ImGui::Text("Type");
+		ImGui::NextColumn();
+		if (ImGui::BeginCombo("##LightType", currentLightTypeString))
+		{
+			for (int i = 0; i < 2; i++)
+			{
+				bool isSelected = (currentLightTypeString == lightTypeStrings[i]);
+				if (ImGui::Selectable(lightTypeStrings[i], isSelected))
+				{
+					currentLightTypeString = lightTypeStrings[i];
+					component.Type = (LightType)i;
+				}
+			}
+			ImGui::EndCombo();
+		}
+		ImGui::PopItemWidth();
+		ImGui::Columns(1);
+		// Light Type End
+
+		float& intensity = component.Intensity;
+		Utils::DragFloatStyle1("Intensity", RIGHT_COLUMN_WIDTH, intensity, 0.01f, 0.0f, 10.0f, "%.2f");
+
+		nlm::vec3& color = component.Color;
+		Utils::ColorEdit3Style1("Color", RIGHT_COLUMN_WIDTH, color);
+
+		});
+
+#pragma endregion
+
 #pragma region Draw Scripting
 
 		DrawComponent<ScriptComponent>("Scripting", entity, [scene = m_Scene](auto& entity, auto& component) {
@@ -834,7 +891,7 @@ namespace NL
 				if (ImGui::TreeNode(prop.Name.c_str()))
 				{
 					const std::string& oldTexPath = std::get<std::string>(prop.Value);
-					Ref<Texture2D> oldTex = Library<Texture2D>::GetInstance().Get(oldTexPath);
+					Ref<Texture2D> oldTex = Library<Texture2D>::GetInstance().Fetch(oldTexPath);
 
 					if (ImGui::ImageButton((ImTextureID)oldTex->GetRendererID(), ImVec2(64, 64), ImVec2(0, 0), ImVec2(1, 1), 0))
 					{
@@ -844,9 +901,9 @@ namespace NL
 						if (pos != std::string::npos)
 						{
 							filepath = PathConfig::GetInstance().GetAssetsFolder().string() + filepath.substr(pos + 6);
-							Ref<Texture2D> newTex;
+							Ref<Texture2D> newTex = Library<Texture2D>::GetInstance().Fetch(filepath);
 
-							if (Library<Texture2D>::GetInstance().Contains(filepath))
+							/*if (Library<Texture2D>::GetInstance().Contains(filepath))
 							{
 								newTex = Library<Texture2D>::GetInstance().Get(filepath);
 							}
@@ -854,7 +911,7 @@ namespace NL
 							{
 								newTex = Texture2D::Create(filepath);
 								Library<Texture2D>::GetInstance().Add(filepath, newTex);
-							}
+							}*/
 
 							oldTex.reset();
 							mat->ReplaceTexture(prop.Name, newTex);

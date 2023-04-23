@@ -13,11 +13,12 @@ namespace NL
 	RenderSystem::RenderSystem(Scene* scene)
 		: System(scene)
 	{
-		m_SkyboxShader = Library<Shader>::GetInstance().LoadShader("Skybox.glsl");
+		m_SkyboxShader = Library<Shader>::GetInstance().Fetch("Skybox.glsl");
 		NL_ENGINE_ASSERT(m_SkyboxShader, "Skybox shader does NOT exists!");
 
 		std::string modelsFolder = PathConfig::GetInstance().GetModelsFolder().string();
 		m_Skybox = ModelLoader::Create(modelsFolder + "/DontModify/Skybox.obj", -1, ModelLoaderFlags::Triangulate);
+		m_SkyboxTextureCubemap = Library<TextureCubeMap>::GetInstance().FetchDefault();
 	}
 
 	void RenderSystem::OnStartRuntime()
@@ -73,7 +74,7 @@ namespace NL
 			Renderer::DepthFunc(DepthComp::LEQUAL);
 
 			// tmp
-			Library<TextureCubeMap>::GetInstance().Get("DefaultSkybox")->Bind(0);
+			m_SkyboxTextureCubemap->Bind(0);
 			m_SkyboxShader->SetUniformInt("u_Skybox", 0);
 			NL_ENGINE_ASSERT(cameraEntity.HasComponent<TransformComponent>(), "Camera does NOT have transform!");
 			Renderer::DrawModel(m_Skybox, m_SkyboxShader, nlm::translate(nlm::mat4(1.0f), cameraEntity.GetComponent<TransformComponent>().GetTranslation()));
@@ -91,6 +92,37 @@ namespace NL
 	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity)
 	{
 		Renderer::BeginScene(camera);
+
+		// Light Preparation
+		PointLightShadingData pointLightDatas[MAX_LIGHT_COUNT];
+		for (int i = 0; i < MAX_LIGHT_COUNT; i++)
+			pointLightDatas[i].IsValid = false;
+
+		{
+			auto view = m_Scene->m_Registry.view<TransformComponent, LightComponent>();
+			int pointId = 0, dirId = 0;
+			for (auto& e : view)
+			{
+				auto [transform, light] = view.get<TransformComponent, LightComponent>(e);
+
+				if (pointId < MAX_LIGHT_COUNT && light.Type == LightType::Point)
+				{
+					PointLightShadingData info = {
+						transform.GetTranslation(),
+						light.Color * light.Intensity,
+						true
+					};
+					pointLightDatas[pointId++] = info;
+				}
+				else if (light.Type == LightType::Directional)
+				{
+
+				}
+			}
+		}
+
+		// Update Light Data
+		Renderer::SetPointLightData(pointLightDatas);
 
 		// Render Entities
 		auto view = m_Scene->m_Registry.view<TransformComponent, ModelRendererComponent>();
@@ -132,7 +164,7 @@ namespace NL
 			Renderer::DepthFunc(DepthComp::LEQUAL);
 
 			// tmp
-			Library<TextureCubeMap>::GetInstance().Get("DefaultSkybox")->Bind(0);
+			m_SkyboxTextureCubemap->Bind(0);
 			m_SkyboxShader->SetUniformInt("u_Skybox", 0);
 			Renderer::DrawModel(m_Skybox, m_SkyboxShader, nlm::translate(nlm::mat4(1.0f), camera.GetPosition()));
 
