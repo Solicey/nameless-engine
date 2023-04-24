@@ -16,7 +16,6 @@ sampler2D u_Diffuse;
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec2 a_TexCoord;
 layout(location = 2) in vec3 a_Normal;
-layout(location = 5) in int a_EntityID;
 
 uniform mat4 u_ViewProjection;
 uniform mat4 u_Transform;
@@ -24,14 +23,12 @@ uniform mat4 u_Transform;
 layout (location = 0) out vec3 v_Position;
 layout (location = 1) out vec2 v_TexCoord;
 layout (location = 2) out vec3 v_Normal;
-layout (location = 3) out flat int v_EntityID;
 			
 void main()
 {
 	v_Position = a_Position;
 	v_TexCoord = a_TexCoord;
 	v_Normal = a_Normal;
-	v_EntityID = a_EntityID;
 	gl_Position = u_ViewProjection * u_Transform * vec4(a_Position, 1.0);
 }
 
@@ -41,7 +38,6 @@ void main()
 layout (location = 0) in vec3 v_Position;
 layout (location = 1) in vec2 v_TexCoord;
 layout (location = 2) in vec3 v_Normal;
-layout (location = 3) in flat int v_EntityID;
 
 layout (location = 0) out vec4 color;
 layout (location = 1) out int color2;
@@ -50,11 +46,12 @@ layout (location = 2) out vec4 color3;
 uniform vec3 u_Color;
 uniform sampler2D u_Diffuse;
 uniform bool u_IsSelected;
+uniform int u_EntityId;
 			
 void main()
 {
 	color = vec4(texture2D(u_Diffuse, v_TexCoord).rgb, 1.0) * vec4(u_Color, 1.0);
-	color2 = v_EntityID;
+	color2 = u_EntityId;
 
 	color3 = vec4(0.1, 0.1, 0.1, 1);
 	if (u_IsSelected)

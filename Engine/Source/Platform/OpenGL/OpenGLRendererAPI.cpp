@@ -3,6 +3,7 @@
 #include "OpenGLRendererAPI.h"
 
 #include <glad/glad.h>
+#include <gl/GL.h>
 
 namespace NL
 {
@@ -42,6 +43,10 @@ namespace NL
 
 		glEnable(GL_LINE_SMOOTH);
 		glEnable(GL_MULTISAMPLE);
+
+		// glEnable(GL_ALPHA_TEST);
+		// glAlphaFunc(GL_GREATER, 0.1);
+
 	}
 
 	void OpenGLRendererAPI::SetClearColor(const nlm::vec4& color)

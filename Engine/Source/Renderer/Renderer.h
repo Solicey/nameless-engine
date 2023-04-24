@@ -21,6 +21,13 @@ namespace NL
 		bool IsValid = false;
 	};
 
+	struct DirLightShadingData
+	{
+		nlm::vec3 Direction;
+		nlm::vec3 Color;
+		bool IsValid = false;
+	};
+
 	class Renderer
 	{
 	public:
@@ -34,6 +41,7 @@ namespace NL
 			const Ref<Material>& mat,
 			const nlm::mat4& transform = nlm::mat4(1.0f),
 			const std::vector<nlm::mat4>& finalMatrices = {}, 
+			int entityId = -1,
 			bool isSelected = false);
 
 		static void Submit(
@@ -41,13 +49,30 @@ namespace NL
 			const Ref<Shader>& shader, 
 			const nlm::mat4& transform = nlm::mat4(1.0f));
 
+		static void SubmitSprite(
+			const Ref<VertexArray>& vertexArray,
+			const Ref<Shader>& shader,
+			const Ref<Texture2D>& texture,
+			const nlm::vec4& color,
+			const nlm::mat4& transform = nlm::mat4(1.0f),
+			int entityId = -1,
+			bool isSelected = false);
+
 		static void DrawModel(const Ref<Model>& model, 
 			const Ref<Shader>& shader,
-			const nlm::mat4& transform = nlm::mat4(1.0f));
+			const nlm::mat4& transform);
+
+		static void DrawSprite(const Ref<Shader>& shader,
+			const Ref<Texture2D>& texture,
+			const nlm::mat4& transform,
+			const nlm::vec4& color,
+			int entityId = -1,
+			bool isSelected = false);
 
 		static void DrawModel(const Ref<Model>& model,
-			const nlm::mat4& transform = nlm::mat4(1.0f),
-			bool isSelected = false);
+			const nlm::mat4& transform,
+			int entityId,
+			bool isSelected);
 
 		static void OnWindowResize(unsigned int width, unsigned int height);
 
@@ -55,6 +80,12 @@ namespace NL
 		{
 			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
 				s_PointLightDatas[i] = data[i];
+		}
+
+		static void SetDirLightData(const DirLightShadingData data[MAX_LIGHT_COUNT])
+		{
+			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
+				s_DirLightDatas[i] = data[i];
 		}
 
 		struct SceneData
@@ -106,5 +137,8 @@ namespace NL
 		static Scope<RendererAPI> s_RendererAPI;
 
 		static PointLightShadingData s_PointLightDatas[MAX_LIGHT_COUNT];
+		static DirLightShadingData s_DirLightDatas[MAX_LIGHT_COUNT];
+
+		static Ref<Model> s_Sprite;
 	};
 }

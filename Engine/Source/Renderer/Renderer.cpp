@@ -1,6 +1,7 @@
 #include "nlpch.h"
 
 #include "Renderer.h"
+#include "Resources/Loaders/ModelLoader.h"
 #include "Resources/Libraries/TextureLibrary.h"
 
 namespace NL
@@ -8,6 +9,8 @@ namespace NL
 	Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
 	Scope<RendererAPI> Renderer::s_RendererAPI = RendererAPI::Create();
 	PointLightShadingData Renderer::s_PointLightDatas[MAX_LIGHT_COUNT] = {};
+	DirLightShadingData Renderer::s_DirLightDatas[MAX_LIGHT_COUNT] = {};
+	Ref<Model> Renderer::s_Sprite = nullptr;
 
 	void Renderer::BeginScene(OrthographicCamera& camera)
 	{
@@ -28,7 +31,7 @@ namespace NL
 	{
 	}
 
-	void Renderer::Submit(const Ref<VertexArray>& vertexArray, const Ref<Material>& material, const nlm::mat4& transform, const std::vector<nlm::mat4>& finalMatrices, bool isSelected)
+	void Renderer::Submit(const Ref<VertexArray>& vertexArray, const Ref<Material>& material, const nlm::mat4& transform, const std::vector<nlm::mat4>& finalMatrices, int entityId, bool isSelected)
 	{
 		NL_ENGINE_ASSERT(material, "Material is nullptr!");
 
@@ -42,6 +45,7 @@ namespace NL
 		shader->SetUniformMat4("u_ViewProjection", s_SceneData->ViewPositionMatrix);
 		shader->SetUniformMat4("u_Transform", transform);
 		shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
+		shader->SetUniformInt("u_EntityId", entityId);
 
 		// Lights
 		for (int i = 0; i < MAX_LIGHT_COUNT; i++)
@@ -55,6 +59,17 @@ namespace NL
 			else
 			{
 				shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Color", nlm::vec3{ -1.0f });
+			}
+
+			const auto& dir = s_DirLightDatas[i];
+			if (dir.IsValid)
+			{
+				shader->SetUniformFloat3("u_DirLights[" + std::to_string(i) + "].Color", dir.Color);
+				shader->SetUniformFloat3("u_DirLights[" + std::to_string(i) + "].Direction", dir.Direction);
+			}
+			else
+			{
+				shader->SetUniformFloat3("u_DirLights[" + std::to_string(i) + "].Color", nlm::vec3{ -1.0f });
 			}
 		}
 
@@ -114,6 +129,37 @@ namespace NL
 		vertexArray->Unbind();
 	}
 
+	void Renderer::SubmitSprite(
+		const Ref<VertexArray>& vertexArray,
+		const Ref<Shader>& shader,
+		const Ref<Texture2D>& texture,
+		const nlm::vec4& color,
+		const nlm::mat4& transform,
+		int entityId,
+		bool isSelected)
+	{
+		NL_ENGINE_ASSERT(shader, "Shader is nullptr!");
+		NL_ENGINE_ASSERT(texture, "Texture is nullptr!");
+
+		shader->Bind();
+
+		// Typical
+		shader->SetUniformMat4("u_ViewProjection", s_SceneData->ViewPositionMatrix);
+		shader->SetUniformMat4("u_Transform", transform);
+		shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
+		shader->SetUniformInt("u_EntityId", entityId);
+		shader->SetUniformFloat4("u_Color", color);
+		shader->SetUniformInt("u_Sprite", 0);
+		texture->Bind(0);
+
+		vertexArray->Bind();
+
+		DrawIndices(vertexArray);
+
+		shader->Unbind();
+		vertexArray->Unbind();
+	}
+
 	void Renderer::DrawModel(const Ref<Model>& model, const Ref<Shader>& shader, const nlm::mat4& transform)
 	{
 		const auto& meshes = model->GetMeshes();
@@ -124,7 +170,27 @@ namespace NL
 		}
 	}
 
-	void Renderer::DrawModel(const Ref<Model>& model, const nlm::mat4& transform, bool isSelected)
+	void Renderer::DrawSprite(const Ref<Shader>& shader,
+		const Ref<Texture2D>& texture,
+		const nlm::mat4& transform,
+		const nlm::vec4& color,
+		int entityId,
+		bool isSelected)
+	{
+		if (s_Sprite == nullptr)
+		{
+			s_Sprite = ModelLoader::Create(PathConfig::GetInstance().GetModelsFolder().string() + "/DontModify/Gizmos.obj", -1, ModelLoaderFlags::Triangulate);
+		}
+
+		const auto& meshes = s_Sprite->GetMeshes();
+
+		for (const auto& mesh : meshes)
+		{
+			SubmitSprite(mesh->GetVertexArray(), shader, texture, color, transform, entityId, isSelected);
+		}
+	}
+
+	void Renderer::DrawModel(const Ref<Model>& model, const nlm::mat4& transform, int entityId, bool isSelected)
 	{
 		const auto& meshes = model->GetMeshes();
 		bool hasBones = model->HasBones();
@@ -133,7 +199,7 @@ namespace NL
 		for (const auto& mesh : meshes)
 		{
 			const auto& material = model->GetMaterial(mesh);
-			Submit(mesh->GetVertexArray(), material, transform, hasBones ? model->GetFinalBoneMatrices() : emptyMatrices, isSelected);
+			Submit(mesh->GetVertexArray(), material, transform, hasBones ? model->GetFinalBoneMatrices() : emptyMatrices, entityId, isSelected);
 		}
 	}
 

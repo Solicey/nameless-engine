@@ -34,7 +34,7 @@ uniform samplerCube u_Skybox;
 			
 void main()
 {
-	color = texture(u_Skybox, v_TexCoords);
+	color = texture(u_Skybox, v_TexCoords).rgba;
 	color2 = -1;
 	color3 = vec4(0.1, 0.1, 0.1, 1);
 }			

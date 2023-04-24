@@ -109,6 +109,7 @@ namespace NL
 		bool m_ShowSceneSettings;
 		int m_MSAASamples = 4;
 		AntiAliasingType m_AntiAliasingType = AntiAliasingType::MSAA;
+		// bool m_ShowGizmos;
 
 		// Runtime Viewport Cursor
 		bool m_IsRuntimeViewportFocused = false;

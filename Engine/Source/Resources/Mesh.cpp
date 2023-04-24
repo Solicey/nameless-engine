@@ -78,8 +78,7 @@ namespace NL
 			{ShaderDataType::Float2, "a_TexCoord"},
 			{ShaderDataType::Float3, "a_Normal"},
 			{ShaderDataType::Float3, "a_Tangent"},
-			{ShaderDataType::Float3, "a_Bitangent"},
-			{ShaderDataType::Int, "a_EntityID"}
+			{ShaderDataType::Float3, "a_Bitangent"}
 		};
 
 		m_VertexArray = VertexArray::Create();
@@ -108,7 +107,6 @@ namespace NL
 			{ShaderDataType::Float3, "a_Normal"},
 			{ShaderDataType::Float3, "a_Tangent"},
 			{ShaderDataType::Float3, "a_Bitangent"},
-			{ShaderDataType::Int, "a_EntityID"},
 			{ShaderDataType::Int4, "a_BoneIndex"},
 			{ShaderDataType::Float4, "a_BoneWeight"}
 		};

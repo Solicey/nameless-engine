@@ -19,6 +19,13 @@ namespace NL
 		std::string modelsFolder = PathConfig::GetInstance().GetModelsFolder().string();
 		m_Skybox = ModelLoader::Create(modelsFolder + "/DontModify/Skybox.obj", -1, ModelLoaderFlags::Triangulate);
 		m_SkyboxTextureCubemap = Library<TextureCubeMap>::GetInstance().FetchDefault();
+
+		m_GizmosShader = Library<Shader>::GetInstance().Fetch("Gizmos.glsl");
+		m_Gizmos = ModelLoader::Create(modelsFolder + "/DontModify/Gizmos.obj", -1, ModelLoaderFlags::Triangulate);
+
+		std::string assetFolder = PathConfig::GetInstance().GetAssetsFolder().string();
+		m_PointGizmosTexture = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Icons/PointLight.png");
+		m_DirGizmosTexture = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Icons/DirLight.png");
 	}
 
 	void RenderSystem::OnStartRuntime()
@@ -63,7 +70,7 @@ namespace NL
 
 			if (model.mModel != nullptr)
 			{
-				Renderer::DrawModel(model.mModel, transform.GetTransform());
+				Renderer::DrawModel(model.mModel, transform.GetTransform(), (int)(uint32_t)entity, false);
 			}
 		}
 
@@ -93,36 +100,55 @@ namespace NL
 	{
 		Renderer::BeginScene(camera);
 
+		bool renderGizmos = camera.IsRenderGizmos();
+		nlm::mat4 cameraRotation = nlm::mat4(camera.GetOrientation());
+
 		// Light Preparation
 		PointLightShadingData pointLightDatas[MAX_LIGHT_COUNT];
+		DirLightShadingData dirLightDatas[MAX_LIGHT_COUNT];
+		Entity pointEntites[MAX_LIGHT_COUNT], dirEntites[MAX_LIGHT_COUNT];
+
 		for (int i = 0; i < MAX_LIGHT_COUNT; i++)
-			pointLightDatas[i].IsValid = false;
+			pointLightDatas[i].IsValid = dirLightDatas[i].IsValid = false;
 
 		{
 			auto view = m_Scene->m_Registry.view<TransformComponent, LightComponent>();
 			int pointId = 0, dirId = 0;
 			for (auto& e : view)
 			{
+				Entity entity = Entity(e, m_Scene);
 				auto [transform, light] = view.get<TransformComponent, LightComponent>(e);
 
-				if (pointId < MAX_LIGHT_COUNT && light.Type == LightType::Point)
+				if (light.Type == LightType::Point && pointId < MAX_LIGHT_COUNT)
 				{
+					nlm::vec3 color = light.Color * light.Intensity;
+
 					PointLightShadingData info = {
 						transform.GetTranslation(),
-						light.Color * light.Intensity,
+						color,
 						true
 					};
+					pointEntites[pointId] = entity;
 					pointLightDatas[pointId++] = info;
 				}
-				else if (light.Type == LightType::Directional)
+				else if (light.Type == LightType::Directional && dirId < MAX_LIGHT_COUNT)
 				{
+					nlm::vec3 color = light.Color * light.Intensity;
 
+					DirLightShadingData info = {
+						transform.GetForward(),
+						color,
+						true
+					};
+					dirEntites[dirId] = entity;
+					dirLightDatas[dirId++] = info;
 				}
 			}
 		}
 
 		// Update Light Data
 		Renderer::SetPointLightData(pointLightDatas);
+		Renderer::SetDirLightData(dirLightDatas);
 
 		// Render Entities
 		auto view = m_Scene->m_Registry.view<TransformComponent, ModelRendererComponent>();
@@ -135,22 +161,25 @@ namespace NL
 
 			if (model.mModel != nullptr)
 			{
-				Renderer::DrawModel(model.mModel, transform.GetTransform(), selectedEntity == entity);
+				Renderer::DrawModel(model.mModel, transform.GetTransform(), (int)(uint32_t)entity, selectedEntity == entity);
 			}
 		}
 
-		// Render Camera Gizmos
-		auto view2 = m_Scene->m_Registry.view<TransformComponent, CameraComponent>();
-		for (auto& e : view2)
+		if (renderGizmos)
 		{
-			Entity entity = Entity(e, m_Scene);
-
-			auto& transform = entity.GetComponent<TransformComponent>();
-			auto& camera = entity.GetComponent<CameraComponent>();
-
-			if (camera.Gizmos != nullptr)
+			// Render Camera Gizmos
+			auto view2 = m_Scene->m_Registry.view<TransformComponent, CameraComponent>();
+			for (auto& e : view2)
 			{
-				Renderer::DrawModel(camera.Gizmos, transform.GetTransform() * nlm::scale(nlm::mat4(1.0f), nlm::vec3(1.0f, 1.0f, -1.0f)), selectedEntity == entity);
+				Entity entity = Entity(e, m_Scene);
+
+				auto& transform = entity.GetComponent<TransformComponent>();
+				auto& camera = entity.GetComponent<CameraComponent>();
+
+				if (camera.Gizmos != nullptr)
+				{
+					Renderer::DrawModel(camera.Gizmos, transform.GetTransform() * nlm::scale(nlm::mat4(1.0f), nlm::vec3(1.0f, 1.0f, -1.0f)), (int)(uint32_t)entity, selectedEntity == entity);
+				}
 			}
 		}
 
@@ -169,6 +198,26 @@ namespace NL
 			Renderer::DrawModel(m_Skybox, m_SkyboxShader, nlm::translate(nlm::mat4(1.0f), camera.GetPosition()));
 
 			Renderer::DepthFunc(DepthComp::LESS);
+		}
+
+		// Gizsmo
+		if (renderGizmos)
+		{
+			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
+			{
+				if (pointLightDatas[i].IsValid)
+				{
+					auto& entity = pointEntites[i];
+					const auto& transform = entity.GetComponent<TransformComponent>();
+					Renderer::DrawSprite(m_GizmosShader, m_PointGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(pointLightDatas[i].Color, 0.7), (int)(uint32_t)entity, selectedEntity == entity);
+				}
+				if (dirLightDatas[i].IsValid)
+				{
+					auto& entity = dirEntites[i];
+					const auto& transform = entity.GetComponent<TransformComponent>();
+					Renderer::DrawSprite(m_GizmosShader, m_DirGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(dirLightDatas[i].Color, 0.7), (int)(uint32_t)entity, selectedEntity == entity);
+				}
+			}
 		}
 
 		Renderer::EndScene();

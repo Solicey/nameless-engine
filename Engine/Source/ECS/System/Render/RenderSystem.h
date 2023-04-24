@@ -22,5 +22,9 @@ namespace NL
 		Ref<TextureCubeMap> m_SkyboxTextureCubemap;
 		Ref<Shader> m_SkyboxShader;
 		Ref<Model> m_Skybox;
+
+		Ref<Shader> m_GizmosShader;
+		Ref<Model> m_Gizmos;
+		Ref<Texture2D> m_PointGizmosTexture, m_DirGizmosTexture;
 	};
 }

@@ -61,7 +61,9 @@ namespace NL
 
         // Post-processing
         m_PostProcessing = PostProcessing::Create();
-        m_EditorPostProcessingQueue = { PostProcessingType::EditorOutline };
+        if (m_EditorCamera.IsRenderGizmos())
+            m_EditorPostProcessingQueue = { PostProcessingType::EditorOutline };
+        else m_EditorPostProcessingQueue.clear();
 
 		// m_EditorCamera = EditorCamera(Camera::ProjectionType::Orthographic, 10.0f, 1280, 720, 0.1f, 1000.0f);
 		m_EditorCamera = EditorCamera(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
@@ -106,11 +108,19 @@ namespace NL
 
         // Framebuffer preparation
         m_MultisampledFramebuffer->Bind();
+
+        /*if (m_EditorCamera.GetClearFlagType() == Camera::ClearFlagType::Color)
+            Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.75f });
+        else if (m_EditorCamera.GetClearFlagType() == Camera::ClearFlagType::Skybox)
+            Renderer::SetClearColor({ 0.0f, 0.0f, 0.0f, 0.0f });*/
         Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.75f });
+
         Renderer::Clear();
+
         m_MultisampledFramebuffer->Unbind();
 
         // Clear entity ID attachment to -1
+        // m_MultisampledFramebuffer->ClearAttachment(0, 1);
         m_MultisampledFramebuffer->ClearAttachment(1, -1);
 
 		//NL_TRACE("Delta Time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
@@ -415,7 +425,7 @@ namespace NL
 
 
             // Grid
-            if (IsEditorMode())
+            if (IsEditorMode() && m_EditorCamera.IsRenderGizmos() && m_EditorCamera.GetClearFlagType() == Camera::ClearFlagType::Color)
             {
                 ImGuizmo::SetOrthographic(false);
                 ImGuizmo::SetDrawlist();
@@ -456,7 +466,7 @@ namespace NL
             }
 
             // Gizmos
-            if (IsEditorMode())
+            if (IsEditorMode() && m_EditorCamera.IsRenderGizmos())
             {
                 Entity entitySelected = m_HierarchyPanel->GetSelectedEntity();
                 if (entitySelected && entitySelected.HasComponent<TransformComponent>())
@@ -481,6 +491,7 @@ namespace NL
 
                     float snapValues[3] = { snapValue, snapValue, snapValue };
 
+                    ImGuizmo::AllowAxisFlip(false);
                     ImGuizmo::Manipulate(nlm::value_ptr(cameraView), nlm::value_ptr(cameraProjection),
                         (ImGuizmo::OPERATION)m_GuizmoType, ImGuizmo::LOCAL, nlm::value_ptr(transform),
                         nullptr, snap ? snapValues : nullptr);
@@ -527,7 +538,7 @@ namespace NL
         // Scene Settings
         if (m_ShowSceneSettings && !(m_IsMaximizeOnPlay && m_ViewportMode == ViewportMode::Runtime))
         {
-            ImGui::Begin("Scene Settings");
+            ImGui::Begin("Settings");
 
             // Anti-Aliasing
             bool hasAntiAliasModified = false;
@@ -567,7 +578,7 @@ namespace NL
             }
 
             // Editor Camera Clear Flag
-            if (ImGui::TreeNode("Viewport Clear Flag"))
+            if (ImGui::TreeNode("Clear Flag"))
             {
                 Camera::ClearFlagType type = m_EditorCamera.GetClearFlagType();
                 if (ImGui::RadioButton("Color", (type == Camera::ClearFlagType::Color)))
@@ -582,7 +593,17 @@ namespace NL
                 ImGui::TreePop();
             }
 
-            // Skybox
+            // Editor Viewport Gizmos
+            if (ImGui::TreeNode("Gizmos"))
+            {
+                if (ImGui::Checkbox("Show Gizmos", &m_EditorCamera.GetRenderGizmosRef()))
+                {
+                    if (m_EditorCamera.IsRenderGizmos())
+                        m_EditorPostProcessingQueue = { PostProcessingType::EditorOutline };
+                    else m_EditorPostProcessingQueue.clear();
+                }
+                ImGui::TreePop();
+            }
 
             // Runtime PostEffects
 
@@ -764,7 +785,8 @@ namespace NL
         std::unordered_map<std::string, int> sceneSettingsInt = {
             {"AntiAliasingType", (int)m_AntiAliasingType},
             {"MSAASamples", m_MSAASamples},
-            {"EditorCameraClearFlag", (int)m_EditorCamera.GetClearFlagType()}
+            {"EditorCameraClearFlag", (int)m_EditorCamera.GetClearFlagType()},
+            {"ShowGizmos", m_EditorCamera.IsRenderGizmos() ? 1 : 0}
         };
         serializer.Serialize(path, sceneSettingsInt);
     }
@@ -820,7 +842,8 @@ namespace NL
         std::unordered_map<std::string, int> sceneSettingsInt = {
             {"AntiAliasingType", (int)m_AntiAliasingType},
             {"MSAASamples", m_MSAASamples},
-            {"EditorCameraClearFlag", (int)m_EditorCamera.GetClearFlagType()}
+            {"EditorCameraClearFlag", (int)m_EditorCamera.GetClearFlagType()},
+            {"ShowGizmos", m_EditorCamera.IsRenderGizmos() ? 1 : 0}
         };
         if (serializer.Deserialize(path, sceneSettingsInt))
         {
@@ -841,6 +864,9 @@ namespace NL
             m_AntiAliasingType = (AntiAliasingType)sceneSettingsInt.at("AntiAliasingType");
             m_MSAASamples = sceneSettingsInt.at("MSAASamples");
             m_EditorCamera.SetClearFlagType((Camera::ClearFlagType)sceneSettingsInt.at("EditorCameraClearFlag"));
+
+            m_EditorCamera.SetRenderGizmos(sceneSettingsInt.at("ShowGizmos"));
+            
         }
     }
 

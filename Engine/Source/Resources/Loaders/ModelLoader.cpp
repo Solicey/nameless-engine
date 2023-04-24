@@ -385,8 +385,7 @@ namespace NL
 					nlm::vec2(texCoords.x, texCoords.y),
 					nlm::vec3(normal.x, normal.y, normal.z),
 					nlm::vec3(tangent.x, tangent.y, tangent.z),
-					nlm::vec3(bitangent.x, bitangent.y, bitangent.z),
-					entityID
+					nlm::vec3(bitangent.x, bitangent.y, bitangent.z)
 				}
 			);
 
@@ -424,7 +423,6 @@ namespace NL
 					nlm::vec3(normal.x, normal.y, normal.z),
 					nlm::vec3(tangent.x, tangent.y, tangent.z),
 					nlm::vec3(bitangent.x, bitangent.y, bitangent.z),
-					entityID,
 					nlm::ivec4(0, 0, 0, 0),
 					nlm::vec4(0.0f, 0.0f, 0.0f, 0.0f)
 				}

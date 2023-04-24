@@ -58,17 +58,6 @@ namespace NL
 		const std::string& GetPath() const { return m_Path; }
 		const std::unordered_map<std::string, Ref<Material>>& GetMaterials() const { return m_Materials; }
 		std::unordered_map<std::string, Ref<Material>>& GetMaterialsNotConst() { return m_Materials; }
-
-		void DeleteMaterialTexturesReference()
-		{
-			for (auto& item : m_Materials)
-			{
-				Ref<Material> mat = item.second;
-				if (mat != nullptr)
-					mat->DeleteMaterialTexturesReference();
-			}
-			Library<Texture2D>::GetInstance().TraverseDelete();
-		}
 		
 		bool HasBones() const
 		{
@@ -87,6 +76,17 @@ namespace NL
 		const std::vector<nlm::mat4>& CalculateFinalBoneMatrices();
 
 		void AddBonePair(const std::pair<std::string, std::string>& pair);
+
+		void DeleteMaterialTexturesReference()
+		{
+			for (auto& item : m_Materials)
+			{
+				Ref<Material> mat = item.second;
+				if (mat != nullptr)
+					mat->DeleteMaterialTexturesReference();
+			}
+			Library<Texture2D>::GetInstance().TraverseDelete();
+		}
 
 	private:
 		Model() = delete;
