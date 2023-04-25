@@ -9,6 +9,7 @@
 #include "Core/Misc/PtrWrapper.h"
 #include "Core/Misc/Directives.h"
 #include "Core/Misc/PathConfig.h"
+#include "Core/Misc/Singleton.h"
 
 #include "Camera/Camera.h"
 #include "Camera/EditorCamera.h"

@@ -13,12 +13,13 @@ namespace NL
 	class ModelRendererComponent : public ComponentBase
 	{
 	public:
-		ModelRendererComponent() : Flags(ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace | ModelLoaderFlags::PopulateArmatureData | ModelLoaderFlags::JoinIdenticalVertices | ModelLoaderFlags::GenSmoothNormals) {}
+		ModelRendererComponent() {}
+		ModelRendererComponent(const ModelRendererComponent&) = default;
 
-		ModelRendererComponent(const std::string& path, int entityID, ModelLoaderFlags flags = ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace | ModelLoaderFlags::PopulateArmatureData | ModelLoaderFlags::JoinIdenticalVertices | ModelLoaderFlags::GenSmoothNormals)
-			: Path(std::regex_replace(path, std::regex("\\\\"), "/")), Flags(flags), mModel(ModelLoader::Create(path, entityID, flags))
+		ModelRendererComponent(const std::string& path, ModelLoaderFlags flags = ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace | ModelLoaderFlags::PopulateArmatureData | ModelLoaderFlags::JoinIdenticalVertices | ModelLoaderFlags::GenSmoothNormals)
+			: Path(std::regex_replace(path, std::regex("\\\\"), "/"))
 		{
-			// NL_ENGINE_TRACE("Entity entt id: {0}", entityID);
+			mModel = ModelLoader::Create(path, flags);
 		}
 
 		void RotateBone(int boneId, nlm::vec3* eulerAngles);
@@ -30,8 +31,5 @@ namespace NL
 		std::string Path = "";
 		Ref<Model> mModel = nullptr;
 
-		// std::vector<ChainInfo> BoneChains;
-		
-		ModelLoaderFlags Flags;
 	};
 }

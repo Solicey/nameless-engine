@@ -15,16 +15,13 @@ namespace NL
 		ModelLoader() = delete;
 
 		static Ref<Model> Create(const std::string& path,
-			int entityID = -1,
-			ModelLoaderFlags flags = ModelLoaderFlags::None);
-		
+			ModelLoaderFlags flags = ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace | ModelLoaderFlags::PopulateArmatureData | ModelLoaderFlags::JoinIdenticalVertices | ModelLoaderFlags::GenSmoothNormals);
 	private:
 		static bool AssimpLoadModel(const std::string& path,
 			std::vector<Ref<Mesh>>& meshes,
 			std::unordered_map<std::string, Ref<Material>>& materials,
 			std::unordered_map<std::string, int>& boneMap,
 			std::map<int, BoneInfo>& bones,
-			int entityID,
 			ModelLoaderFlags flags = ModelLoaderFlags::None);
 
 		static void ProcessMaterials(const std::string& path, const struct aiScene* scene,
@@ -37,23 +34,20 @@ namespace NL
 			std::unordered_map<std::string, Ref<Material>>& materials,
 			std::unordered_map<std::string, int>& boneMap,
 			std::map<int, BoneInfo>& bones,
-			std::vector<std::pair<std::string, std::string>>& bonePairs,
-			int entityID);
+			std::vector<std::pair<std::string, std::string>>& bonePairs);
 
 		static void ProcessMesh(const struct aiScene* scene,
 			void* transform,
 			aiMesh* mesh,
 			std::vector<Vertex>& vertices,
-			std::vector<uint32_t>& indices,
-			int entityID
+			std::vector<uint32_t>& indices
 		);
 
 		static void ProcessMesh(const struct aiScene* scene,
 			void* transform,
 			aiMesh* mesh,
 			std::vector<SkinnedVertex>& vertices,
-			std::vector<uint32_t>& indices,
-			int entityID
+			std::vector<uint32_t>& indices
 		);
 
 		static void ProcessBoneHierarchy(

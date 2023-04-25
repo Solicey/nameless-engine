@@ -11,8 +11,9 @@ namespace NL
 {
 	class Shader
 	{
-
 	public:
+		template <typename LibType>
+		friend class Library;
 
 		virtual ~Shader() = default;
 
@@ -28,6 +29,7 @@ namespace NL
 		virtual void SetUniformMat4Array(const std::string& name, const std::vector<nlm::mat4>& values) = 0;
 		virtual const std::vector<ShaderProperty>& GetShaderProperties() const = 0;
 
+	private:
 		// Should ONLY be called by ShaderLibrary, call ShaderLibrary instead
 		static Ref<Shader> Create(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc);
 		// Should ONLY be called by ShaderLibrary, call ShaderLibrary instead
