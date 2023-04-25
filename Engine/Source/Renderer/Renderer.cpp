@@ -179,8 +179,7 @@ namespace NL
 	{
 		if (s_Sprite == nullptr)
 		{
-			// s_Sprite = Library<Model>::GetInstance().Fetch(PathConfig::GetInstance().GetModelsFolder().string() + "/DontModify/Gizmos.obj");
-			s_Sprite = ModelLoader::Create(PathConfig::GetInstance().GetModelsFolder().string() + "/DontModify/Gizmos.obj", ModelLoaderFlags::Triangulate);
+			s_Sprite = ModelLoader::Create(PathConfig::GetInstance().GetModelsFolder().string() + "/DontModify/Gizmos.obj", -1, ModelLoaderFlags::Triangulate);
 		}
 
 		const auto& meshes = s_Sprite->GetMeshes();

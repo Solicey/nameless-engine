@@ -19,7 +19,7 @@ namespace NL
 		
 	}
 
-	Ref<Model> ModelLoader::Create(const std::string& path, ModelLoaderFlags flags)
+	Ref<Model> ModelLoader::Create(const std::string& path, int entityID, ModelLoaderFlags flags)
 	{
 		NL_ENGINE_INFO("Before regex: {0}", path);
 		std::string normPath = std::regex_replace(path, std::regex("\\\\"), "/");
@@ -27,7 +27,7 @@ namespace NL
 
 		Ref<Model> model = CreateRef<Model>(Model(normPath));
 
-		if (!AssimpLoadModel(normPath, model->m_Meshes, model->m_Materials, model->m_BoneMap, model->m_Bones, flags))
+		if (!AssimpLoadModel(normPath, model->m_Meshes, model->m_Materials, model->m_BoneMap, model->m_Bones, entityID, flags))
 		{
 			NL_ENGINE_WARN("Failed to load model path: {0}", normPath);
 			return nullptr;
@@ -50,6 +50,7 @@ namespace NL
 		std::unordered_map<std::string, Ref<Material>>& materials,
 		std::unordered_map<std::string, int>& boneMap,
 		std::map<int, BoneInfo>& bones,
+		int entityID,
 		ModelLoaderFlags flags)
 	{
 
@@ -62,7 +63,7 @@ namespace NL
 		aiMatrix4x4 identity;
 
 		std::vector<std::pair<std::string, std::string>> bonePairs;
-		ProcessNode(scene, &identity, scene->mRootNode, meshes, materials, boneMap, bones, bonePairs);
+		ProcessNode(scene, &identity, scene->mRootNode, meshes, materials, boneMap, bones, bonePairs, entityID);
 		if (!bonePairs.empty())
 			ProcessBoneHierarchy(boneMap, bones, bonePairs, scene->mRootNode);
 
@@ -190,7 +191,7 @@ namespace NL
 		}
 	}
 
-	void ModelLoader::ProcessNode(const struct aiScene* scene, void* transform, aiNode* node, std::vector<Ref<Mesh>>& meshes, std::unordered_map<std::string, Ref<Material>>& materials, std::unordered_map<std::string, int>& boneMap, std::map<int, BoneInfo>& bones, std::vector<std::pair<std::string, std::string>>& bonePairs)
+	void ModelLoader::ProcessNode(const struct aiScene* scene, void* transform, aiNode* node, std::vector<Ref<Mesh>>& meshes, std::unordered_map<std::string, Ref<Material>>& materials, std::unordered_map<std::string, int>& boneMap, std::map<int, BoneInfo>& bones, std::vector<std::pair<std::string, std::string>>& bonePairs, int entityID)
 	{
 		aiMatrix4x4 nodeTransformation = *reinterpret_cast<aiMatrix4x4*>(transform) * node->mTransformation;
 
@@ -211,11 +212,11 @@ namespace NL
 			if (mesh->mNumBones > 0)
 			{
 				hasBones = true;
-				ProcessMesh(scene, &nodeTransformation, mesh, skinnedVertices, indices);
+				ProcessMesh(scene, &nodeTransformation, mesh, skinnedVertices, indices, entityID);
 			}
 			else
 			{
-				ProcessMesh(scene, &nodeTransformation, mesh, vertices, indices);
+				ProcessMesh(scene, &nodeTransformation, mesh, vertices, indices, entityID);
 			}
 
 			for (uint32_t j = 0; j < mesh->mNumBones; j++)
@@ -342,7 +343,7 @@ namespace NL
 		// Then do the same for each of its children
 		for (uint32_t i = 0; i < node->mNumChildren; ++i)
 		{
-			ProcessNode(scene, &nodeTransformation, node->mChildren[i], meshes, materials, boneMap, bones, bonePairs);
+			ProcessNode(scene, &nodeTransformation, node->mChildren[i], meshes, materials, boneMap, bones, bonePairs, entityID);
 		}
 
 		// If it is a tip
@@ -364,7 +365,7 @@ namespace NL
 		}*/
 	}
 
-	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
+	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, int entityID)
 	{
 		// aiMatrix4x4 meshTransformation = *reinterpret_cast<aiMatrix4x4*>(transform);
 		aiMatrix4x4 meshTransformation = aiMatrix4x4();
@@ -401,7 +402,7 @@ namespace NL
 
 	}
 
-	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<SkinnedVertex>& vertices, std::vector<uint32_t>& indices)
+	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<SkinnedVertex>& vertices, std::vector<uint32_t>& indices, int entityID)
 	{
 		//aiMatrix4x4 meshTransformation = *reinterpret_cast<aiMatrix4x4*>(transform);
 		aiMatrix4x4 meshTransformation = aiMatrix4x4();

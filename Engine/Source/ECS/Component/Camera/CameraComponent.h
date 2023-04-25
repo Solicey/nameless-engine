@@ -3,6 +3,7 @@
 #include "Core/Misc/PtrWrapper.h"
 #include "Core/Math/Math.h"
 #include "ECS/Component/Component.h"
+#include "Resources/Loaders/ModelLoader.h"
 #include "Camera/Camera.h"
 
 #include <string>
@@ -17,8 +18,7 @@ namespace NL
 
 		void LoadGizmosModel(int entityId)
 		{
-			Gizmos = ModelLoader::Create(PathConfig::GetInstance().GetModelsFolder().string() + "/DontModify/Camera.obj");
-			// Gizmos = Library<Model>::GetInstance().Fetch(PathConfig::GetInstance().GetModelsFolder().string() + "/DontModify/Camera.obj");
+			Gizmos = ModelLoader::Create(PathConfig::GetInstance().GetModelsFolder().string() + "/DontModify/Camera.obj", entityId);
 		}
 
 		bool FixedAspectRatio = false;

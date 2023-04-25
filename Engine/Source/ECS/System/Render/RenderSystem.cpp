@@ -17,13 +17,11 @@ namespace NL
 		NL_ENGINE_ASSERT(m_SkyboxShader, "Skybox shader does NOT exists!");
 
 		std::string modelsFolder = PathConfig::GetInstance().GetModelsFolder().string();
-		m_Skybox = ModelLoader::Create(modelsFolder + "/DontModify/Skybox.obj", ModelLoaderFlags::Triangulate);
+		m_Skybox = ModelLoader::Create(modelsFolder + "/DontModify/Skybox.obj", -1, ModelLoaderFlags::Triangulate);
 		m_SkyboxTextureCubemap = Library<TextureCubeMap>::GetInstance().FetchDefault();
-		//m_Skybox = Library<Model>::GetInstance().Fetch(modelsFolder + "/DontModify/Skybox.obj");
 
-		m_Gizmos = ModelLoader::Create(modelsFolder + "/DontModify/Gizmos.obj", ModelLoaderFlags::Triangulate);
 		m_GizmosShader = Library<Shader>::GetInstance().Fetch("Gizmos.glsl");
-		//m_Gizmos = Library<Model>::GetInstance().Fetch(modelsFolder + "/DontModify/Gizmos.obj");
+		m_Gizmos = ModelLoader::Create(modelsFolder + "/DontModify/Gizmos.obj", -1, ModelLoaderFlags::Triangulate);
 
 		std::string assetFolder = PathConfig::GetInstance().GetAssetsFolder().string();
 		m_PointGizmosTexture = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Icons/PointLight.png");
@@ -211,13 +209,13 @@ namespace NL
 				{
 					auto& entity = pointEntites[i];
 					const auto& transform = entity.GetComponent<TransformComponent>();
-					Renderer::DrawSprite(m_GizmosShader, m_PointGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(pointLightDatas[i].Color, 0.9), (int)(uint32_t)entity, selectedEntity == entity);
+					Renderer::DrawSprite(m_GizmosShader, m_PointGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(pointLightDatas[i].Color, 0.7), (int)(uint32_t)entity, selectedEntity == entity);
 				}
 				if (dirLightDatas[i].IsValid)
 				{
 					auto& entity = dirEntites[i];
 					const auto& transform = entity.GetComponent<TransformComponent>();
-					Renderer::DrawSprite(m_GizmosShader, m_DirGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(dirLightDatas[i].Color, 0.9), (int)(uint32_t)entity, selectedEntity == entity);
+					Renderer::DrawSprite(m_GizmosShader, m_DirGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(dirLightDatas[i].Color, 0.7), (int)(uint32_t)entity, selectedEntity == entity);
 				}
 			}
 		}

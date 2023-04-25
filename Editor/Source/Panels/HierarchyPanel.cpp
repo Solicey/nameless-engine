@@ -499,7 +499,7 @@ namespace NL
 			{
 				if (component.mModel)
 					component.mModel->DeleteMaterialTexturesReference();
-				component = ModelRendererComponent(path.string());
+				component = ModelRendererComponent(path.string(), (uint32_t)entity, component.Flags);
 			}
 		}
 		ImGui::PopID();
