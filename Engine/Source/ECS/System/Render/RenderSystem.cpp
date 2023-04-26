@@ -60,7 +60,7 @@ namespace NL
 
 		Renderer::BeginScene(camera.mCamera, camTransform.GetTransform());
 
-		auto view = m_Scene->m_Registry.view<TransformComponent, ModelRendererComponent>();
+		auto view = m_Scene->Registry.view<TransformComponent, ModelRendererComponent>();
 		for (auto& e : view)
 		{
 			Entity entity = Entity(e, m_Scene);
@@ -112,7 +112,7 @@ namespace NL
 			pointLightDatas[i].IsValid = dirLightDatas[i].IsValid = false;
 
 		{
-			auto view = m_Scene->m_Registry.view<TransformComponent, LightComponent>();
+			auto view = m_Scene->Registry.view<TransformComponent, LightComponent>();
 			int pointId = 0, dirId = 0;
 			for (auto& e : view)
 			{
@@ -151,7 +151,7 @@ namespace NL
 		Renderer::SetDirLightData(dirLightDatas);
 
 		// Render Entities
-		auto view = m_Scene->m_Registry.view<TransformComponent, ModelRendererComponent>();
+		auto view = m_Scene->Registry.view<TransformComponent, ModelRendererComponent>();
 		for (auto& e : view)
 		{
 			Entity entity = Entity(e, m_Scene);
@@ -168,7 +168,7 @@ namespace NL
 		if (renderGizmos)
 		{
 			// Render Camera Gizmos
-			auto view2 = m_Scene->m_Registry.view<TransformComponent, CameraComponent>();
+			auto view2 = m_Scene->Registry.view<TransformComponent, CameraComponent>();
 			for (auto& e : view2)
 			{
 				Entity entity = Entity(e, m_Scene);

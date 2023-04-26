@@ -57,7 +57,7 @@ namespace NL
 		void OnComponentRemoved(Entity entity, C& component);
 
 	public:
-		entt::registry m_Registry;
+		entt::registry Registry;
 
 	private:
 		friend class Entity;

@@ -35,24 +35,25 @@ namespace NL
 
 		void Delete(const std::string& name)
 		{
-			if (m_Library.find(name) != m_Library.end())
+			if (Contains(name))
 			{
-				auto& item = m_Library[name];
-				if (item.use_count() <= 1 && name.compare(m_DefaultTextureName) != 0)
+				const auto& item = Get(name);
+				int useCount = item.use_count();
+				if (useCount <= 1 && name.compare(m_DefaultTextureName) != 0)
 				{
 					NL_ENGINE_TRACE("Texture {0} reference no more than 1, will be deleted!", name);
-					item.reset();
-					m_Library.erase(name);
+					Remove(name);
+					//m_Library.erase(name);
 				}
 				else
 				{
-					NL_ENGINE_TRACE("Texture {0} reference count is {1}, will not be deleted!", name, item.use_count());
+					NL_ENGINE_TRACE("Texture {0} reference count is {1}, will not be deleted!", name, useCount);
 				}
 			}
 		}
 
 		// Avoid memory leak, buggy
-		void TraverseDelete()
+		/*void TraverseDelete()
 		{
 			NL_ENGINE_TRACE("Texture Library Traverse Delete!");
 
@@ -74,7 +75,7 @@ namespace NL
 				}
 				else iter++;
 			}
-		}
+		}*/
 
 	private:
 		const std::string& m_DefaultTextureName = "Default";

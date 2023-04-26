@@ -127,6 +127,7 @@ namespace NL
 								mat->AddTexture(TextureType::Ambient, tex);
 								break;
 							case aiTextureType_EMISSIVE:
+								mat->AddTexture(TextureType::Emissive, tex);
 								break;
 							case aiTextureType_HEIGHT:
 								mat->AddTexture(TextureType::Height, tex);
@@ -135,6 +136,7 @@ namespace NL
 								mat->AddTexture(TextureType::Normals, tex);
 								break;
 							case aiTextureType_SHININESS:
+								mat->AddTexture(TextureType::Shininess, tex);
 								break;
 							case aiTextureType_OPACITY:
 								break;
@@ -153,8 +155,10 @@ namespace NL
 							case aiTextureType_EMISSION_COLOR:
 								break;
 							case aiTextureType_METALNESS:
+								mat->AddTexture(TextureType::Metalness, tex);
 								break;
 							case aiTextureType_DIFFUSE_ROUGHNESS:
+								mat->AddTexture(TextureType::Roughness, tex);
 								break;
 							case aiTextureType_AMBIENT_OCCLUSION:
 								break;

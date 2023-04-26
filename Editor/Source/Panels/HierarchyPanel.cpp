@@ -209,7 +209,7 @@ namespace NL
 					ImGui::EndPopup();
 				}
 
-				m_Scene->m_Registry.each(
+				m_Scene->Registry.each(
 					[&](auto handle)
 					{
 						Entity entity{ handle, m_Scene.get() };

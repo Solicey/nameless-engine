@@ -138,7 +138,7 @@ namespace NL
         {
             if (!m_RuntimeCameraEntity.HasComponent<CameraComponent>())
             {
-                auto camView = m_RuntimeScene->m_Registry.view<CameraComponent>();
+                auto camView = m_RuntimeScene->Registry.view<CameraComponent>();
                 for (auto entity : camView)
                 {
                     m_RuntimeCameraEntity = Entity(entity, m_RuntimeScene.get());
@@ -356,11 +356,11 @@ namespace NL
                     if (ImGui::BeginCombo("Runtime Camera", runtimeCameraName.c_str()))
                     {
                         Application::GetInstance().GetImGuiLayer()->BlockEvents(true);
-                        auto camView = m_RuntimeScene->m_Registry.view<CameraComponent>();
+                        auto camView = m_RuntimeScene->Registry.view<CameraComponent>();
                         for (auto entity : camView)
                         {
-                            auto& comp = m_RuntimeScene->m_Registry.get<CameraComponent>(entity);
-                            auto& name = m_RuntimeScene->m_Registry.get<IdentityComponent>(entity).Name;
+                            auto& comp = m_RuntimeScene->Registry.get<CameraComponent>(entity);
+                            auto& name = m_RuntimeScene->Registry.get<IdentityComponent>(entity).Name;
                             bool isSelected = entity == m_RuntimeCameraEntity;
                             if (ImGui::Selectable(name.c_str(), isSelected))
                             {
@@ -545,18 +545,27 @@ namespace NL
             std::string meshString = "Mesh (" + std::to_string(Library<Mesh>::GetInstance().GetSize()) + ")";
             std::string shaderString = "Shader (" + std::to_string(Library<Shader>::GetInstance().GetSize()) + ")";
 
-            if (ImGui::TreeNode(texString.c_str()))
+            if (ImGui::TreeNodeEx("##TexturesList", 0, texString.c_str()))
             {
+                const auto& names = Library<Texture2D>::GetInstance().GetNames();
+                for (auto& name : names)
+                    ImGui::Text(name.c_str());
                 ImGui::TreePop();
             }
 
-            if (ImGui::TreeNode(meshString.c_str()))
+            if (ImGui::TreeNodeEx("##MeshesList", 0, meshString.c_str()))
             {
+                const auto& names = Library<Mesh>::GetInstance().GetNames();
+                for (auto& name : names)
+                    ImGui::Text(name.c_str());
                 ImGui::TreePop();
             }
 
-            if (ImGui::TreeNode(shaderString.c_str()))
+            if (ImGui::TreeNodeEx("##ShadersList", 0, shaderString.c_str()))
             {
+                const auto& names = Library<Shader>::GetInstance().GetNames();
+                for (auto& name : names)
+                    ImGui::Text(name.c_str());
                 ImGui::TreePop();
             }
 
@@ -827,7 +836,7 @@ namespace NL
         }
 
         // if (m_EditorScene)
-           // m_EditorScene->m_Registry.clear();
+           // m_EditorScene->Registry.clear();
         m_EditorScene->DestroyScene();
         m_EditorScene.reset();
         m_EditorScene = CreateRef<Scene>();
@@ -878,7 +887,7 @@ namespace NL
         if (serializer.Deserialize(path, sceneSettingsInt))
         {
             // if (m_EditorScene)
-               // m_EditorScene->m_Registry.clear();
+               // m_EditorScene->Registry.clear();
 
             m_EditorScene->DestroyScene();
             m_EditorScene.reset();

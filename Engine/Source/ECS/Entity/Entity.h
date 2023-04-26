@@ -20,7 +20,7 @@ namespace NL
 		C& AddComponent(Args&&... args)
 		{
 			NL_ENGINE_ASSERT(!HasComponent<C>(), "Entity already has this component!");
-			C& component = m_Scene->m_Registry.emplace<C>(m_EntityHandle, std::forward<Args>(args)...);
+			C& component = m_Scene->Registry.emplace<C>(m_EntityHandle, std::forward<Args>(args)...);
 			m_Scene->OnComponentAdded<C>(*this, component);
 			return component;
 		}
@@ -28,7 +28,7 @@ namespace NL
 		template<Component C, typename... Args>
 		C& AddOrReplaceComponent(Args&&... args)
 		{
-			C& component = m_Scene->m_Registry.emplace_or_replace<C>(m_EntityHandle, std::forward<Args>(args)...);
+			C& component = m_Scene->Registry.emplace_or_replace<C>(m_EntityHandle, std::forward<Args>(args)...);
 			m_Scene->OnComponentAdded<C>(*this, component);
 			return component;
 		}
@@ -37,21 +37,21 @@ namespace NL
 		C& GetComponent()
 		{
 			NL_ENGINE_ASSERT(HasComponent<C>(), "Entity does NOT have this component!");
-			return m_Scene->m_Registry.get<C>(m_EntityHandle);
+			return m_Scene->Registry.get<C>(m_EntityHandle);
 		}
 
 		template<Component... C>
 		std::tuple<C&...> GetComponents()
 		{
 			NL_ENGINE_ASSERT((HasComponent<C>() && ...), "Entity does NOT have some of these components!");
-			return std::make_tuple<C&...>((m_Scene->m_Registry.get<C>(m_EntityHandle))...);
+			return std::make_tuple<C&...>((m_Scene->Registry.get<C>(m_EntityHandle))...);
 		}
 
 		template<Component... C>
 		std::tuple<const C& const...> GetConstComponents() const
 		{
 			NL_ENGINE_ASSERT((HasComponent<C>() && ...), "Entity does NOT have some of these components!");
-			return std::make_tuple<const C& const...>((m_Scene->m_Registry.get<C>(m_EntityHandle))...);
+			return std::make_tuple<const C& const...>((m_Scene->Registry.get<C>(m_EntityHandle))...);
 		}
 
 		template<Component C>
@@ -59,7 +59,7 @@ namespace NL
 		{
 			if (m_Scene == nullptr)
 				return false;
-			return m_Scene->m_Registry.all_of<C>(m_EntityHandle);
+			return m_Scene->Registry.all_of<C>(m_EntityHandle);
 		}
 
 		template<Component C>
@@ -67,7 +67,7 @@ namespace NL
 		{
 			NL_ENGINE_ASSERT(HasComponent<C>(), "Entity does NOT have this component!");
 			m_Scene->OnComponentRemoved<C>(*this, this->GetComponent<C>());
-			m_Scene->m_Registry.remove<C>(m_EntityHandle);
+			m_Scene->Registry.remove<C>(m_EntityHandle);
 		}
 
 		operator bool() const { return m_EntityHandle != entt::null; }

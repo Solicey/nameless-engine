@@ -27,7 +27,7 @@ namespace NL
 
     Scene::~Scene()
     {
-        
+        // DestroyScene();
     }
 
     template<Component... C>
@@ -62,8 +62,8 @@ namespace NL
 
         std::unordered_map<ID, entt::entity> enttMap;
 
-        auto& srcSceneRegistry = scene->m_Registry;
-        auto& dstSceneRegistry = newScene->m_Registry;
+        auto& srcSceneRegistry = scene->Registry;
+        auto& dstSceneRegistry = newScene->Registry;
         auto idView = srcSceneRegistry.view<IdentityComponent>();
         for (auto entity : idView)
         {
@@ -87,7 +87,7 @@ namespace NL
 
     Entity Scene::CreateEntityWithID(ID id, const std::string& name)
     {
-        Entity entity = Entity(m_Registry.create(), this);
+        Entity entity = Entity(Registry.create(), this);
         NL_ENGINE_TRACE("Entity entt id: {0}, nl id: {1}", (uint32_t)entity, id.GetID());
         entity.AddComponent<IdentityComponent>(id, name);
         entity.AddComponent<TransformComponent>();
@@ -107,15 +107,21 @@ namespace NL
         }
 
         m_EntityMap.erase(entity.GetID());
-        m_Registry.destroy(entity);
+        Registry.destroy(entity);
     }
 
     void Scene::DestroyScene()
     {
-        m_Registry.clear();
+        auto view = Registry.view<IdentityComponent>();
+        for (auto entity : view)
+        {
+            DestroyEntity(Entity(entity, this));
+        }
+
+        Registry.clear();
         m_EntityMap.clear();
-        Library<Texture2D>::GetInstance().TraverseDelete();
-        Library<Mesh>::GetInstance().TraverseDelete();
+        //Library<Texture2D>::GetInstance().TraverseDelete();
+        //Library<Mesh>::GetInstance().TraverseDelete();
     }
 
     void Scene::OnStartRuntime()
@@ -174,7 +180,7 @@ namespace NL
 
     Entity Scene::FindEntityByName(std::string_view name)
     {
-        auto view = m_Registry.view<IdentityComponent>();
+        auto view = Registry.view<IdentityComponent>();
         for (auto entity : view)
         {
             const IdentityComponent& comp = view.get<IdentityComponent>(entity);
@@ -186,7 +192,7 @@ namespace NL
 
     /*nlm::vec2 Scene::OnViewportResize(uint32_t width, uint32_t height)
     {
-        auto view = m_Registry.view<CameraComponent>();
+        auto view = Registry.view<CameraComponent>();
         for (auto entity : view)
         {
             auto& cameraComponent = view.get<CameraComponent>(entity);

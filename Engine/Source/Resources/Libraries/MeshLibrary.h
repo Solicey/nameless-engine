@@ -31,7 +31,7 @@ namespace NL
 		bool HasModel(const std::string& modelName)
 		{
 			std::string name = std::regex_replace(modelName, std::regex("\\\\"), "/");
-			for (const auto& item : m_Library)
+			for (const auto& item : GetLibrary())
 			{
 				if (item.first.substr(0, item.first.find_first_of(":")).compare(name) == 0)
 					return true;
@@ -41,24 +41,26 @@ namespace NL
 
 		void DeleteMesh(const std::string& modelName, const std::string meshName)
 		{
-			const std::string& name = modelName + ":" + meshName;
-			if (m_Library.find(name) != m_Library.end())
+			auto name = modelName + ":" + meshName;
+			if (Contains(name))
 			{
-				auto& item = m_Library[name];
-				if (item.use_count() <= 1)
+				const auto& item = Get(name);
+				int useCount = item.use_count();
+				if (useCount <= 1)
 				{
 					NL_ENGINE_TRACE("Mesh {0} reference no more than 1, will be deleted!", name);
-					item.reset();
-					m_Library.erase(name);
+					Remove(name);
+					//Get(name).reset();
+					//m_Library.erase(name);
 				}
 				else
 				{
-					NL_ENGINE_TRACE("Mesh {0} reference count is {1}, will not be deleted!", name, item.use_count());
+					NL_ENGINE_TRACE("Mesh {0} reference count is {1}, will not be deleted!", name, useCount);
 				}
 			}
 		}
 
-		void TraverseDelete()
+		/*void TraverseDelete()
 		{
 			NL_ENGINE_TRACE("Mesh Library Traverse Delete!");
 			if (m_Library.size() <= 0)
@@ -79,7 +81,7 @@ namespace NL
 				}
 				else iter++;
 			}
-		}
+		}*/
 
 	
 	};
