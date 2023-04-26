@@ -54,7 +54,9 @@ namespace NL
 		// Avoid memory leak, buggy
 		void TraverseDelete()
 		{
-			if (m_Library.empty())
+			NL_ENGINE_TRACE("Texture Library Traverse Delete!");
+
+			if (m_Library.size() <= 0)
 				return;
 
 			std::unordered_map<std::string, Ref<Texture2D>>::iterator iter = m_Library.begin();

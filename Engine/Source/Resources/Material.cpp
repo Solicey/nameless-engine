@@ -25,6 +25,23 @@ namespace NL
 		LoadShader(Library<Shader>::GetInstance().GetDefaultShaderName());
 	}
 
+	Material::Material(const Material* src)
+		: m_Name(src->m_Name), m_ShaderName(src->m_ShaderName), m_Shader(src->m_Shader),
+		m_Properties(src->m_Properties), m_TextureMap(src->m_TextureMap)
+	{
+	}
+
+	void Material::DeleteTexturesReference()
+	{
+		NL_ENGINE_INFO("Material {0} Deleted!", m_Name);
+		for (auto& item : m_TextureMap)
+		{
+			std::string name = item.second->GetPath();
+			item.second.reset();
+			Library<Texture2D>::GetInstance().Delete(name);
+		}
+	}
+
 	void Material::ReplaceTexture(const std::string& name, Ref<Texture2D> texture)
 	{
 		if (s_String2TexTypeMap.contains(name))
@@ -103,7 +120,7 @@ namespace NL
 		}
 	}
 
-	void Material::DeleteOldTextures(Ref<Texture2D> oldTex, Ref<Texture2D> newTex)
+	/*void Material::DeleteOldTextures(Ref<Texture2D> oldTex, Ref<Texture2D> newTex)
 	{
 		for (auto& pair : m_TextureMap)
 		{
@@ -112,6 +129,6 @@ namespace NL
 				pair.second = newTex;
 			}
 		}
-	}
+	}*/
 
 }

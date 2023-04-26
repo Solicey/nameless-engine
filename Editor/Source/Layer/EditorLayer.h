@@ -111,6 +111,9 @@ namespace NL
 		AntiAliasingType m_AntiAliasingType = AntiAliasingType::MSAA;
 		// bool m_ShowGizmos;
 
+		// Resource List
+		bool m_ShowResourceList;
+
 		// Runtime Viewport Cursor
 		bool m_IsRuntimeViewportFocused = false;
 	};

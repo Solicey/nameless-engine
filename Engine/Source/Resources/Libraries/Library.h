@@ -13,6 +13,9 @@ namespace NL
 	template <template <typename> typename Derived, typename LibType>
 	class LibraryBase : public Singleton<Derived<LibType>>
 	{
+	public:
+		int GetSize() const { return m_Library.size(); }
+
 	protected:
 		void Add(const std::string& name, const Ref<LibType>& item)
 		{

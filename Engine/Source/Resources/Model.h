@@ -15,14 +15,10 @@ namespace NL
 		friend class ModelLoader;
 
 	public:
-		~Model()
-		{
-			NL_ENGINE_TRACE("Model {0} Deleted!", m_Path);
-		}
 
 		inline void DebugPrintModelInfo()
 		{
-			NL_ENGINE_INFO("Model Info:");
+			/*NL_ENGINE_INFO("Model Info:");
 			NL_ENGINE_INFO("  Path: {0}", m_Path);
 			NL_ENGINE_INFO("  Mesh Count: {0}", m_Meshes.size());
 			// NL_ENGINE_INFO("  Material Count: {0}", m_materialNames.size());
@@ -32,7 +28,7 @@ namespace NL
 			{
 				NL_ENGINE_INFO("  Mesh {0}: {1} vertices, {2} faces", 
 					cnt++, mesh->GetVertexCount(), mesh->GetIndexCount() / 3);
-			}
+			}*/
 
 			/*cnt = 0;
 			for (const auto& mat : m_materialNames)
@@ -46,7 +42,7 @@ namespace NL
 		// 获取当前mesh绑定的material
 		const Ref<Material>& GetMaterial(const Ref<Mesh>& mesh) const
 		{
-			const std::string& name = mesh->GetMaterialName();
+			const std::string& name = mesh->GetMeshName();
 			NL_ENGINE_ASSERT(m_Materials.contains(name), "Model get shader failed!");
 			return m_Materials.at(name);
 		}
@@ -77,16 +73,13 @@ namespace NL
 
 		void AddBonePair(const std::pair<std::string, std::string>& pair);
 
-		void DeleteMaterialTexturesReference()
-		{
-			for (auto& item : m_Materials)
-			{
-				Ref<Material> mat = item.second;
-				if (mat != nullptr)
-					mat->DeleteMaterialTexturesReference();
-			}
-			Library<Texture2D>::GetInstance().TraverseDelete();
-		}
+		// Called when the model is deleted (single delete operation)
+		// For multiply delete operations (such as delete of a whole scene, use Scene::DestroyScene)
+		void DeleteMeshesAndTexturesReference();
+
+		Model(const Model* src);
+
+		// Model(const Model& model) = default;
 
 	private:
 		Model() = delete;

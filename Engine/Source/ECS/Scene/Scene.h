@@ -28,7 +28,10 @@ namespace NL
 
 		Entity CreateEntity(const std::string& name = "Entity");
 		Entity CreateEntityWithID(ID id, const std::string& name = "Entity");
+		// Called when entity is deleted.
 		void DestroyEntity(Entity entity);
+		// Must be called every time a scene is deleted!
+		void DestroyScene();
 
 		void OnStartRuntime();
 		void OnStopRuntime(Scene* editorScene);

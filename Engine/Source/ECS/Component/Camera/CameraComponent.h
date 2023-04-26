@@ -18,7 +18,7 @@ namespace NL
 
 		void LoadGizmosModel(int entityId)
 		{
-			Gizmos = ModelLoader::Create(PathConfig::GetInstance().GetModelsFolder().string() + "/DontModify/Camera.obj", entityId);
+			Gizmos = ModelLoader::Create(PathConfig::GetInstance().GetModelsFolder().string() + "/DontModify/Camera.obj");
 		}
 
 		bool FixedAspectRatio = false;

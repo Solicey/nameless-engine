@@ -24,17 +24,9 @@ namespace NL
 	{
     public:
         Material();
+        Material(const Material* src);
 
-        void DeleteMaterialTexturesReference()
-        {
-            NL_ENGINE_INFO("Material {0} Deleted!", m_Name);
-            for (auto& item : m_TextureMap)
-            {
-                // std::string name = item.second->GetPath();
-                item.second.reset();
-                // Library<Texture2D>::GetInstance().Delete(name);
-            }
-        }
+        void DeleteTexturesReference();
 
         void AddTexture(TextureType type, Ref<Texture2D> texture)
         {
@@ -58,7 +50,7 @@ namespace NL
         // void SetShaderName(const std::string& name) { m_ShaderName = name; }
 
         // called after user change a texture
-        void DeleteOldTextures(Ref<Texture2D> oldTex, Ref<Texture2D> newTex);
+        // void DeleteOldTextures(Ref<Texture2D> oldTex, Ref<Texture2D> newTex);
 
 
 	private:
@@ -67,7 +59,7 @@ namespace NL
 		Ref<Shader>	m_Shader;
         std::vector<ShaderProperty> m_Properties;
         std::unordered_map<TextureType, Ref<Texture2D>, EnumClassHash> m_TextureMap;
-        std::unordered_map<TextureType, bool, EnumClassHash> m_UseDefaultTexture;
+        // std::unordered_map<TextureType, bool, EnumClassHash> m_UseDefaultTexture;
         static std::unordered_map<std::string, TextureType> s_String2TexTypeMap;
 	};
 }

@@ -498,8 +498,8 @@ namespace NL
 			if (!filepath.empty())
 			{
 				if (component.mModel)
-					component.mModel->DeleteMaterialTexturesReference();
-				component = ModelRendererComponent(path.string(), (uint32_t)entity, component.Flags);
+					component.mModel->DeleteMeshesAndTexturesReference();
+				component = ModelRendererComponent(path.string());
 			}
 		}
 		ImGui::PopID();

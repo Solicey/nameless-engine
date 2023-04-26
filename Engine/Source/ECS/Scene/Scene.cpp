@@ -7,6 +7,9 @@
 #include "ECS/System/AllSystems.h"
 #include "Scripting/ScriptEngine.h"
 
+#include "Resources/Libraries/TextureLibrary.h"
+#include "Resources/Libraries/MeshLibrary.h"
+
 namespace NL
 {
     Scene::Scene()
@@ -24,7 +27,7 @@ namespace NL
 
     Scene::~Scene()
     {
-        m_Registry.clear();
+        
     }
 
     template<Component... C>
@@ -100,11 +103,19 @@ namespace NL
         {
             auto& model = entity.GetComponent<ModelRendererComponent>().mModel;
             if (model)
-                model->DeleteMaterialTexturesReference();
+                model->DeleteMeshesAndTexturesReference();
         }
 
         m_EntityMap.erase(entity.GetID());
         m_Registry.destroy(entity);
+    }
+
+    void Scene::DestroyScene()
+    {
+        m_Registry.clear();
+        m_EntityMap.clear();
+        Library<Texture2D>::GetInstance().TraverseDelete();
+        Library<Mesh>::GetInstance().TraverseDelete();
     }
 
     void Scene::OnStartRuntime()
@@ -123,8 +134,6 @@ namespace NL
         {
             system->OnStopRuntime(editorScene);
         }
-
-        m_Registry.clear();
     }
 
     void Scene::OnUpdateRuntime(TimeStep ts, Entity cameraEntity, bool isRuntimeViewportFocused)
@@ -256,7 +265,7 @@ namespace NL
     {
         if (component.mModel)
         {
-            component.mModel->DeleteMaterialTexturesReference();
+            component.mModel->DeleteMeshesAndTexturesReference();
         }
     }
 

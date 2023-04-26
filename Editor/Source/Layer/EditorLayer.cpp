@@ -288,6 +288,7 @@ namespace NL
                 ImGui::MenuItem("Viewport", NULL, &m_ShowViewport);
                 ImGui::MenuItem("Hierarchy", NULL, &m_ShowHierarchy);
                 ImGui::MenuItem("Scene Settings", NULL, &m_ShowSceneSettings);
+                ImGui::MenuItem("Resource List", NULL, &m_ShowResourceList);
                 // ImGui::MenuItem("TRS Toolbar", NULL, &m_ShowTRS);
 
                 ImGui::EndMenu();
@@ -535,10 +536,37 @@ namespace NL
             m_HierarchyPanel->OnImGuiRender(m_ShowHierarchy, true);
         }
 
+        // Resource List
+        if (m_ShowResourceList && !(m_IsMaximizeOnPlay && m_ViewportMode == ViewportMode::Runtime))
+        {
+            ImGui::Begin("Resource List");
+
+            std::string texString = "Texture (" + std::to_string(Library<Texture2D>::GetInstance().GetSize()) + ")";
+            std::string meshString = "Mesh (" + std::to_string(Library<Mesh>::GetInstance().GetSize()) + ")";
+            std::string shaderString = "Shader (" + std::to_string(Library<Shader>::GetInstance().GetSize()) + ")";
+
+            if (ImGui::TreeNode(texString.c_str()))
+            {
+                ImGui::TreePop();
+            }
+
+            if (ImGui::TreeNode(meshString.c_str()))
+            {
+                ImGui::TreePop();
+            }
+
+            if (ImGui::TreeNode(shaderString.c_str()))
+            {
+                ImGui::TreePop();
+            }
+
+            ImGui::End();
+        }
+
         // Scene Settings
         if (m_ShowSceneSettings && !(m_IsMaximizeOnPlay && m_ViewportMode == ViewportMode::Runtime))
         {
-            ImGui::Begin("Settings");
+            ImGui::Begin("Scene Settings");
 
             // Anti-Aliasing
             bool hasAntiAliasModified = false;
@@ -798,8 +826,10 @@ namespace NL
             OnSceneStop();
         }
 
-        if (m_EditorScene)
-            m_EditorScene->m_Registry.clear();
+        // if (m_EditorScene)
+           // m_EditorScene->m_Registry.clear();
+        m_EditorScene->DestroyScene();
+        m_EditorScene.reset();
         m_EditorScene = CreateRef<Scene>();
 
         m_EditorScene->OnStartEditor();
@@ -810,7 +840,7 @@ namespace NL
         m_EditorScenePath = "";
 
         // Avoid Memory Leak
-        Library<Texture2D>::GetInstance().TraverseDelete();
+        // Library<Texture2D>::GetInstance().TraverseDelete();
         Application::GetInstance().SetWindowTitle("Nameless Editor - New Scene");
     }
 
@@ -826,7 +856,7 @@ namespace NL
             OpenScene(path);
 
         // Avoid Memory Leak
-        Library<Texture2D>::GetInstance().TraverseDelete();
+        // Library<Texture2D>::GetInstance().TraverseDelete();
     }
 
     void EditorLayer::OpenScene(const std::string& path)
@@ -847,9 +877,11 @@ namespace NL
         };
         if (serializer.Deserialize(path, sceneSettingsInt))
         {
-            if (m_EditorScene)
-                m_EditorScene->m_Registry.clear();
+            // if (m_EditorScene)
+               // m_EditorScene->m_Registry.clear();
 
+            m_EditorScene->DestroyScene();
+            m_EditorScene.reset();
             m_EditorScene = newScene;            
             m_EditorScenePath = path;
 
@@ -924,7 +956,9 @@ namespace NL
         m_ViewportMode = ViewportMode::Editor;
 
         m_RuntimeScene->OnStopRuntime(m_EditorScene.get());
+        m_RuntimeScene->DestroyScene();
         m_RuntimeScene.reset();
+
         m_RuntimeCameraEntity = {};
 
         m_HierarchyPanel->SetSceneContext(m_EditorScene);

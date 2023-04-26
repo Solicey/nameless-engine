@@ -17,11 +17,11 @@ namespace NL
 		NL_ENGINE_ASSERT(m_SkyboxShader, "Skybox shader does NOT exists!");
 
 		std::string modelsFolder = PathConfig::GetInstance().GetModelsFolder().string();
-		m_Skybox = ModelLoader::Create(modelsFolder + "/DontModify/Skybox.obj", -1, ModelLoaderFlags::Triangulate);
+		m_Skybox = ModelLoader::Create(modelsFolder + "/DontModify/Skybox.obj", ModelLoaderFlags::Triangulate);
 		m_SkyboxTextureCubemap = Library<TextureCubeMap>::GetInstance().FetchDefault();
 
 		m_GizmosShader = Library<Shader>::GetInstance().Fetch("Gizmos.glsl");
-		m_Gizmos = ModelLoader::Create(modelsFolder + "/DontModify/Gizmos.obj", -1, ModelLoaderFlags::Triangulate);
+		m_Gizmos = ModelLoader::Create(modelsFolder + "/DontModify/Gizmos.obj", ModelLoaderFlags::Triangulate);
 
 		std::string assetFolder = PathConfig::GetInstance().GetAssetsFolder().string();
 		m_PointGizmosTexture = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Icons/PointLight.png");

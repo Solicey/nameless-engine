@@ -13,6 +13,7 @@ namespace NL
 			const std::vector<SkinnedVertex>& skinnedVertices,
 			const std::vector<uint32_t>& indices,
 			uint32_t matIndex, 
+			const std::string& modelPath,
 			const std::string& name,
 			bool hasBones = false);
 
@@ -30,7 +31,8 @@ namespace NL
 
 		inline const Ref<VertexArray>& GetVertexArray() const { return m_VertexArray; }
 
-		const std::string& GetMaterialName() const { return m_MaterialName; }
+		const std::string& GetModelPath() const { return m_ModelPath; }
+		const std::string& GetMeshName() const { return m_MeshName; }
 
 	private:
 		void CreateBuffers(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices);
@@ -44,7 +46,8 @@ namespace NL
 		// includes buffers already
 		Ref<VertexArray> m_VertexArray;
 
-		std::string m_MaterialName;
+		std::string m_ModelPath;
+		std::string m_MeshName;
 		bool m_HasBones;
 
 		// bounding sphere

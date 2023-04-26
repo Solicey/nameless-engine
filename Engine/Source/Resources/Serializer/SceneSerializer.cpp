@@ -219,7 +219,7 @@ namespace NL
 			if (modelRendererComponent)
 			{
 				std::string path = modelRendererComponent["ModelPath"].as<std::string>();
-				auto& comp = deserializedEntity.AddComponent<ModelRendererComponent>(path, (uint32_t)deserializedEntity);
+				auto& comp = deserializedEntity.AddComponent<ModelRendererComponent>(path);
 				auto& materialMap = comp.mModel->GetMaterialsNotConst();
 
 				auto mats = modelRendererComponent["Materials"];
