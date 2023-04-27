@@ -3,6 +3,8 @@
 #prop
 
 color3 u_Color;
+float u_AmbientStrength;
+color3 u_Test;
 
 #end
 
@@ -42,9 +44,12 @@ layout (location = 0) out vec4 color;
 layout (location = 1) out int color2;
 layout (location = 2) out vec4 color3;
 
+// Object Color
 uniform vec3 u_Color;
 uniform bool u_IsSelected;
 uniform int u_EntityId;
+uniform float u_AmbientStrength;
+uniform vec3 u_Test;
 
 #define MAX_LIGHT_COUNT 4
 
@@ -65,12 +70,20 @@ uniform DirLight u_DirLights[MAX_LIGHT_COUNT];
 void main()
 {
 	if (u_DirLights[0].Color.r >= 0)
-		color = vec4(u_DirLights[0].Color, 1.0);
+	{
+		vec3 ambient = u_AmbientStrength * u_DirLights[0].Color;
+		vec3 result = ambient * u_Color;
+		color = vec4(result, 1.0);
+	}
 	else
+	{
 		color = vec4(u_Color, 1.0);
+	}
 
+	// color = vec4(1, 1, 1, 1.0);
+
+	// Dont Modify
 	color2 = u_EntityId;
-
 	color3 = vec4(0.1, 0.1, 0.1, 1);
 	if (u_IsSelected)
 		color3 = vec4(1, 1, 1, 1);

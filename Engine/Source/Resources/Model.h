@@ -79,6 +79,8 @@ namespace NL
 
 		Model(const Model* src);
 
+		void UpdateShaderProperties(const std::string& shaderName);
+
 		// Model(const Model& model) = default;
 
 	private:

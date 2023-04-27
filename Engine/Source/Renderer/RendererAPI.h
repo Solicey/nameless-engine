@@ -8,9 +8,16 @@ namespace NL
 {
 	enum class DepthComp
 	{
-		EQUAL,
-		LEQUAL,
-		LESS
+		Equal,
+		Lequal,
+		Less
+	};
+
+	enum class CullFace
+	{
+		Front,
+		Back,
+		FrontAndBack
 	};
 
 	class RendererAPI
@@ -37,6 +44,8 @@ namespace NL
 		virtual void DepthTest(bool enable) = 0;
 
 		virtual void DepthFunc(DepthComp comp) = 0;
+
+		virtual void SetCullFace(CullFace face) = 0;
 
 		inline static API GetCurrent() { return s_API; }
 

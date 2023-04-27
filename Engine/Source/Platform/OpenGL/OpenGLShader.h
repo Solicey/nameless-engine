@@ -28,12 +28,15 @@ namespace NL
 		virtual void SetUniformMat4(const std::string& name, const nlm::mat4& value) override;
 		virtual void SetUniformMat4Array(const std::string& name, const std::vector<nlm::mat4>& values) override;
 		virtual const std::vector<ShaderProperty>& GetShaderProperties() const override { return m_Properties; }
+		virtual bool HasCompiledSuccessfully() const override { return m_HasCompiledSuccessfully; }
+
+		virtual void Reload() override;
 
 	private:
 		uint32_t GetUniformLocation(const std::string& name);
 		std::string ReadShaderFile(const std::string& path);
 		bool ShaderFileParser(const std::string& rawSrc, std::string& vertexSrc, std::string& fragmentSrc);
-		void CompileShader(const std::string& vertexSrc, const std::string& fragmentSrc);
+		bool CompileShader(const std::string& vertexSrc, const std::string& fragmentSrc);
 		void AddProperty(const std::string& type, const std::string& name);
 
 	private:
@@ -43,5 +46,7 @@ namespace NL
 
 		std::string								m_Name;
 		std::string								m_Path;
+
+		bool									m_HasCompiledSuccessfully = false;
 	};
 }

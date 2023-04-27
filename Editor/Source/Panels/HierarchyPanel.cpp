@@ -458,7 +458,7 @@ namespace NL
 		
 #pragma region Draw Model Renderer
 
-		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [](auto& entity, auto& component) {
+		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [scene = m_Scene, &shaderSelectClick = m_ModelRendererCompShaderSelectOpen](auto& entity, auto& component) {
 
 		const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
 		// NL_ENGINE_TRACE("Default shader name: {0}", Library<Shader>::GetInstance().GetDefaultShaderName());
@@ -519,13 +519,27 @@ namespace NL
 
 				ImGui::PushID(&mat);
 
-				std::string shaderName = mat->GetShaderName();				
+				std::string shaderName = mat->GetShaderName();	
+
+				
 				if (ImGui::TreeNode(matName.c_str()))
 				{
+					bool hasCompiledSuccessfully = mat->GetShader()->HasCompiledSuccessfully();
+					if (!hasCompiledSuccessfully)
+						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
+
 					// Select Shaders
 					if (ImGui::BeginCombo("Shader", shaderName.c_str()))
 					{
-						Library<Shader>::GetInstance().TraverseShadersFolder();
+						if (!hasCompiledSuccessfully)
+							ImGui::PopStyleColor();
+
+						if (!shaderSelectClick)
+						{
+							Library<Shader>::GetInstance().TraverseShadersFolder();
+							shaderSelectClick = true;
+						}
+
 						const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
 
 						if (!shaderNameMap.contains(shaderName))
@@ -540,13 +554,36 @@ namespace NL
 								if (!isSelected)
 								{
 									shaderName = name;
-									mat->LoadShader(shaderName);
+									mat->LoadShaderAndUpdateProps(shaderName);
 									mat->UpdateSampler2DinProperties();
 								}
 							}
 						}
 						
 						ImGui::EndCombo();
+					}
+					else
+					{
+						if (!hasCompiledSuccessfully)
+							ImGui::PopStyleColor();
+						shaderSelectClick = false;
+					}
+
+					ImGui::SameLine();
+
+					if (ImGui::Button("Reload"))
+					{
+						auto shader = Library<Shader>::GetInstance().Reload(shaderName);
+						if (shader->HasCompiledSuccessfully())
+						{
+							auto view = scene->Registry.view<ModelRendererComponent>();
+							for (auto entity : view)
+							{
+								ModelRendererComponent& comp = view.get<ModelRendererComponent>(entity);
+								comp.mModel->UpdateShaderProperties(shaderName);
+							}
+							NL_INFO("Reload Shader {0}, shader compiled success: {1}", shaderName, shader->HasCompiledSuccessfully());
+						}
 					}
 
 					// Exposed Shader Properties
@@ -881,14 +918,17 @@ namespace NL
 			switch (prop.Type)
 			{
 			case ShaderUniformType::Color3:
+			{
 				nlm::vec3 color = std::get<nlm::vec3>(prop.Value);
-				if (ImGui::ColorEdit3(prop.Name.c_str(), nlm::value_ptr(color)))
+				if (Utils::ColorEdit3Style1(prop.Name, RIGHT_COLUMN_WIDTH, color))
+				// if (ImGui::ColorEdit3(prop.Name.c_str(), nlm::value_ptr(color)))
 				{
 					prop.Value = color;
 				}
 				break;
+			}
 			case ShaderUniformType::Sampler2D:
-
+			{
 				ImGui::PushID(&prop);
 				if (ImGui::TreeNode(prop.Name.c_str()))
 				{
@@ -931,6 +971,16 @@ namespace NL
 				}
 				ImGui::PopID();
 				break;
+			}
+			case ShaderUniformType::Float:
+			{
+				float f = std::get<float>(prop.Value);
+				if (Utils::DragFloatStyle1(prop.Name, RIGHT_COLUMN_WIDTH, f))
+				{
+					prop.Value = f;
+				}
+				break;
+			}
 
 			default:
 				break;

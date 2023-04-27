@@ -130,6 +130,11 @@ namespace NL
 			s_RendererAPI->DepthFunc(comp);
 		}
 
+		inline static void SetCullFace(CullFace face)
+		{
+			s_RendererAPI->SetCullFace(face);
+		}
+
 #pragma endregion
 
 	private:

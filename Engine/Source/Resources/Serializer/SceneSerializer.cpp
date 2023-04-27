@@ -231,7 +231,7 @@ namespace NL
 
 					auto& material = materialMap[matName];
 
-					material->LoadShader(mat["ShaderName"].as<std::string>());
+					material->LoadShaderAndUpdateProps(mat["ShaderName"].as<std::string>());
 
 					auto props = mat["ShaderProperties"];
 					if (!props)
@@ -273,6 +273,11 @@ namespace NL
 
 							// Avoid memory leak
 
+							break;
+						}
+						case ShaderUniformType::Float:
+						{
+							newProp.Value = prop["Value"].as<float>();
 							break;
 						}
 						default:
@@ -441,6 +446,9 @@ namespace NL
 						break;
 					case 1:		// nlm::vec3
 						out << YAML::Key << "Value" << YAML::Value << std::get<1>(prop.Value);
+						break;
+					case 2:		// float
+						out << YAML::Key << "Value" << YAML::Value << std::get<2>(prop.Value);
 						break;
 					default:
 						break;

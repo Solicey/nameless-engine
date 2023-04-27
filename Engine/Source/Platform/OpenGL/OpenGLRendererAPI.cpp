@@ -13,16 +13,30 @@ namespace NL
 		{
 			switch (comp)
 			{
-			case DepthComp::EQUAL:
+			case DepthComp::Equal:
 				return GL_EQUAL;
-			case DepthComp::LEQUAL:
+			case DepthComp::Lequal:
 				return GL_LEQUAL;
-			case DepthComp::LESS:
+			case DepthComp::Less:
 				return GL_LESS;
 			}
 			NL_ENGINE_ASSERT(false, "Unknown Depth Comp");
 			return -1;
 		}
+
+		static GLenum CullFace2OpenGLCullFace(CullFace face)
+		{
+			switch (face)
+			{
+			case NL::CullFace::Front:
+				return GL_FRONT;
+			case NL::CullFace::Back:
+				return GL_BACK;
+			case NL::CullFace::FrontAndBack:
+				return GL_FRONT_AND_BACK;
+			}
+		}
+
 	}
 
 	void OpenGLRendererAPI::Init()
@@ -46,7 +60,7 @@ namespace NL
 
 		// glEnable(GL_ALPHA_TEST);
 		// glAlphaFunc(GL_GREATER, 0.1);
-
+		glEnable(GL_CULL_FACE);
 	}
 
 	void OpenGLRendererAPI::SetClearColor(const nlm::vec4& color)
@@ -78,5 +92,10 @@ namespace NL
 	void OpenGLRendererAPI::DepthFunc(DepthComp comp)
 	{
 		glDepthFunc(Utils::DepthComparison2OpenGLDepthComparison(comp));
+	}
+
+	void OpenGLRendererAPI::SetCullFace(CullFace face)
+	{
+		glCullFace(Utils::CullFace2OpenGLCullFace(face));
 	}
 }

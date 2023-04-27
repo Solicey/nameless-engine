@@ -35,6 +35,26 @@ namespace NL
 		}
 	}
 
+	Ref<Shader> Library<Shader>::Reload(const std::string& name)
+	{
+		if (m_ShaderNameMap.contains(name))
+		{
+			if (Contains(name))
+			{
+				Get(name)->Reload();
+				return Get(name);
+			}
+			else
+			{
+				Ref<Shader> shader = Shader::Create(name, m_ShaderNameMap[name]);
+				Add(name, shader);
+				NL_ENGINE_TRACE("Add shader to library: {0}", name);
+				return shader;
+			}
+		}
+		return nullptr;
+	}
+
 	Ref<Shader> Library<Shader>::Fetch(const std::string& name)
 	{
 		NL_ENGINE_TRACE("Load shader: {0}", name);

@@ -36,6 +36,8 @@ namespace NL
 		NL_ENGINE_ASSERT(material, "Material is nullptr!");
 
 		const auto& shader = material->GetShader();
+		if (!shader->HasCompiledSuccessfully())
+			return;
 
 		NL_ENGINE_ASSERT(shader, "Shader is nullptr!");
 
@@ -85,7 +87,7 @@ namespace NL
 
 		// Custom
 		int cntSampler2D = 0;
-		for (const auto& prop : material->GetShaderPropertiesNotConst())
+		for (const auto& prop : material->GetShaderProperties())
 		{
 			switch (prop.Type)
 			{
@@ -100,6 +102,10 @@ namespace NL
 				// std::get<std::string>(prop.Value)
 				Library<Texture2D>::GetInstance().Fetch(std::get<std::string>(prop.Value))->Bind(cntSampler2D);
 				cntSampler2D++;
+				break;
+
+			case ShaderUniformType::Float:
+				shader->SetUniformFloat(prop.Name.c_str(), std::get<float>(prop.Value));
 				break;
 
 			default:
@@ -117,6 +123,9 @@ namespace NL
 
 	void Renderer::Submit(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader, const nlm::mat4& transform)
 	{
+		if (!shader->HasCompiledSuccessfully())
+			return;
+
 		shader->Bind();
 		shader->SetUniformMat4("u_ViewProjection", s_SceneData->ViewPositionMatrix);
 		shader->SetUniformMat4("u_Transform", transform);
@@ -140,6 +149,9 @@ namespace NL
 	{
 		NL_ENGINE_ASSERT(shader, "Shader is nullptr!");
 		NL_ENGINE_ASSERT(texture, "Texture is nullptr!");
+
+		if (!shader->HasCompiledSuccessfully())
+			return;
 
 		shader->Bind();
 

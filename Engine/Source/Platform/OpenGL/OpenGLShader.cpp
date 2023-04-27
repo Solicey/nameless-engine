@@ -13,7 +13,7 @@ namespace NL
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 		: m_Name(name)
 	{
-		CompileShader(vertexSrc, fragmentSrc);
+		m_HasCompiledSuccessfully = CompileShader(vertexSrc, fragmentSrc);
 	}
 
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& path)
@@ -25,10 +25,11 @@ namespace NL
 		
 		if (ShaderFileParser(src, vertexSrc, fragmentSrc))
 		{
-			CompileShader(vertexSrc, fragmentSrc);
+			m_HasCompiledSuccessfully = CompileShader(vertexSrc, fragmentSrc);
 		}
 		else
 		{
+			m_HasCompiledSuccessfully = false;
 			NL_ENGINE_ERROR("Failed to load shader: {0}", name);
 		}
 	}
@@ -83,6 +84,26 @@ namespace NL
 	{
 		// GL_FALSE£∫¡–”≈œ»æÿ’Û
 		glUniformMatrix4fv(GetUniformLocation(name), values.size(), GL_FALSE, (float*)values.data());
+	}
+
+	void OpenGLShader::Reload()
+	{
+		if (m_RendererID)
+			glDeleteProgram(m_RendererID);
+		m_Properties.clear();
+		m_UniformLocationMap.clear();
+
+		std::string src = ReadShaderFile(m_Path);
+		std::string vertexSrc, fragmentSrc;
+
+		if (ShaderFileParser(src, vertexSrc, fragmentSrc))
+		{
+			m_HasCompiledSuccessfully = CompileShader(vertexSrc, fragmentSrc);
+		}
+		else
+		{
+			m_HasCompiledSuccessfully = false;
+		}
 	}
 
 	uint32_t OpenGLShader::GetUniformLocation(const std::string& name)
@@ -191,7 +212,7 @@ namespace NL
 		return vertexSrcParsed && fragmentSrcParsed;
 	}
 
-	void OpenGLShader::CompileShader(const std::string& vertexSrc, const std::string& fragmentSrc)
+	bool OpenGLShader::CompileShader(const std::string& vertexSrc, const std::string& fragmentSrc)
 	{
 		// Create an empty vertex shader handle
 		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -221,9 +242,9 @@ namespace NL
 			// Use the infoLog as you see fit.
 
 			NL_ENGINE_ERROR("{0}", infoLog.data());
-			NL_ENGINE_ASSERT(false, "Vertex shader compilation error!");
+			// NL_ENGINE_ASSERT(false, "Vertex shader compilation error!");
 
-			return;
+			return false;
 		}
 
 		// Create an empty fragment shader handle
@@ -255,10 +276,10 @@ namespace NL
 			// Use the infoLog as you see fit.
 
 			NL_ENGINE_ERROR("{0}", infoLog.data());
-			NL_ENGINE_ASSERT(false, "Fragment shader compilation error!");
+			// NL_ENGINE_ASSERT(false, "Fragment shader compilation error!");
 
 			// In this simple program, we'll just leave
-			return;
+			return false;
 		}
 
 		// Vertex and fragment shaders are successfully compiled.
@@ -295,15 +316,17 @@ namespace NL
 			// Use the infoLog as you see fit.
 
 			NL_ENGINE_ERROR("{0}", infoLog.data());
-			NL_ENGINE_ASSERT(false, "OpenGLShader link error!");
+			// NL_ENGINE_ASSERT(false, "OpenGLShader link error!");
 
 			// In this simple program, we'll just leave
-			return;
+			return false;
 		}
 
 		// Always detach shaders after a successful link.
 		glDetachShader(program, vertexShader);
 		glDetachShader(program, fragmentShader);
+
+		return true;
 	}
 
 	void OpenGLShader::AddProperty(const std::string& type, const std::string& name)

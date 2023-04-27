@@ -1,6 +1,10 @@
 Scene: Untitled
+AntiAliasingType: 1
+MSAASamples: 4
+EditorCameraClearFlag: 0
+ShowGizmos: 1
 Entities:
-  - ID: 1781519213112273313
+  - ID: 8949066074757219805
     Name: Entity
     TransformComponent:
       Translation: [0, 0, 0]
@@ -10,8 +14,13 @@ Entities:
       ModelPath: ../Assets/Models/Box.obj
       Materials:
         - MaterialName: Material
-          ShaderName: Default.glsl
+          ShaderName: Lit.glsl
           ShaderProperties:
-            []
+            - Type: 6
+              Name: u_Color
+              Value: [1, 1, 1]
+            - Type: 1
+              Name: u_AmbientStrength
+              Value: 0.5
       Bones:
         []

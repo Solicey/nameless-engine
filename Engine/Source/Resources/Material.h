@@ -41,8 +41,9 @@ namespace NL
         const Ref<Texture2D>& GetTexture(const std::string& name);
         const std::string& GetShaderName() const { return m_ShaderName; }
         const Ref<Shader>& GetShader() const { return m_Shader; }
+        const std::vector<ShaderProperty>& GetShaderProperties() const { return m_Properties; }
         std::vector<ShaderProperty>& GetShaderPropertiesNotConst() { return m_Properties; }
-        void LoadShader(const std::string name);
+        void LoadShaderAndUpdateProps(const std::string name);
 
         // called after all textures are sent to lib
         void UpdateSampler2DinProperties();

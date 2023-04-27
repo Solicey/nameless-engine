@@ -52,5 +52,6 @@ namespace NL
 		Ref<Scene> m_Scene;
 		Entity m_EntitySelected;
 		Callback m_RuntimeCameraUpdateCallback;
+		bool m_ModelRendererCompShaderSelectOpen = false;
 	};
 }

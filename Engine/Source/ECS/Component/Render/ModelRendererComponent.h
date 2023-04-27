@@ -27,6 +27,7 @@ namespace NL
 
 		void RecalculateFinalBoneMatrices();
 
+
 	public:
 		// turn all "\" into "/" with std::regex_replace(Path, std::regex("\\\\"), "/");
 		std::string Path = "";

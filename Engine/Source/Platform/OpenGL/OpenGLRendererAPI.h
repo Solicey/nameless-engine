@@ -20,5 +20,7 @@ namespace NL
 		virtual void DepthTest(bool enable) override;
 
 		virtual void DepthFunc(DepthComp comp) override;
+
+		virtual void SetCullFace(CullFace face) override;
 	};
 }

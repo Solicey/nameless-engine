@@ -78,7 +78,7 @@ namespace NL
 		{
 			m_SkyboxShader->Bind();
 
-			Renderer::DepthFunc(DepthComp::LEQUAL);
+			Renderer::DepthFunc(DepthComp::Lequal);
 
 			// tmp
 			m_SkyboxTextureCubemap->Bind(0);
@@ -86,7 +86,7 @@ namespace NL
 			NL_ENGINE_ASSERT(cameraEntity.HasComponent<TransformComponent>(), "Camera does NOT have transform!");
 			Renderer::DrawModel(m_Skybox, m_SkyboxShader, nlm::translate(nlm::mat4(1.0f), cameraEntity.GetComponent<TransformComponent>().GetTranslation()));
 
-			Renderer::DepthFunc(DepthComp::LESS);
+			Renderer::DepthFunc(DepthComp::Less);
 		}
 
 		Renderer::EndScene();
@@ -190,14 +190,16 @@ namespace NL
 		{
 			m_SkyboxShader->Bind();
 
-			Renderer::DepthFunc(DepthComp::LEQUAL);
+			Renderer::DepthFunc(DepthComp::Lequal);
+			Renderer::SetCullFace(CullFace::Front);
 
 			// tmp
 			m_SkyboxTextureCubemap->Bind(0);
 			m_SkyboxShader->SetUniformInt("u_Skybox", 0);
 			Renderer::DrawModel(m_Skybox, m_SkyboxShader, nlm::translate(nlm::mat4(1.0f), camera.GetPosition()));
 
-			Renderer::DepthFunc(DepthComp::LESS);
+			Renderer::DepthFunc(DepthComp::Less);
+			Renderer::SetCullFace(CullFace::Back);
 		}
 
 		// Gizsmo

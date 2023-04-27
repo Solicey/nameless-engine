@@ -89,6 +89,15 @@ namespace NL
 
 	}
 
+	void Model::UpdateShaderProperties(const std::string& shaderName)
+	{
+		// NL_ENGINE_INFO("Update Shader Properties: {0}, {1}", m_Path, shaderName);
+		for (auto& mat : m_Materials)
+		{
+			mat.second->LoadShaderAndUpdateProps(shaderName);
+		}
+	}
+
 	void Model::CalculateFinalBoneMatrixRecursively(int boneId, const aiMatrix4x4& parentTransform, const aiMatrix4x4& invRootTransform)
 	{
 		const auto& bone = m_Bones[boneId];

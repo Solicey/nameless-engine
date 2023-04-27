@@ -22,7 +22,7 @@ namespace NL
 
 	Material::Material()
 	{
-		LoadShader(Library<Shader>::GetInstance().GetDefaultShaderName());
+		LoadShaderAndUpdateProps(Library<Shader>::GetInstance().GetDefaultShaderName());
 	}
 
 	Material::Material(const Material* src)
@@ -66,7 +66,7 @@ namespace NL
 		else return nullptr;
 	}
 
-	void Material::LoadShader(const std::string name)
+	void Material::LoadShaderAndUpdateProps(const std::string name)
 	{
 		// Load default shader
 		// NL_ENGINE_TRACE("Material init: {0}", Library<Shader>::GetInstance().GetDefaultShaderName());
@@ -78,14 +78,33 @@ namespace NL
 			NL_ENGINE_WARN("Couldn't find shader '{0}', use default instead", name);
 		}
 		// Load properties
+		std::unordered_map<std::string, ShaderPropValue> oldProps;
+		for (auto& prop : m_Properties)
+		{
+			int type = (int)prop.Type;
+			oldProps.insert(std::make_pair(prop.Name + std::to_string(type), prop.Value));
+		}
+
 		m_Properties = m_Shader->GetShaderProperties();
 
 		for (auto& prop : m_Properties)
 		{
+			int type = (int)prop.Type;
+			std::string key = prop.Name + std::to_string(type);
+			if (oldProps.contains(key))
+			{
+				prop.Value = oldProps[key];
+				continue;
+			}
+
 			switch (prop.Type)
 			{
 			case ShaderUniformType::Color3:
 				prop.Value = nlm::vec3(1.0, 1.0, 1.0);
+				break;
+
+			case ShaderUniformType::Float:
+				prop.Value = 0.0f;
 				break;
 
 			default:
