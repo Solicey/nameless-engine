@@ -35,8 +35,8 @@ namespace NL
 	private:
 		uint32_t GetUniformLocation(const std::string& name);
 		std::string ReadShaderFile(const std::string& path);
-		bool ShaderFileParser(const std::string& rawSrc, std::string& vertexSrc, std::string& fragmentSrc);
-		bool CompileShader(const std::string& vertexSrc, const std::string& fragmentSrc);
+		bool ShaderFileParser(const std::string& rawSrc, std::string& vertexSrc, std::string& fragmentSrc, std::string& geometrySrc);
+		bool CompileShader(const std::string& vertexSrc, const std::string& fragmentSrc, const std::string& geometrySrc);
 		void AddProperty(const std::string& type, const std::string& name);
 
 	private:

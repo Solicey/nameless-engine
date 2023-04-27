@@ -90,7 +90,8 @@ namespace NL
 
 		struct SceneData
 		{
-			nlm::mat4 ViewPositionMatrix;
+			nlm::mat4 ViewMatrix;
+			nlm::mat4 ProjectionMatrix;
 		};
 
 #pragma region Commands

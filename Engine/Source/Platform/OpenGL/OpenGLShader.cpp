@@ -13,7 +13,7 @@ namespace NL
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
 		: m_Name(name)
 	{
-		m_HasCompiledSuccessfully = CompileShader(vertexSrc, fragmentSrc);
+		m_HasCompiledSuccessfully = CompileShader(vertexSrc, fragmentSrc, "");
 	}
 
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& path)
@@ -21,11 +21,11 @@ namespace NL
 	{
 		NL_ENGINE_TRACE("Loading Shader {0} ... path: {1}", name, path);
 		std::string src = ReadShaderFile(path);
-		std::string vertexSrc, fragmentSrc;
-		
-		if (ShaderFileParser(src, vertexSrc, fragmentSrc))
+		std::string vertexSrc, fragmentSrc, geometrySrc;
+
+		if (ShaderFileParser(src, vertexSrc, fragmentSrc, geometrySrc))
 		{
-			m_HasCompiledSuccessfully = CompileShader(vertexSrc, fragmentSrc);
+			m_HasCompiledSuccessfully = CompileShader(vertexSrc, fragmentSrc, geometrySrc);
 		}
 		else
 		{
@@ -94,11 +94,11 @@ namespace NL
 		m_UniformLocationMap.clear();
 
 		std::string src = ReadShaderFile(m_Path);
-		std::string vertexSrc, fragmentSrc;
+		std::string vertexSrc, fragmentSrc, geometrySrc;
 
-		if (ShaderFileParser(src, vertexSrc, fragmentSrc))
+		if (ShaderFileParser(src, vertexSrc, fragmentSrc, geometrySrc))
 		{
-			m_HasCompiledSuccessfully = CompileShader(vertexSrc, fragmentSrc);
+			m_HasCompiledSuccessfully = CompileShader(vertexSrc, fragmentSrc, geometrySrc);
 		}
 		else
 		{
@@ -142,7 +142,7 @@ namespace NL
 		return result;
 	}
 
-	bool OpenGLShader::ShaderFileParser(const std::string& rawSrc, std::string& vertexSrc, std::string& fragmentSrc)
+	bool OpenGLShader::ShaderFileParser(const std::string& rawSrc, std::string& vertexSrc, std::string& fragmentSrc, std::string& geometrySrc)
 	{
 		bool vertexSrcParsed = false, fragmentSrcParsed = false;
 
@@ -201,6 +201,11 @@ namespace NL
 				fragmentSrcParsed = true;
 				NL_ENGINE_TRACE("Fragment shader parsed!");
 			}	
+			else if (type == "geometry")
+			{
+				geometrySrc = (pos == std::string::npos) ? rawSrc.substr(nextLinePos) : rawSrc.substr(nextLinePos, pos - nextLinePos);
+				NL_ENGINE_TRACE("Geometry shader parsed!");
+			}
 			else
 			{
 				NL_ENGINE_ASSERT(false, "Invalid shader type specified!");
@@ -212,7 +217,7 @@ namespace NL
 		return vertexSrcParsed && fragmentSrcParsed;
 	}
 
-	bool OpenGLShader::CompileShader(const std::string& vertexSrc, const std::string& fragmentSrc)
+	bool OpenGLShader::CompileShader(const std::string& vertexSrc, const std::string& fragmentSrc, const std::string& geometrySrc)
 	{
 		// Create an empty vertex shader handle
 		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -247,6 +252,42 @@ namespace NL
 			return false;
 		}
 
+		// Geometry Shader
+		GLuint geometryShader;
+		bool isGeometryCompiled = false;
+		if (!geometrySrc.empty())
+		{
+			geometryShader = glCreateShader(GL_GEOMETRY_SHADER);
+
+			const GLchar* source = geometrySrc.c_str();
+			glShaderSource(geometryShader, 1, &source, 0);
+
+			glCompileShader(geometryShader);
+
+			GLint isCompiled = 0;
+			glGetShaderiv(geometryShader, GL_COMPILE_STATUS, &isCompiled);
+			isGeometryCompiled = isCompiled;
+			if (isCompiled == GL_FALSE)
+			{
+				GLint maxLength = 0;
+				glGetShaderiv(geometryShader, GL_INFO_LOG_LENGTH, &maxLength);
+
+				// The maxLength includes the NULL character
+				std::vector<GLchar> infoLog(maxLength);
+				glGetShaderInfoLog(geometryShader, maxLength, &maxLength, &infoLog[0]);
+
+				// We don't need the shader anymore.
+				glDeleteShader(vertexShader);
+				glDeleteShader(geometryShader);
+
+				// Use the infoLog as you see fit.
+
+				NL_ENGINE_ERROR("{0}", infoLog.data());
+
+				return false;
+			}
+		}
+
 		// Create an empty fragment shader handle
 		GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
@@ -272,6 +313,8 @@ namespace NL
 			glDeleteShader(fragmentShader);
 			// Either of them. Don't leak shaders.
 			glDeleteShader(vertexShader);
+			if (isGeometryCompiled)
+				glDeleteShader(geometryShader);
 
 			// Use the infoLog as you see fit.
 
@@ -290,6 +333,8 @@ namespace NL
 
 		// Attach our shaders to our program
 		glAttachShader(program, vertexShader);
+		if (isGeometryCompiled) 
+			glAttachShader(program, geometryShader);
 		glAttachShader(program, fragmentShader);
 
 		// Link our program
@@ -312,6 +357,8 @@ namespace NL
 			// Don't leak shaders either.
 			glDeleteShader(vertexShader);
 			glDeleteShader(fragmentShader);
+			if (isGeometryCompiled)
+				glDeleteShader(geometryShader);
 
 			// Use the infoLog as you see fit.
 
@@ -325,6 +372,8 @@ namespace NL
 		// Always detach shaders after a successful link.
 		glDetachShader(program, vertexShader);
 		glDetachShader(program, fragmentShader);
+		if (isGeometryCompiled)
+			glDetachShader(program, geometryShader);
 
 		return true;
 	}

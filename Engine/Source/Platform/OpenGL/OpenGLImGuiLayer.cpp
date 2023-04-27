@@ -60,7 +60,7 @@ namespace NL
 
     void OpenGLImGuiLayer::OnImGuiRender()
     {
-        //static bool show = false;
+        //static bool show = true;
         //ImGui::ShowDemoWindow(&show);
     }
 

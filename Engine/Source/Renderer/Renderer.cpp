@@ -14,17 +14,23 @@ namespace NL
 
 	void Renderer::BeginScene(OrthographicCamera& camera)
 	{
-		s_SceneData->ViewPositionMatrix = camera.GetViewProjectionMatrix();
+		//s_SceneData->ViewPositionMatrix = camera.GetViewProjectionMatrix();
+		s_SceneData->ViewMatrix = camera.GetViewMatrix();
+		s_SceneData->ProjectionMatrix = camera.GetProjectionMatrix();
 	}
 
 	void Renderer::BeginScene(EditorCamera& camera)
 	{
-		s_SceneData->ViewPositionMatrix = camera.GetViewProjectionMatrix();
+		//s_SceneData->ViewPositionMatrix = camera.GetViewProjectionMatrix();
+		s_SceneData->ViewMatrix = camera.GetViewMatrix();
+		s_SceneData->ProjectionMatrix = camera.GetProjectionMatrix();
 	}
 
 	void Renderer::BeginScene(Camera& camera, const nlm::mat4& transform)
 	{
-		s_SceneData->ViewPositionMatrix = camera.GetProjectionMatrix() * nlm::inverse(transform);
+		//s_SceneData->ViewPositionMatrix = camera.GetProjectionMatrix() * nlm::inverse(transform);
+		s_SceneData->ViewMatrix = nlm::inverse(transform);
+		s_SceneData->ProjectionMatrix = camera.GetProjectionMatrix();
 	}
 
 	void Renderer::EndScene()
@@ -44,7 +50,8 @@ namespace NL
 		shader->Bind();
 
 		// Typical
-		shader->SetUniformMat4("u_ViewProjection", s_SceneData->ViewPositionMatrix);
+		shader->SetUniformMat4("u_View", s_SceneData->ViewMatrix);
+		shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
 		shader->SetUniformMat4("u_Transform", transform);
 		shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
 		shader->SetUniformInt("u_EntityId", entityId);
@@ -127,7 +134,8 @@ namespace NL
 			return;
 
 		shader->Bind();
-		shader->SetUniformMat4("u_ViewProjection", s_SceneData->ViewPositionMatrix);
+		shader->SetUniformMat4("u_View", s_SceneData->ViewMatrix);
+		shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
 		shader->SetUniformMat4("u_Transform", transform);
 
 		vertexArray->Bind();
@@ -156,7 +164,8 @@ namespace NL
 		shader->Bind();
 
 		// Typical
-		shader->SetUniformMat4("u_ViewProjection", s_SceneData->ViewPositionMatrix);
+		shader->SetUniformMat4("u_View", s_SceneData->ViewMatrix);
+		shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
 		shader->SetUniformMat4("u_Transform", transform);
 		shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
 		shader->SetUniformInt("u_EntityId", entityId);

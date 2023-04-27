@@ -14,7 +14,8 @@ layout(location = 2) in vec3 a_Normal;
 layout(location = 5) in ivec4 a_BoneIndex;
 layout(location = 6) in vec4 a_BoneWeight;
 
-uniform mat4 u_ViewProjection;
+uniform mat4 u_View;
+uniform mat4 u_Projection;
 uniform mat4 u_Transform;
 uniform mat4 u_FinalBoneMatrices[MAX_BONES];
 			
@@ -31,7 +32,7 @@ void main()
 
 	v_Position = a_Position;
 	v_Normal = a_Normal;
-	gl_Position = u_ViewProjection * u_Transform * bone_transform * vec4(a_Position, 1.0);
+	gl_Position = u_Projection * u_View * u_Transform * bone_transform * vec4(a_Position, 1.0);
 
 	float weight = a_BoneIndex[0] * a_BoneWeight[0] + a_BoneIndex[1] * a_BoneWeight[1] + a_BoneIndex[2] * a_BoneWeight[2] + a_BoneIndex[3] * a_BoneWeight[3];
 	v_BoneColor = vec4(weight / 16.0f, weight / 16.0f, weight / 16.0f, 1.0f);
