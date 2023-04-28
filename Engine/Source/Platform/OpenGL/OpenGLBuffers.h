@@ -7,8 +7,8 @@ namespace NL
 	class OpenGLVertexBuffer : public VertexBuffer
 	{
 	public:
-		OpenGLVertexBuffer(void* vertices, uint32_t size);
-		OpenGLVertexBuffer(std::vector<float>& vertices);
+		OpenGLVertexBuffer(void* vertices, uint32_t size, BufferAccessFrequency frequency, BufferAccessNature nature);
+		OpenGLVertexBuffer(std::vector<float>& vertices, BufferAccessFrequency frequency, BufferAccessNature nature);
 
 		virtual ~OpenGLVertexBuffer();
 
@@ -17,6 +17,8 @@ namespace NL
 
 		virtual const BufferLayout& GetLayout() const override { return m_Layout; }
 		virtual void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
+
+		virtual void BindBufferBase(BindBufferBaseTarget target) override;
 
 	private:
 		uint32_t m_RendererID;
@@ -39,5 +41,25 @@ namespace NL
 	private:
 		uint32_t m_RendererID;
 		uint32_t m_Count;
+	};
+
+	class OpenGLTransformFeedbackBuffer : public TransformFeedbackBuffer
+	{
+	public:
+		OpenGLTransformFeedbackBuffer();
+
+		virtual ~OpenGLTransformFeedbackBuffer();
+
+		virtual void Bind() const override;
+		virtual void Unbind() const override;
+
+		virtual void BindBufferBase(const Ref<VertexBuffer>& buffer) const override;
+
+		virtual void Begin(TransformFeedbackPrimitiveMode primitiveMode) const override;
+
+		virtual void Draw(PrimitiveMode mode) const override;
+
+	private:
+		uint32_t m_RendererID;
 	};
 }

@@ -37,12 +37,45 @@ namespace NL
 			}
 		}
 
+		static GLenum PrimitiveMode2OpenGLPrimitiveMode(PrimitiveMode mode)
+		{
+			switch (mode)
+			{
+			case NL::PrimitiveMode::Points:
+				return GL_POINTS;
+			case NL::PrimitiveMode::LineStrip:
+				return GL_LINE_STRIP;
+			case NL::PrimitiveMode::LineLoop:
+				return GL_LINE_LOOP;
+			case NL::PrimitiveMode::Lines:
+				return GL_LINES;
+			case NL::PrimitiveMode::LineStripAdjacency:
+				return GL_LINE_STRIP_ADJACENCY;
+			case NL::PrimitiveMode::LinesAdjacency:
+				return GL_LINES_ADJACENCY;
+			case NL::PrimitiveMode::TriangleStrip:
+				return GL_TRIANGLE_STRIP;
+			case NL::PrimitiveMode::TriangleFan:
+				return GL_TRIANGLE_FAN;
+			case NL::PrimitiveMode::Triangles:
+				return GL_TRIANGLES;
+			case NL::PrimitiveMode::TriangleStripAdjacency:
+				return GL_TRIANGLE_STRIP_ADJACENCY;
+			case NL::PrimitiveMode::TrianglesAdjacency:
+				return GL_TRIANGLES_ADJACENCY;
+			case NL::PrimitiveMode::Patches:
+				return GL_PATCHES;
+			default:
+				break;
+			}
+			return GL_POINTS;
+		}
 	}
 
 	void OpenGLRendererAPI::Init()
 	{
 		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
 
 		glEnable(GL_TEXTURE_2D);
 
@@ -98,4 +131,22 @@ namespace NL
 	{
 		glCullFace(Utils::CullFace2OpenGLCullFace(face));
 	}
+
+	void OpenGLRendererAPI::Culling(bool enable)
+	{
+		if (enable) glEnable(GL_CULL_FACE);
+		else glDisable(GL_CULL_FACE);
+	}
+
+	void OpenGLRendererAPI::DrawArrays(PrimitiveMode mode, int first, uint32_t count)
+	{
+		glDrawArrays(Utils::PrimitiveMode2OpenGLPrimitiveMode(mode), first, count);
+	}
+
+	void OpenGLRendererAPI::RasterizerDiscard(bool enable)
+	{
+		if (enable) glEnable(GL_RASTERIZER_DISCARD);
+		else glDisable(GL_RASTERIZER_DISCARD);
+	}
+
 }

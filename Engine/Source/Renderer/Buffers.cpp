@@ -7,7 +7,7 @@
 
 namespace NL
 {
-	Ref<VertexBuffer> VertexBuffer::Create(void* vertices, uint32_t size)
+	Ref<VertexBuffer> VertexBuffer::Create(void* vertices, uint32_t size, BufferAccessFrequency frequency, BufferAccessNature nature)
 	{
 		switch (RendererAPI::GetCurrent())
 		{
@@ -15,7 +15,7 @@ namespace NL
 			NL_ENGINE_ASSERT(false, "RendererAPI::None is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLVertexBuffer>(vertices, size);
+			return CreateRef<OpenGLVertexBuffer>(vertices, size, frequency, nature);
 			return nullptr;
 		}
 
@@ -33,6 +33,21 @@ namespace NL
 			return nullptr;
 		case RendererAPI::API::OpenGL:
 			return CreateRef<OpenGLIndexBuffer>(indices, count);
+		}
+
+		NL_ENGINE_ASSERT(false, "Unknown RendererAPI!");
+		return nullptr;
+	}
+
+	Ref<TransformFeedbackBuffer> TransformFeedbackBuffer::Create()
+	{
+		switch (RendererAPI::GetCurrent())
+		{
+		case RendererAPI::API::None:
+			NL_ENGINE_ASSERT(false, "RendererAPI::None is currently not supported!");
+			return nullptr;
+		case RendererAPI::API::OpenGL:
+			return CreateRef<OpenGLTransformFeedbackBuffer>();
 		}
 
 		NL_ENGINE_ASSERT(false, "Unknown RendererAPI!");

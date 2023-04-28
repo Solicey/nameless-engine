@@ -16,9 +16,9 @@ namespace NL
 		ModelRendererComponent() {}
 
 		ModelRendererComponent(const ModelRendererComponent& comp)
-			: Path(comp.Path), mModel(CreateRef<Model>(comp.mModel.get())), Flags(comp.Flags) {}
+			: Path(comp.Path), _Model(CreateRef<Model>(comp._Model.get())), Flags(comp.Flags) {}
 
-		ModelRendererComponent(const std::string& path, ModelLoaderFlags flags = ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace | ModelLoaderFlags::PopulateArmatureData | ModelLoaderFlags::JoinIdenticalVertices | ModelLoaderFlags::GenSmoothNormals) : Path(std::regex_replace(path, std::regex("\\\\"), "/")), mModel(ModelLoader::Create(path, flags)), Flags(flags)
+		ModelRendererComponent(const std::string& path, ModelLoaderFlags flags = ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace | ModelLoaderFlags::PopulateArmatureData | ModelLoaderFlags::JoinIdenticalVertices | ModelLoaderFlags::GenSmoothNormals) : Path(std::regex_replace(path, std::regex("\\\\"), "/")), _Model(ModelLoader::Create(path, flags)), Flags(flags)
 		{
 			// NL_ENGINE_TRACE("Entity entt id: {0}", entityID);
 		}
@@ -31,7 +31,7 @@ namespace NL
 	public:
 		// turn all "\" into "/" with std::regex_replace(Path, std::regex("\\\\"), "/");
 		std::string Path = "";
-		Ref<Model> mModel = nullptr;
+		Ref<Model> _Model = nullptr;
 		ModelLoaderFlags Flags = ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace | ModelLoaderFlags::PopulateArmatureData | ModelLoaderFlags::JoinIdenticalVertices | ModelLoaderFlags::GenSmoothNormals;
 	};
 }

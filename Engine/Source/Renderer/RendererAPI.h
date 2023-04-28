@@ -47,6 +47,12 @@ namespace NL
 
 		virtual void SetCullFace(CullFace face) = 0;
 
+		virtual void Culling(bool enable) = 0;
+
+		virtual void DrawArrays(PrimitiveMode mode, int first, uint32_t count) = 0;
+
+		virtual void RasterizerDiscard(bool enable) = 0;
+
 		inline static API GetCurrent() { return s_API; }
 
 		static Scope<RendererAPI> Create();

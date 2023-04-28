@@ -30,14 +30,22 @@ namespace NL
 
 	void RenderSystem::OnStartRuntime()
 	{
+		m_TotalTime = 0;
+		m_DeltaTime = 0;
 	}
 
 	void RenderSystem::OnStopRuntime(Scene* editorScene)
 	{
+		m_TotalTime = 0;
+		m_DeltaTime = 0;
 	}
 
 	void RenderSystem::OnUpdateRuntime(TimeStep ts, Entity cameraEntity)
 	{
+		// Update Time
+		m_TotalTime += ts;
+		m_DeltaTime = ts;
+
 		if (!cameraEntity.HasComponent<CameraComponent>())
 			return;
 
@@ -68,9 +76,9 @@ namespace NL
 			auto& transform = entity.GetComponent<TransformComponent>();
 			auto& model = entity.GetComponent<ModelRendererComponent>();
 
-			if (model.mModel != nullptr)
+			if (model._Model != nullptr)
 			{
-				Renderer::DrawModel(model.mModel, transform.GetTransform(), (int)(uint32_t)entity, false);
+				Renderer::DrawModel(model._Model, transform.GetTransform(), (int)(uint32_t)entity, false);
 			}
 		}
 
@@ -89,15 +97,24 @@ namespace NL
 			Renderer::DepthFunc(DepthComp::Less);
 		}
 
+		// Update Particle System
+		UpdateParticleSystem();
+
 		Renderer::EndScene();
 	}
 
 	void RenderSystem::OnStartEditor()
 	{
+		m_TotalTime = 0;
+		m_DeltaTime = 0;
 	}
 
 	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity)
 	{
+		// Update Time
+		m_TotalTime += ts;
+		m_DeltaTime = ts;
+
 		Renderer::BeginScene(camera);
 
 		bool renderGizmos = camera.IsRenderGizmos();
@@ -159,9 +176,9 @@ namespace NL
 			auto& transform = entity.GetComponent<TransformComponent>();
 			auto& model = entity.GetComponent<ModelRendererComponent>();
 
-			if (model.mModel != nullptr)
+			if (model._Model != nullptr)
 			{
-				Renderer::DrawModel(model.mModel, transform.GetTransform(), (int)(uint32_t)entity, selectedEntity == entity);
+				Renderer::DrawModel(model._Model, transform.GetTransform(), (int)(uint32_t)entity, selectedEntity == entity);
 			}
 		}
 
@@ -202,26 +219,57 @@ namespace NL
 			Renderer::SetCullFace(CullFace::Back);
 		}
 
-		// Gizsmo
+		// Gizmos
 		if (renderGizmos)
 		{
+			Renderer::Culling(false);
 			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
 			{
 				if (pointLightDatas[i].IsValid)
 				{
 					auto& entity = pointEntites[i];
 					const auto& transform = entity.GetComponent<TransformComponent>();
-					Renderer::DrawSprite(m_GizmosShader, m_PointGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(pointLightDatas[i].Color, 0.7), (int)(uint32_t)entity, selectedEntity == entity);
+					Renderer::DrawSprite(m_GizmosShader, m_PointGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(pointLightDatas[i].Color, 0.85), (int)(uint32_t)entity, selectedEntity == entity);
 				}
 				if (dirLightDatas[i].IsValid)
 				{
 					auto& entity = dirEntites[i];
 					const auto& transform = entity.GetComponent<TransformComponent>();
-					Renderer::DrawSprite(m_GizmosShader, m_DirGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(dirLightDatas[i].Color, 0.7), (int)(uint32_t)entity, selectedEntity == entity);
+					Renderer::DrawSprite(m_GizmosShader, m_DirGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(dirLightDatas[i].Color, 0.85), (int)(uint32_t)entity, selectedEntity == entity);
 				}
 			}
+			Renderer::Culling(true);
 		}
 
+		// Update Particle System
+		UpdateParticleSystem();
+
 		Renderer::EndScene();
+	}
+
+	void RenderSystem::UpdateParticleSystem()
+	{
+		// Set time...
+
+		// Enable Raasterizer Discard
+		Renderer::RasterizerDiscard(true);
+
+		auto view = m_Scene->Registry.view<TransformComponent, ParticleSystemComponent>();
+		for (auto& e : view)
+		{
+			Entity entity = Entity(e, m_Scene);
+
+			auto& transform = entity.GetComponent<TransformComponent>();
+			auto& system = entity.GetComponent<ParticleSystemComponent>();
+
+			auto& currVBO = system.m_VAO->GetVertexBuffer(m_CurrVBO);
+			auto& currTFB = system.m_TFB[m_CurrVBO];
+
+			currVBO->Bind();
+			currTFB->Bind();
+
+			currTFB->Begin(TransformFeedbackPrimitiveMode::Points);
+		}
+
 	}
 }
