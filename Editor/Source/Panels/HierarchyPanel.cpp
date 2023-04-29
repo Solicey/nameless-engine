@@ -458,9 +458,9 @@ namespace NL
 		
 #pragma region Draw Model Renderer
 
-		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [scene = m_Scene, &shaderSelectClick = m_ModelRendererCompShaderSelectOpen](auto& entity, auto& component) {
+		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [scene = m_Scene, &shaderSelectClick = m_ModelRendererCompShaderSelectOpen, &shaderModelNames = m_ModelShaderNames](auto& entity, auto& component) {
 
-		const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
+		// const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
 		// NL_ENGINE_TRACE("Default shader name: {0}", Library<Shader>::GetInstance().GetDefaultShaderName());
 		
 		Ref<Model> model = component._Model;
@@ -536,18 +536,20 @@ namespace NL
 
 						if (!shaderSelectClick)
 						{
+							NL_INFO("Traverse Shaders Folder");
 							Library<Shader>::GetInstance().TraverseShadersFolder();
+							shaderModelNames = Library<Shader>::GetInstance().GatherShaderNameSet4CertainUsage(ShaderUsage::Model);
 							shaderSelectClick = true;
 						}
 
-						const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
+						// const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
 
-						if (!shaderNameMap.contains(shaderName))
+						if (!shaderModelNames.contains(shaderName))
 							shaderName = Library<Shader>::GetInstance().GetDefaultShaderName();
 
-						for (const auto& pair : shaderNameMap)
+						for (auto& name : shaderModelNames)
 						{
-							std::string name = pair.first;
+							// std::string name = pair.first;
 							bool isSelected = name == shaderName;
 							if (ImGui::Selectable(name.c_str(), isSelected))
 							{

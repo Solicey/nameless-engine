@@ -22,15 +22,14 @@ namespace NL
 			{ShaderDataType::Float, "a_Age"}
 		};
 
-		m_VAO = VertexArray::Create();
-
 		for (int i = 0; i < 2; i++)
 		{
+			m_VAO[i] = VertexArray::Create();
 			m_TFB[i] = TransformFeedbackBuffer::Create();
 
 			Ref<VertexBuffer> vbo = VertexBuffer::Create((void*)const_cast<Particle*>(Particles.data()), Particles.size() * layout.GetStride(), BufferAccessFrequency::Dynamic, BufferAccessNature::Draw);
 			vbo->SetLayout(layout);
-			m_VAO->AddVertexBuffer(vbo);
+			m_VAO[i]->AddVertexBuffer(vbo);
 
 			m_TFB[i]->BindBufferBase(vbo);
 		}

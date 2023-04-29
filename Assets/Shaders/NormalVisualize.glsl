@@ -1,5 +1,7 @@
 // Normal Visualize, use Geometry Shader
 
+#use model
+
 #prop
 color3 u_Color;
 float u_Magnitude;

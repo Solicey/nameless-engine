@@ -252,8 +252,6 @@ namespace NL
 		// Set time...
 
 		// Enable Raasterizer Discard
-		Renderer::RasterizerDiscard(true);
-
 		auto view = m_Scene->Registry.view<TransformComponent, ParticleSystemComponent>();
 		for (auto& e : view)
 		{
@@ -262,13 +260,34 @@ namespace NL
 			auto& transform = entity.GetComponent<TransformComponent>();
 			auto& system = entity.GetComponent<ParticleSystemComponent>();
 
-			auto& currVBO = system.m_VAO->GetVertexBuffer(m_CurrVBO);
-			auto& currTFB = system.m_TFB[m_CurrVBO];
+			auto& inVAO = system.m_VAO[m_Input];
+			auto& outVAO = system.m_VAO[m_Output];
+			auto& inTFB = system.m_TFB[m_Input];
+			auto& outTFB = system.m_TFB[m_Output];
 
-			currVBO->Bind();
-			currTFB->Bind();
+			Renderer::RasterizerDiscard(true);
 
-			currTFB->Begin(TransformFeedbackPrimitiveMode::Points);
+			//currVBO->Bind();
+			inVAO->Bind();
+			outTFB->Bind();
+
+			// redirect their output to the transform feedback buffer according to the currently bound transform feedback object
+			inTFB->Begin(TransformFeedbackPrimitiveMode::Points);
+			if (system.m_FirstTime)
+			{
+				Renderer::DrawArrays(PrimitiveMode::Points, 0, 1);
+				system.m_FirstTime = false;
+			}
+			else
+			{
+				inTFB->Draw(PrimitiveMode::Points);
+			}
+			inTFB->End();
+
+			Renderer::RasterizerDiscard(false);
+
+			outVAO->Bind();
+			outTFB->Draw(PrimitiveMode::Points);
 		}
 
 	}

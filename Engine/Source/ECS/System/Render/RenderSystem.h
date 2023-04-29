@@ -32,6 +32,7 @@ namespace NL
 
 		float m_DeltaTime;
 		float m_TotalTime;
-		int m_CurrVBO = 0;	 // 0 or 1
+		int m_Input = 0;	// Input
+		int m_Output = 1;	// Output
 	};
 }
