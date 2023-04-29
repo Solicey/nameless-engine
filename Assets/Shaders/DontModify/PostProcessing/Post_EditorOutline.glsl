@@ -2,6 +2,8 @@
 // For post-processing only, don't use it on entities
 // You don't need to expose any properties
 
+#use post
+
 #prop
 #end
 

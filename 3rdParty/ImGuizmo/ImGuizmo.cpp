@@ -1340,7 +1340,7 @@ namespace ImGuizmo
          drawList->AddLine(ImVec2(sourcePosOnScreen.x + dif.x, sourcePosOnScreen.y + dif.y), ImVec2(destinationPosOnScreen.x - dif.x, destinationPosOnScreen.y - dif.y), translationLineColor, 2.f);
          */
          char tmps[512];
-         //vec_t deltaInfo = gContext.mModel.v.position - gContext.mMatrixOrigin;
+         //vec_t deltaInfo = gContext._Model.v.position - gContext.mMatrixOrigin;
          int componentInfoIndex = (type - MT_SCALE_X) * 3;
          ImFormatString(tmps, sizeof(tmps), scaleInfoMask[type - MT_SCALE_X], scaleDisplay[translationInfoIndex[componentInfoIndex]]);
          drawList->AddText(ImVec2(destinationPosOnScreen.x + 15, destinationPosOnScreen.y + 15), IM_COL32_BLACK, tmps);

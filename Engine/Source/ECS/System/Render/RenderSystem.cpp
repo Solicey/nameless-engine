@@ -68,9 +68,9 @@ namespace NL
 			auto& transform = entity.GetComponent<TransformComponent>();
 			auto& model = entity.GetComponent<ModelRendererComponent>();
 
-			if (model.mModel != nullptr)
+			if (model._Model != nullptr)
 			{
-				Renderer::DrawModel(model.mModel, transform.GetTransform(), (int)(uint32_t)entity, false);
+				Renderer::DrawModel(model._Model, transform.GetTransform(), (int)(uint32_t)entity, false);
 			}
 		}
 
@@ -159,9 +159,9 @@ namespace NL
 			auto& transform = entity.GetComponent<TransformComponent>();
 			auto& model = entity.GetComponent<ModelRendererComponent>();
 
-			if (model.mModel != nullptr)
+			if (model._Model != nullptr)
 			{
-				Renderer::DrawModel(model.mModel, transform.GetTransform(), (int)(uint32_t)entity, selectedEntity == entity);
+				Renderer::DrawModel(model._Model, transform.GetTransform(), (int)(uint32_t)entity, selectedEntity == entity);
 			}
 		}
 

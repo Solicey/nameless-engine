@@ -460,10 +460,10 @@ namespace NL
 
 		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [scene = m_Scene, &shaderSelectClick = m_ModelRendererCompShaderSelectOpen](auto& entity, auto& component) {
 
-		const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
+		//const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
 		// NL_ENGINE_TRACE("Default shader name: {0}", Library<Shader>::GetInstance().GetDefaultShaderName());
 		
-		Ref<Model> model = component.mModel;
+		Ref<Model> model = component._Model;
 
 		ImGui::Columns(2);
 		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - 420.0f);
@@ -497,8 +497,8 @@ namespace NL
 
 			if (!filepath.empty())
 			{
-				if (component.mModel)
-					component.mModel->DeleteMeshesAndTexturesReference();
+				if (component._Model)
+					component._Model->DeleteMeshesAndTexturesReference();
 				component = ModelRendererComponent(path.string());
 			}
 		}
@@ -506,7 +506,7 @@ namespace NL
 
 		ImGui::Columns(1);
 
-		model = component.mModel;
+		model = component._Model;
 		if (model == nullptr)
 			return;
 
@@ -540,13 +540,17 @@ namespace NL
 							shaderSelectClick = true;
 						}
 
-						const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
+						//const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
+						const auto& shaderUseMap = Library<Shader>::GetInstance().GetShaderUseMap();
 
-						if (!shaderNameMap.contains(shaderName))
+						if (!shaderUseMap.contains(shaderName))
 							shaderName = Library<Shader>::GetInstance().GetDefaultShaderName();
 
-						for (const auto& pair : shaderNameMap)
+						for (const auto& pair : shaderUseMap)
 						{
+							if (pair.second != ShaderUse::Model)
+								continue;
+
 							std::string name = pair.first;
 							bool isSelected = name == shaderName;
 							if (ImGui::Selectable(name.c_str(), isSelected))
@@ -580,7 +584,7 @@ namespace NL
 							for (auto entity : view)
 							{
 								ModelRendererComponent& comp = view.get<ModelRendererComponent>(entity);
-								comp.mModel->UpdateShaderProperties(shaderName);
+								comp._Model->UpdateShaderProperties(shaderName);
 							}
 							NL_INFO("Reload Shader {0}, shader compiled success: {1}", shaderName, shader->HasCompiledSuccessfully());
 						}

@@ -1,5 +1,7 @@
 // nlsl template shader file
 
+#use model
+
 #prop
 
 color3 u_Color;

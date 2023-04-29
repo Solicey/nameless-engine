@@ -15,7 +15,9 @@ namespace NL
 
 	void Library<Shader>::TraverseShadersFolder(const std::filesystem::path& path)
 	{
-		// NL_ENGINE_TRACE("Traverse Shader Folder: {0}", path);
+		NL_ENGINE_TRACE("Traverse Shader Folder: {0}", path);
+		m_ShaderPathMap.clear();
+		m_ShaderUseMap.clear();
 		for (auto& item : std::filesystem::directory_iterator(path))
 		{
 			if (std::filesystem::is_directory(item.status()))
@@ -29,15 +31,26 @@ namespace NL
 					std::string name = item.path().filename().string();
 					// NL_ENGINE_TRACE("Traverse shaders file: {0}", name);
 					// Add(name, Shader::Create(name, item.path().string()));
-					m_ShaderNameMap[name] = item.path();
+					m_ShaderPathMap[name] = item.path();
+
+					if (Contains(name))
+					{
+						m_ShaderUseMap[name] = Get(name)->GetShaderUse();
+					}
+					else
+					{
+						m_ShaderUseMap[name] = Shader::ParseAndGetShaderUse(item.path().string());
+					}
 				}
 			}
 		}
+
+		
 	}
 
 	Ref<Shader> Library<Shader>::Reload(const std::string& name)
 	{
-		if (m_ShaderNameMap.contains(name))
+		if (m_ShaderPathMap.contains(name))
 		{
 			if (Contains(name))
 			{
@@ -46,7 +59,7 @@ namespace NL
 			}
 			else
 			{
-				Ref<Shader> shader = Shader::Create(name, m_ShaderNameMap[name]);
+				Ref<Shader> shader = Shader::Create(name, m_ShaderPathMap[name]);
 				Add(name, shader);
 				NL_ENGINE_TRACE("Add shader to library: {0}", name);
 				return shader;
@@ -58,18 +71,18 @@ namespace NL
 	Ref<Shader> Library<Shader>::Fetch(const std::string& name)
 	{
 		NL_ENGINE_TRACE("Load shader: {0}", name);
-		if (m_ShaderNameMap.contains(name))
+		if (m_ShaderPathMap.contains(name))
 		{
 			if (Contains(name))
 			{
 				NL_ENGINE_TRACE("Shader library contains: {0}", name);
-				// Ref<Shader> shader = Shader::Create(name, m_ShaderNameMap[name]);
+				// Ref<Shader> shader = Shader::Create(name, m_ShaderPathMap[name]);
 				// Set(name, shader);
 				return Get(name);
 			}
 			else
 			{
-				Ref<Shader> shader = Shader::Create(name, m_ShaderNameMap[name]);
+				Ref<Shader> shader = Shader::Create(name, m_ShaderPathMap[name]);
 				Add(name, shader);
 				NL_ENGINE_TRACE("Add shader to library: {0}", name);
 				return shader;
