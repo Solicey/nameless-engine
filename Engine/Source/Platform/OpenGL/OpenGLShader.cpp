@@ -242,6 +242,19 @@ namespace NL
 			glAttachShader(program, geometryShader);
 		glAttachShader(program, fragmentShader);
 
+		// Transform Feedback Varyings
+		// For testing purpose
+		if (m_Use == ShaderUse::Particle)
+		{
+			const GLchar* Varyings[4];
+			Varyings[0] = "v_Type";
+			Varyings[1] = "v_Position";
+			Varyings[2] = "v_Velocity";
+			Varyings[3] = "v_Lifetime";
+
+			glTransformFeedbackVaryings(program, 4, Varyings, GL_INTERLEAVED_ATTRIBS);
+		}
+
 		// Link our program
 		glLinkProgram(program);
 

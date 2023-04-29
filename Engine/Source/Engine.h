@@ -43,6 +43,7 @@
 #include "Renderer/VertexArray.h"
 #include "Renderer/Framebuffer.h"
 #include "Renderer/PostProcessing.h"
+#include "Renderer/TransformFeedback.h"
 
 #include "Scripting/ScriptEngine.h"
 #include "Scripting/ScriptGlue.h"

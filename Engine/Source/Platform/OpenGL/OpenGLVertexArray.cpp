@@ -7,25 +7,28 @@
 
 namespace NL
 {
-	static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
+	namespace Utils
 	{
-		switch (type)
+		static GLenum ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
 		{
-		case NL::ShaderDataType::Float:		return GL_FLOAT;
-		case NL::ShaderDataType::Float2:	return GL_FLOAT;
-		case NL::ShaderDataType::Float3:	return GL_FLOAT;
-		case NL::ShaderDataType::Float4:	return GL_FLOAT;
-		case NL::ShaderDataType::Mat3:		return GL_FLOAT;
-		case NL::ShaderDataType::Mat4:		return GL_FLOAT;
-		case NL::ShaderDataType::Int:		return GL_INT;
-		case NL::ShaderDataType::Int2:		return GL_INT;
-		case NL::ShaderDataType::Int3:		return GL_INT;
-		case NL::ShaderDataType::Int4:		return GL_INT;
-		case NL::ShaderDataType::Bool:		return GL_BOOL;
-		}
+			switch (type)
+			{
+			case NL::ShaderDataType::Float:		return GL_FLOAT;
+			case NL::ShaderDataType::Float2:	return GL_FLOAT;
+			case NL::ShaderDataType::Float3:	return GL_FLOAT;
+			case NL::ShaderDataType::Float4:	return GL_FLOAT;
+			case NL::ShaderDataType::Mat3:		return GL_FLOAT;
+			case NL::ShaderDataType::Mat4:		return GL_FLOAT;
+			case NL::ShaderDataType::Int:		return GL_INT;
+			case NL::ShaderDataType::Int2:		return GL_INT;
+			case NL::ShaderDataType::Int3:		return GL_INT;
+			case NL::ShaderDataType::Int4:		return GL_INT;
+			case NL::ShaderDataType::Bool:		return GL_BOOL;
+			}
 
-		NL_ENGINE_ASSERT(false, "Unknown ShaderDataType!");
-		return 0;
+			NL_ENGINE_ASSERT(false, "Unknown ShaderDataType!");
+			return 0;
+		}
 	}
 
 	OpenGLVertexArray::OpenGLVertexArray()
@@ -62,9 +65,9 @@ namespace NL
 		{
 			glEnableVertexAttribArray(index);
 			if (element.Type == ShaderDataType::Int || element.Type == ShaderDataType::Int2 || element.Type == ShaderDataType::Int3 || element.Type == ShaderDataType::Int4)
-				glVertexAttribIPointer(index, element.GetComponentCount(), ShaderDataTypeToOpenGLBaseType(element.Type), layout.GetStride(), (const void*)element.Offset);
+				glVertexAttribIPointer(index, element.GetComponentCount(), Utils::ShaderDataTypeToOpenGLBaseType(element.Type), layout.GetStride(), (const void*)element.Offset);
 			else
-				glVertexAttribPointer(index, element.GetComponentCount(), ShaderDataTypeToOpenGLBaseType(element.Type), element.Normalized ? GL_TRUE : GL_FALSE, layout.GetStride(), (const void*)element.Offset);
+				glVertexAttribPointer(index, element.GetComponentCount(), Utils::ShaderDataTypeToOpenGLBaseType(element.Type), element.Normalized ? GL_TRUE : GL_FALSE, layout.GetStride(), (const void*)element.Offset);
 			index++;
 		}
 

@@ -98,4 +98,19 @@ namespace NL
 	{
 		glCullFace(Utils::CullFace2OpenGLCullFace(face));
 	}
+
+	void OpenGLRendererAPI::BeginTransformFeedback_Points()
+	{
+		glBeginTransformFeedback(GL_POINTS);
+	}
+
+	void OpenGLRendererAPI::EndTransformFeedback()
+	{
+		glEndTransformFeedback();
+	}
+
+	void OpenGLRendererAPI::DrawArrays_Points(int first, uint32_t count)
+	{
+		glDrawArrays(GL_POINTS, first, count);
+	}
 }

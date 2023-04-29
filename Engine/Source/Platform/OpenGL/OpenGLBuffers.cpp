@@ -35,6 +35,12 @@ namespace NL
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
+	void OpenGLVertexBuffer::SetTransformFeedbackTarget() const
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_RendererID);
+	}
+
 	// IndexBuffer /////////////////////////////////////////////////////////
 
 	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, uint32_t count)

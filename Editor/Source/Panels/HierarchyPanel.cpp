@@ -316,6 +316,7 @@ namespace NL
 			InspectorAddComponent<CameraComponent>("Camera");
 			InspectorAddComponent<ModelRendererComponent>("Model Renderer");
 			InspectorAddComponent<LightComponent>("Light");
+			InspectorAddComponent<ParticleSystemComponent>("Particle System");
 			InspectorAddComponent<ScriptComponent>("Scripting");
 
 			ImGui::EndPopup();
@@ -705,6 +706,15 @@ namespace NL
 
 		nlm::vec3& color = component.Color;
 		Utils::ColorEdit3Style1("Color", RIGHT_COLUMN_WIDTH, color);
+
+		});
+
+#pragma endregion
+
+#pragma region Particle System
+
+		DrawComponent<ParticleSystemComponent>("Particle System", entity, [scene = m_Scene](auto& entity, auto& component) {
+			
 
 		});
 

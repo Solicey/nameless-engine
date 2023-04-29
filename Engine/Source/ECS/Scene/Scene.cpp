@@ -246,6 +246,12 @@ namespace NL
 
     }
 
+    template<>
+    void Scene::OnComponentAdded<ParticleSystemComponent>(Entity entity, ParticleSystemComponent& component)
+    {
+        NL_ENGINE_INFO("Add Particle System!");
+    }
+
 #pragma endregion
 
 #pragma region OnComponentRemoved
@@ -289,6 +295,12 @@ namespace NL
 
     template<>
     void Scene::OnComponentRemoved<LightComponent>(Entity entity, LightComponent& component)
+    {
+
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<ParticleSystemComponent>(Entity entity, ParticleSystemComponent& component)
     {
 
     }

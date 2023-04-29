@@ -8,6 +8,7 @@
 #include "ECS/Component/Camera/CameraComponent.h"
 #include "ECS/Component/Scripting/ScriptComponent.h"
 #include "ECS/Component/Light/LightComponent.h"
+#include "ECS/Component/VFX/ParticleSystemComponent.h"
 
 namespace NL
 {
@@ -18,5 +19,5 @@ namespace NL
     };
 
     // Component to be copied
-    using AllComponents = Components<TransformComponent, CameraComponent, ModelRendererComponent, ScriptComponent, LightComponent>;
+    using AllComponents = Components<TransformComponent, CameraComponent, ModelRendererComponent, ScriptComponent, LightComponent, ParticleSystemComponent>;
 }

@@ -22,5 +22,11 @@ namespace NL
 		virtual void DepthFunc(DepthComp comp) override;
 
 		virtual void SetCullFace(CullFace face) override;
+
+		virtual void BeginTransformFeedback_Points() override;
+
+		virtual void EndTransformFeedback() override;
+
+		virtual void DrawArrays_Points(int first, uint32_t count) override;
 	};
 }

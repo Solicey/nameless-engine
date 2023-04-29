@@ -47,6 +47,12 @@ namespace NL
 
 		virtual void SetCullFace(CullFace face) = 0;
 
+		virtual void BeginTransformFeedback_Points() = 0;
+
+		virtual void EndTransformFeedback() = 0;
+
+		virtual void DrawArrays_Points(int first, uint32_t count) = 0;
+
 		inline static API GetCurrent() { return s_API; }
 
 		static Scope<RendererAPI> Create();

@@ -13,23 +13,27 @@ namespace NL
 		TraverseShadersFolder(m_ShadersFolder);
 	}
 
-	void Library<Shader>::TraverseShadersFolder(const std::filesystem::path& path)
+	void Library<Shader>::TraverseShadersFolder(const std::filesystem::path& path, int depth)
 	{
+		if (depth == 0)
+		{
+			m_ShaderPathMap.clear();
+			m_ShaderUseMap.clear();
+		}
+
 		NL_ENGINE_TRACE("Traverse Shader Folder: {0}", path);
-		m_ShaderPathMap.clear();
-		m_ShaderUseMap.clear();
 		for (auto& item : std::filesystem::directory_iterator(path))
 		{
 			if (std::filesystem::is_directory(item.status()))
 			{
-				TraverseShadersFolder(item.path());
+				TraverseShadersFolder(item.path(), depth + 1);
 			}
 			else
 			{
 				if (item.path().extension().string() == ".glsl")
 				{
 					std::string name = item.path().filename().string();
-					// NL_ENGINE_TRACE("Traverse shaders file: {0}", name);
+					NL_ENGINE_TRACE("Traverse shaders file: {0}", name);
 					// Add(name, Shader::Create(name, item.path().string()));
 					m_ShaderPathMap[name] = item.path();
 

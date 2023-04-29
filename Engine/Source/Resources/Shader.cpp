@@ -147,7 +147,7 @@ namespace NL
 			// NL_ENGINE_TRACE("pos: {0}", pos);
 		}
 
-		return vertexSrcParsed && fragmentSrcParsed;
+		return vertexSrcParsed; // && fragmentSrcParsed;
 	}
 
 	void Shader::AddProperty(const std::string& type, const std::string& name)

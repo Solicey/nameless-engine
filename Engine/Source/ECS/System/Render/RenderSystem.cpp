@@ -30,14 +30,19 @@ namespace NL
 
 	void RenderSystem::OnStartRuntime()
 	{
+		m_Duration = m_DeltaTime = 0;
 	}
 
 	void RenderSystem::OnStopRuntime(Scene* editorScene)
 	{
+		m_Duration = m_DeltaTime = 0;
 	}
 
 	void RenderSystem::OnUpdateRuntime(TimeStep ts, Entity cameraEntity)
 	{
+		m_Duration += ts;
+		m_DeltaTime = ts;
+
 		if (!cameraEntity.HasComponent<CameraComponent>())
 			return;
 
@@ -89,15 +94,21 @@ namespace NL
 			Renderer::DepthFunc(DepthComp::Less);
 		}
 
+		UpdateParticleSystem(nlm::inverse(camTransform.GetTransform()), camera.mCamera.GetProjectionMatrix());
+
 		Renderer::EndScene();
 	}
 
 	void RenderSystem::OnStartEditor()
 	{
+		m_Duration = m_DeltaTime = 0;
 	}
 
 	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity)
 	{
+		m_Duration += ts;
+		m_DeltaTime = ts;
+
 		Renderer::BeginScene(camera);
 
 		bool renderGizmos = camera.IsRenderGizmos();
@@ -222,6 +233,57 @@ namespace NL
 			}
 		}
 
+		UpdateParticleSystem(camera.GetViewMatrix(), camera.GetProjectionMatrix());
+
 		Renderer::EndScene();
+	}
+
+	void RenderSystem::UpdateParticleSystem(const nlm::mat4& viewMat, const nlm::mat4& projMat)
+	{
+		auto view = m_Scene->Registry.view<TransformComponent, ParticleSystemComponent>();
+		for (auto& e : view)
+		{
+			Entity entity = Entity(e, m_Scene);
+
+			auto& transform = entity.GetComponent<TransformComponent>();
+			auto& particleSystem = entity.GetComponent<ParticleSystemComponent>();
+
+			auto& inputBuffer = particleSystem.TFB[particleSystem.Input];
+			auto& outputBuffer = particleSystem.TFB[particleSystem.Output];
+
+			// Pass 1
+			auto& shader1 = particleSystem.Pass1;
+			shader1->Bind();
+			shader1->SetUniformMat4("u_View", viewMat);
+			shader1->SetUniformMat4("u_Projection", projMat);
+			shader1->SetUniformMat4("u_Transform", transform.GetTransform());
+			shader1->SetUniformFloat("u_DeltaTime", m_DeltaTime);
+
+			inputBuffer->BindBuffer();
+			outputBuffer->BindTransformFeedback();
+
+			// Rasterizer discard on
+
+			Renderer::BeginTransformFeedback_Points();
+			// test
+			Renderer::DrawArrays_Points(0, 1);
+			Renderer::EndTransformFeedback();
+
+			// Rasterizer discard off
+
+			shader1->Unbind();
+			inputBuffer->UnbindBuffer();
+			outputBuffer->UnbindTransformFeedback();
+
+			// Pass 2
+			//particleSystem.Pass2->Bind();
+
+
+			//particleSystem.Pass2->Unbind();
+
+			// Switch buffer
+			particleSystem.Input = particleSystem.Output;
+			particleSystem.Output = 1 - particleSystem.Output;
+		}
 	}
 }

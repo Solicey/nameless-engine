@@ -13,7 +13,7 @@ namespace NL
 	{
 	public:
 		Library(Singleton::token);
-		void TraverseShadersFolder(const std::filesystem::path& path = PathConfig::GetInstance().GetShadersFolder());
+		void TraverseShadersFolder(const std::filesystem::path& path = PathConfig::GetInstance().GetShadersFolder(), int depth = 0);
 		// Don't use Library Class's Get() directly, use Fetch instead
 		Ref<Shader> Fetch(const std::string& name);
 		Ref<Shader> Reload(const std::string& name);

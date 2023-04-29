@@ -136,6 +136,23 @@ namespace NL
 			s_RendererAPI->SetCullFace(face);
 		}
 
+		// tmp
+		inline static void BeginTransformFeedback_Points()
+		{
+			s_RendererAPI->BeginTransformFeedback_Points();
+		}
+
+		inline static void EndTransformFeedback()
+		{
+			s_RendererAPI->EndTransformFeedback();
+		}
+
+		inline static void DrawArrays_Points(int first, uint32_t count)
+		{
+			s_RendererAPI->DrawArrays_Points(first, count);
+		}
+
+
 #pragma endregion
 
 	private:
