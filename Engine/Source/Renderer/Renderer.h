@@ -136,22 +136,6 @@ namespace NL
 			s_RendererAPI->SetCullFace(face);
 		}
 
-		inline static void Culling(bool enable)
-		{
-			s_RendererAPI->Culling(enable);
-		}
-
-		inline static void DrawArrays(PrimitiveMode mode, int first, uint32_t count)
-		{
-			s_RendererAPI->DrawArrays(mode, first, count);
-		}
-
-		// For TransformFeedback
-		inline static void RasterizerDiscard(bool enable)
-		{
-			s_RendererAPI->RasterizerDiscard(enable);
-		}
-
 #pragma endregion
 
 	private:

@@ -18,9 +18,6 @@ namespace NL
 		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity) override;
 
 	private:
-		void UpdateParticleSystem();
-
-	private:
 		// Ref<Shader> m_GrayScaleShader;
 		Ref<TextureCubeMap> m_SkyboxTextureCubemap;
 		Ref<Shader> m_SkyboxShader;
@@ -29,9 +26,5 @@ namespace NL
 		Ref<Shader> m_GizmosShader;
 		Ref<Model> m_Gizmos;
 		Ref<Texture2D> m_PointGizmosTexture, m_DirGizmosTexture;
-
-		float m_DeltaTime;
-		float m_TotalTime;
-		int m_CurrVBO = 0;	 // 0 or 1
 	};
 }

@@ -22,11 +22,5 @@ namespace NL
 		virtual void DepthFunc(DepthComp comp) override;
 
 		virtual void SetCullFace(CullFace face) override;
-
-		virtual void Culling(bool enable) override;
-
-		virtual void DrawArrays(PrimitiveMode mode, int first, uint32_t count) override;
-
-		virtual void RasterizerDiscard(bool enable) override;
 	};
 }

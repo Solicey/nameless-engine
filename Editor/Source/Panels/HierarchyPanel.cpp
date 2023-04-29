@@ -463,7 +463,7 @@ namespace NL
 		const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
 		// NL_ENGINE_TRACE("Default shader name: {0}", Library<Shader>::GetInstance().GetDefaultShaderName());
 		
-		Ref<Model> model = component._Model;
+		Ref<Model> model = component.mModel;
 
 		ImGui::Columns(2);
 		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - 420.0f);
@@ -497,8 +497,8 @@ namespace NL
 
 			if (!filepath.empty())
 			{
-				if (component._Model)
-					component._Model->DeleteMeshesAndTexturesReference();
+				if (component.mModel)
+					component.mModel->DeleteMeshesAndTexturesReference();
 				component = ModelRendererComponent(path.string());
 			}
 		}
@@ -506,7 +506,7 @@ namespace NL
 
 		ImGui::Columns(1);
 
-		model = component._Model;
+		model = component.mModel;
 		if (model == nullptr)
 			return;
 
@@ -580,7 +580,7 @@ namespace NL
 							for (auto entity : view)
 							{
 								ModelRendererComponent& comp = view.get<ModelRendererComponent>(entity);
-								comp._Model->UpdateShaderProperties(shaderName);
+								comp.mModel->UpdateShaderProperties(shaderName);
 							}
 							NL_INFO("Reload Shader {0}, shader compiled success: {1}", shaderName, shader->HasCompiledSuccessfully());
 						}

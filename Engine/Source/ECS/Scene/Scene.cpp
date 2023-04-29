@@ -101,7 +101,7 @@ namespace NL
     {
         if (entity.HasComponent<ModelRendererComponent>())
         {
-            auto& model = entity.GetComponent<ModelRendererComponent>()._Model;
+            auto& model = entity.GetComponent<ModelRendererComponent>().mModel;
             if (model)
                 model->DeleteMeshesAndTexturesReference();
         }
@@ -269,9 +269,9 @@ namespace NL
     template<>
     void Scene::OnComponentRemoved<ModelRendererComponent>(Entity entity, ModelRendererComponent& component)
     {
-        if (component._Model)
+        if (component.mModel)
         {
-            component._Model->DeleteMeshesAndTexturesReference();
+            component.mModel->DeleteMeshesAndTexturesReference();
         }
     }
 

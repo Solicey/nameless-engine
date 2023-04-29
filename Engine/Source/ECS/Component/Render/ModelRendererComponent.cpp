@@ -6,10 +6,10 @@ namespace NL
 {
 	void ModelRendererComponent::RotateBone(int boneId, nlm::vec3* eulerAngles)
 	{
-		if (!_Model->HasBones())
+		if (!mModel->HasBones())
 			return;
 
-		auto& bones = _Model->GetBonesNotConst();
+		auto& bones = mModel->GetBonesNotConst();
 		if (bones.find(boneId) == bones.end())
 			return;
 
@@ -28,7 +28,7 @@ namespace NL
 
 	void ModelRendererComponent::RecalculateFinalBoneMatrices()
 	{
-		if (_Model->HasBones())
-			_Model->CalculateFinalBoneMatrices();
+		if (mModel->HasBones())
+			mModel->CalculateFinalBoneMatrices();
 	}
 }

@@ -220,7 +220,7 @@ namespace NL
 			{
 				std::string path = modelRendererComponent["ModelPath"].as<std::string>();
 				auto& comp = deserializedEntity.AddComponent<ModelRendererComponent>(path);
-				auto& materialMap = comp._Model->GetMaterialsNotConst();
+				auto& materialMap = comp.mModel->GetMaterialsNotConst();
 
 				auto mats = modelRendererComponent["Materials"];
 				for (auto mat : mats)
@@ -293,7 +293,7 @@ namespace NL
 					std::string parent = bone["Parent"].as<std::string>();
 					std::string child = bone["Child"].as<std::string>();
 					//comp.Bones.push_back(std::make_pair(parent, child));
-					comp._Model->AddBonePair(std::make_pair(parent, child));
+					comp.mModel->AddBonePair(std::make_pair(parent, child));
 				}
 				//comp.UpdateBoneInfos();
 			}
@@ -418,7 +418,7 @@ namespace NL
 			out << YAML::Key << "ModelPath" << YAML::Value << comp.Path;
 
 			out << YAML::Key << "Materials" << YAML::Value << YAML::BeginSeq; // Materials
-			const auto& mats = comp._Model->GetMaterials();
+			const auto& mats = comp.mModel->GetMaterials();
 			for (const auto& item : mats)
 			{
 				const auto& matName = item.first;
@@ -464,7 +464,7 @@ namespace NL
 
 
 			out << YAML::Key << "Bones" << YAML::Value << YAML::BeginSeq; // Bones
-			auto& bones = comp._Model->GetBonesNotConst();
+			auto& bones = comp.mModel->GetBonesNotConst();
 			std::string empty = "null";
 			for (auto& pair : bones)
 			{

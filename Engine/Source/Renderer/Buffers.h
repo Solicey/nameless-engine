@@ -13,39 +13,6 @@ FBOÔÚFramebuffer.h
 
 namespace NL
 {
-	enum class BindBufferBaseTarget
-	{
-		AtomicCounterBuffer,
-		TransformFeedbackBuffer,
-		UniformBuffer,
-		ShaderStorageBuffer
-	};
-
-	enum class TransformFeedbackPrimitiveMode
-	{
-		Points,
-		Lines,
-		Triangles
-	};
-
-	enum class PrimitiveMode
-	{
-		Points,
-		LineStrip, LineLoop, Lines, LineStripAdjacency, LinesAdjacency,
-		TriangleStrip, TriangleFan, Triangles, TriangleStripAdjacency, TrianglesAdjacency,
-		Patches
-	};
-
-	enum class BufferAccessFrequency
-	{
-		Stream, Static, Dynamic
-	};
-
-	enum class BufferAccessNature
-	{
-		Draw, Read, Copy
-	};
-
 	struct BufferElement
 	{
 		std::string Name;
@@ -136,10 +103,7 @@ namespace NL
 		virtual const BufferLayout& GetLayout() const = 0;
 		virtual void SetLayout(const BufferLayout& layout) = 0;
 
-		// Called after buffer base target is binded
-		virtual void BindBufferBase(BindBufferBaseTarget target) = 0;
-
-		static Ref<VertexBuffer> Create(void* vertices, uint32_t size, BufferAccessFrequency frequency = BufferAccessFrequency::Static, BufferAccessNature nature = BufferAccessNature::Draw);
+		static Ref<VertexBuffer> Create(void* vertices, uint32_t size);
 
 	};
 
@@ -157,21 +121,5 @@ namespace NL
 		virtual uint32_t GetCount() const = 0;
 
 		static Ref<IndexBuffer> Create(uint32_t* indices, uint32_t count);
-	};
-
-	class TransformFeedbackBuffer
-	{
-	public:
-		virtual ~TransformFeedbackBuffer() = default;
-
-		virtual void Bind() const = 0;
-		virtual void Unbind() const = 0;
-
-		virtual void BindBufferBase(const Ref<VertexBuffer>& buffer) const = 0;
-		virtual void Begin(TransformFeedbackPrimitiveMode primitiveMode) const = 0;
-
-		virtual void Draw(PrimitiveMode mode) const = 0;
-
-		static Ref<TransformFeedbackBuffer> Create();
 	};
 }
