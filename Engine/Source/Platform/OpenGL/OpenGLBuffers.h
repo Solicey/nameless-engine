@@ -56,7 +56,6 @@ namespace NL
 		virtual void BindBufferBase(const Ref<VertexBuffer>& buffer) const override;
 
 		virtual void Begin(TransformFeedbackPrimitiveMode primitiveMode) const override;
-		virtual void End() const override;
 
 		virtual void Draw(PrimitiveMode mode) const override;
 

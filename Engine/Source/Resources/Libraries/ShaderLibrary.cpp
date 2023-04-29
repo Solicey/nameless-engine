@@ -16,8 +16,6 @@ namespace NL
 	void Library<Shader>::TraverseShadersFolder(const std::filesystem::path& path)
 	{
 		// NL_ENGINE_TRACE("Traverse Shader Folder: {0}", path);
-		m_ShaderNameMap.clear();
-		m_ShaderUsageMap.clear();
 		for (auto& item : std::filesystem::directory_iterator(path))
 		{
 			if (std::filesystem::is_directory(item.status()))
@@ -32,11 +30,6 @@ namespace NL
 					// NL_ENGINE_TRACE("Traverse shaders file: {0}", name);
 					// Add(name, Shader::Create(name, item.path().string()));
 					m_ShaderNameMap[name] = item.path();
-					
-					if (Contains(name))
-						m_ShaderUsageMap[name] = Get(name)->GetShaderUsage();
-					else
-						m_ShaderUsageMap[name] = Shader::ParseShaderUsage(item.path().string());
 				}
 			}
 		}
@@ -62,29 +55,6 @@ namespace NL
 		return nullptr;
 	}
 
-	std::set<std::string> Library<Shader>::GatherShaderNameSet4CertainUsage(ShaderUsage usage) const
-	{
-		std::set<std::string> nameSet;
-		for (auto& pair : m_ShaderNameMap)
-		{
-			const auto& name = pair.first;
-			if (m_ShaderUsageMap.contains(name))
-			{
-				if (m_ShaderUsageMap.at(name) == usage)
-					nameSet.insert(name);
-			}
-			else
-			{
-				ShaderUsage u = Shader::ParseShaderUsage(pair.second.string());
-				if (u == usage)
-				{
-					nameSet.insert(name);
-				}
-			}
-		}
-		return nameSet;
-	}
-
 	Ref<Shader> Library<Shader>::Fetch(const std::string& name)
 	{
 		NL_ENGINE_TRACE("Load shader: {0}", name);
@@ -108,9 +78,4 @@ namespace NL
 		NL_ENGINE_WARN("Shader library failed to load shader {0}", name);
 		return nullptr;
 	}
-
-	/*const std::set<std::string>& Library<Shader>::GetShaderNameSet4CertainUsage(ShaderUsage usage) const
-	{
-
-	}*/
 }

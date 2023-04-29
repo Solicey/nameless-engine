@@ -53,6 +53,5 @@ namespace NL
 		Entity m_EntitySelected;
 		Callback m_RuntimeCameraUpdateCallback;
 		bool m_ModelRendererCompShaderSelectOpen = false;
-		std::set<std::string> m_ModelShaderNames;
 	};
 }

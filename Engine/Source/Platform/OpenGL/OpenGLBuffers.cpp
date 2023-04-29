@@ -223,11 +223,6 @@ namespace NL
 		glBeginTransformFeedback(Utils::TransformFeedbackPrimitiveMode2OpenGLPrimitiveMode(primitiveMode));
 	}
 
-	void OpenGLTransformFeedbackBuffer::End() const
-	{
-		glEndTransformFeedback();
-	}
-
 	void OpenGLTransformFeedbackBuffer::Draw(PrimitiveMode mode) const
 	{
 		glDrawTransformFeedback(Utils::PrimitiveMode2OpenGLPrimitiveMode(mode), m_RendererID);

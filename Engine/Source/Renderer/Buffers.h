@@ -168,9 +168,7 @@ namespace NL
 		virtual void Unbind() const = 0;
 
 		virtual void BindBufferBase(const Ref<VertexBuffer>& buffer) const = 0;
-
 		virtual void Begin(TransformFeedbackPrimitiveMode primitiveMode) const = 0;
-		virtual void End() const = 0;
 
 		virtual void Draw(PrimitiveMode mode) const = 0;
 

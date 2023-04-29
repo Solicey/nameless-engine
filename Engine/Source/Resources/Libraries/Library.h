@@ -34,7 +34,7 @@ namespace NL
 			m_Names.insert(path);
 		}
 
-		Ref<LibType> Get(const std::string& name) const
+		Ref<LibType> Get(const std::string& name)
 		{
 			auto path = std::regex_replace(name, std::regex("\\\\"), "/");
 			NL_ENGINE_ASSERT(m_Names.contains(path), "Item does NOT exist in this library! Please use Add(...) first!");
@@ -50,7 +50,7 @@ namespace NL
 			m_Names.erase(path);
 		}
 
-		bool Contains(const std::string& name) const
+		bool Contains(const std::string& name)
 		{
 			auto path = std::regex_replace(name, std::regex("\\\\"), "/");
 			return m_Names.contains(path);

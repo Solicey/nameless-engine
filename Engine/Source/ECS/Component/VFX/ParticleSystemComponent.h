@@ -44,8 +44,7 @@ namespace NL
 		std::vector<Particle>	Particles;
 
 	private:
-		bool							m_FirstTime = true;
-		Ref<VertexArray>				m_VAO[2];
+		Ref<VertexArray>				m_VAO;
 		Ref<TransformFeedbackBuffer>	m_TFB[2];
 	};
 }

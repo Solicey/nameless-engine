@@ -1,5 +1,3 @@
-#use model
-
 #prop
 
 #end

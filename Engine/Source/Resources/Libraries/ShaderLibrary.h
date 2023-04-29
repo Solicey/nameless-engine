@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Resources/Libraries/Library.h"
-#include "Core/Misc/EnumClassHash.h"
 #include "Core/Misc/PathConfig.h"
 #include "Resources/Shader.h"
 
@@ -16,11 +15,10 @@ namespace NL
 		// Don't use Library Class's Get() directly, use Fetch instead
 		Ref<Shader> Fetch(const std::string& name);
 		Ref<Shader> Reload(const std::string& name);
-		/*const std::unordered_map<std::string, std::filesystem::path>& GetShaderNameMap()
+		const std::unordered_map<std::string, std::filesystem::path>& GetShaderNameMap()
 		{
 			return m_ShaderNameMap;
-		}*/
-		std::set<std::string> GatherShaderNameSet4CertainUsage(ShaderUsage usage) const;
+		}
 		std::string GetDefaultShaderName()
 		{
 			if (m_ShaderNameMap.contains("Default.glsl"))
@@ -31,6 +29,5 @@ namespace NL
 	private:
 		std::filesystem::path m_ShadersFolder;
 		std::unordered_map<std::string, std::filesystem::path> m_ShaderNameMap;
-		std::unordered_map<std::string, ShaderUsage> m_ShaderUsageMap;
 	};
 }
