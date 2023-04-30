@@ -23,6 +23,8 @@ namespace NL
 
 		virtual void SetCullFace(CullFace face) override;
 
+		virtual void EnableCullFace(bool enable) override;
+
 		virtual void BeginTransformFeedback_Points() override;
 
 		virtual void EndTransformFeedback() override;

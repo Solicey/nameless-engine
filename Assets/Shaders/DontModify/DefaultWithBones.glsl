@@ -16,8 +16,13 @@ layout(location = 2) in vec3 a_Normal;
 layout(location = 5) in ivec4 a_BoneIndex;
 layout(location = 6) in vec4 a_BoneWeight;
 
-uniform mat4 u_View;
-uniform mat4 u_Projection;
+layout(std140, binding = 0) uniform Camera
+{
+	mat4 u_View;
+	mat4 u_Projection;
+	vec3 u_CameraPosition;
+};
+
 uniform mat4 u_Transform;
 uniform mat4 u_FinalBoneMatrices[MAX_BONES];
 			

@@ -3,10 +3,11 @@
 #include "Renderer.h"
 #include "Resources/Loaders/ModelLoader.h"
 #include "Resources/Libraries/TextureLibrary.h"
+#include "Resources/Libraries/UniformBufferLibrary.h"
 
 namespace NL
 {
-	Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
+	// Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
 	Scope<RendererAPI> Renderer::s_RendererAPI = RendererAPI::Create();
 	PointLightShadingData Renderer::s_PointLightDatas[MAX_LIGHT_COUNT] = {};
 	DirLightShadingData Renderer::s_DirLightDatas[MAX_LIGHT_COUNT] = {};
@@ -15,22 +16,36 @@ namespace NL
 	void Renderer::BeginScene(OrthographicCamera& camera)
 	{
 		//s_SceneData->ViewPositionMatrix = camera.GetViewProjectionMatrix();
-		s_SceneData->ViewMatrix = camera.GetViewMatrix();
-		s_SceneData->ProjectionMatrix = camera.GetProjectionMatrix();
+		Ref<UniformBuffer> cameraUniform = Library<UniformBuffer>::GetInstance().GetCameraUniformBuffer();
+		nlm::mat4 ViewMatrix = camera.GetViewMatrix();
+		nlm::mat4 ProjMatrix = camera.GetProjectionMatrix();
+		nlm::vec3 CamPosition = camera.GetPosition();
+		cameraUniform->SetData(&ViewMatrix, 64, 0);
+		cameraUniform->SetData(&ProjMatrix, 64, 64);
+		cameraUniform->SetData(&CamPosition, 16, 128);
 	}
 
 	void Renderer::BeginScene(EditorCamera& camera)
 	{
 		//s_SceneData->ViewPositionMatrix = camera.GetViewProjectionMatrix();
-		s_SceneData->ViewMatrix = camera.GetViewMatrix();
-		s_SceneData->ProjectionMatrix = camera.GetProjectionMatrix();
+		Ref<UniformBuffer> cameraUniform = Library<UniformBuffer>::GetInstance().GetCameraUniformBuffer();
+		nlm::mat4 ViewMatrix = camera.GetViewMatrix();
+		nlm::mat4 ProjMatrix = camera.GetProjectionMatrix();
+		nlm::vec3 CamPosition = camera.GetPosition();
+		cameraUniform->SetData(&ViewMatrix, 64, 0);
+		cameraUniform->SetData(&ProjMatrix, 64, 64);
+		cameraUniform->SetData(&CamPosition, 16, 128);
 	}
 
-	void Renderer::BeginScene(Camera& camera, const nlm::mat4& transform)
+	void Renderer::BeginScene(Camera& camera, const nlm::mat4& transform, const nlm::vec3& position)
 	{
 		//s_SceneData->ViewPositionMatrix = camera.GetProjectionMatrix() * nlm::inverse(transform);
-		s_SceneData->ViewMatrix = nlm::inverse(transform);
-		s_SceneData->ProjectionMatrix = camera.GetProjectionMatrix();
+		Ref<UniformBuffer> cameraUniform = Library<UniformBuffer>::GetInstance().GetCameraUniformBuffer();
+		nlm::mat4 ViewMatrix = nlm::inverse(transform);
+		nlm::mat4 ProjMatrix = camera.GetProjectionMatrix();
+		cameraUniform->SetData(&ViewMatrix, 64, 0);
+		cameraUniform->SetData(&ProjMatrix, 64, 64);
+		cameraUniform->SetData(&position, 16, 128);
 	}
 
 	void Renderer::EndScene()
@@ -50,8 +65,8 @@ namespace NL
 		shader->Bind();
 
 		// Typical
-		shader->SetUniformMat4("u_View", s_SceneData->ViewMatrix);
-		shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
+		// shader->SetUniformMat4("u_View", s_SceneData->ViewMatrix);
+		// shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
 		shader->SetUniformMat4("u_Transform", transform);
 		shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
 		shader->SetUniformInt("u_EntityId", entityId);
@@ -134,8 +149,8 @@ namespace NL
 			return;
 
 		shader->Bind();
-		shader->SetUniformMat4("u_View", s_SceneData->ViewMatrix);
-		shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
+		// shader->SetUniformMat4("u_View", s_SceneData->ViewMatrix);
+		// shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
 		shader->SetUniformMat4("u_Transform", transform);
 
 		vertexArray->Bind();
@@ -164,8 +179,8 @@ namespace NL
 		shader->Bind();
 
 		// Typical
-		shader->SetUniformMat4("u_View", s_SceneData->ViewMatrix);
-		shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
+		// shader->SetUniformMat4("u_View", s_SceneData->ViewMatrix);
+		// shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
 		shader->SetUniformMat4("u_Transform", transform);
 		shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
 		shader->SetUniformInt("u_EntityId", entityId);
@@ -200,7 +215,7 @@ namespace NL
 	{
 		if (s_Sprite == nullptr)
 		{
-			s_Sprite = ModelLoader::Create(PathConfig::GetInstance().GetModelsFolder().string() + "/DontModify/Gizmos.obj", ModelLoaderFlags::Triangulate);
+			s_Sprite = ModelLoader::Create(PathConfig::GetInstance().GetModelsFolder().string() + "/DontModify/Sprite.obj", ModelLoaderFlags::Triangulate);
 		}
 
 		const auto& meshes = s_Sprite->GetMeshes();

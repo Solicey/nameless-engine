@@ -26,6 +26,8 @@ namespace NL
 		std::string assetFolder = PathConfig::GetInstance().GetAssetsFolder().string();
 		m_PointGizmosTexture = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Icons/PointLight.png");
 		m_DirGizmosTexture = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Icons/DirLight.png");
+
+		m_SpriteShader = Library<Shader>::GetInstance().Fetch("Sprite.glsl");
 	}
 
 	void RenderSystem::OnStartRuntime()
@@ -63,20 +65,42 @@ namespace NL
 			Renderer::Clear();
 		}
 
-		Renderer::BeginScene(camera.mCamera, camTransform.GetTransform());
+		Renderer::BeginScene(camera.mCamera, camTransform.GetTransform(), camTransform.GetTranslation());
 
-		auto view = m_Scene->Registry.view<TransformComponent, ModelRendererComponent>();
-		for (auto& e : view)
+		// Render Models
 		{
-			Entity entity = Entity(e, m_Scene);
-
-			auto& transform = entity.GetComponent<TransformComponent>();
-			auto& model = entity.GetComponent<ModelRendererComponent>();
-
-			if (model._Model != nullptr)
+			auto view = m_Scene->Registry.view<TransformComponent, ModelRendererComponent>();
+			for (auto& e : view)
 			{
-				Renderer::DrawModel(model._Model, transform.GetTransform(), (int)(uint32_t)entity, false);
+				Entity entity = Entity(e, m_Scene);
+
+				auto& transform = entity.GetComponent<TransformComponent>();
+				auto& model = entity.GetComponent<ModelRendererComponent>();
+
+				if (model._Model != nullptr)
+				{
+					Renderer::DrawModel(model._Model, transform.GetTransform(), (int)(uint32_t)entity, false);
+				}
 			}
+		}
+
+		// Render Sprites
+		{
+			Renderer::SetCullFace(CullFace::Front);
+			auto view = m_Scene->Registry.view<TransformComponent, SpriteRendererComponent>();
+			for (auto& e : view)
+			{
+				Entity entity = Entity(e, m_Scene);
+
+				auto& transform = entity.GetComponent<TransformComponent>();
+				auto& sprite = entity.GetComponent<SpriteRendererComponent>();
+
+				if (sprite.SpriteTexture != nullptr)
+				{
+					Renderer::DrawSprite(m_SpriteShader, sprite.SpriteTexture, transform.GetTransform(), sprite.Color, (int)(uint32_t)entity);
+				}
+			}
+			Renderer::SetCullFace(CullFace::Back);
 		}
 
 		if (clearFlag == Camera::ClearFlagType::Skybox)
@@ -84,6 +108,7 @@ namespace NL
 			m_SkyboxShader->Bind();
 
 			Renderer::DepthFunc(DepthComp::Lequal);
+			Renderer::SetCullFace(CullFace::Front);
 
 			// tmp
 			m_SkyboxTextureCubemap->Bind(0);
@@ -92,9 +117,10 @@ namespace NL
 			Renderer::DrawModel(m_Skybox, m_SkyboxShader, nlm::translate(nlm::mat4(1.0f), cameraEntity.GetComponent<TransformComponent>().GetTranslation()));
 
 			Renderer::DepthFunc(DepthComp::Less);
+			Renderer::SetCullFace(CullFace::Back);
 		}
 
-		UpdateParticleSystem(nlm::inverse(camTransform.GetTransform()), camera.mCamera.GetProjectionMatrix());
+		UpdateParticleSystem();
 
 		Renderer::EndScene();
 	}
@@ -162,25 +188,47 @@ namespace NL
 		Renderer::SetDirLightData(dirLightDatas);
 
 		// Render Entities
-		auto view = m_Scene->Registry.view<TransformComponent, ModelRendererComponent>();
-		for (auto& e : view)
 		{
-			Entity entity = Entity(e, m_Scene);
-
-			auto& transform = entity.GetComponent<TransformComponent>();
-			auto& model = entity.GetComponent<ModelRendererComponent>();
-
-			if (model._Model != nullptr)
+			auto view = m_Scene->Registry.view<TransformComponent, ModelRendererComponent>();
+			for (auto& e : view)
 			{
-				Renderer::DrawModel(model._Model, transform.GetTransform(), (int)(uint32_t)entity, selectedEntity == entity);
+				Entity entity = Entity(e, m_Scene);
+
+				auto& transform = entity.GetComponent<TransformComponent>();
+				auto& model = entity.GetComponent<ModelRendererComponent>();
+
+				if (model._Model != nullptr)
+				{
+					Renderer::DrawModel(model._Model, transform.GetTransform(), (int)(uint32_t)entity, selectedEntity == entity);
+				}
 			}
+		}
+
+		// Render Sprites
+		{
+			Renderer::SetCullFace(CullFace::Front);
+			auto view = m_Scene->Registry.view<TransformComponent, SpriteRendererComponent>();
+			for (auto& e : view)
+			{
+				Entity entity = Entity(e, m_Scene);
+
+				auto& transform = entity.GetComponent<TransformComponent>();
+				auto& sprite = entity.GetComponent<SpriteRendererComponent>();
+
+				if (sprite.SpriteTexture != nullptr)
+				{
+					Renderer::DrawSprite(m_SpriteShader, sprite.SpriteTexture, transform.GetTransform(), sprite.Color, (int)(uint32_t)entity, selectedEntity == entity);
+				}
+			}
+			Renderer::SetCullFace(CullFace::Back);
 		}
 
 		if (renderGizmos)
 		{
+			Renderer::SetCullFace(CullFace::Front);
 			// Render Camera Gizmos
-			auto view2 = m_Scene->Registry.view<TransformComponent, CameraComponent>();
-			for (auto& e : view2)
+			auto view = m_Scene->Registry.view<TransformComponent, CameraComponent>();
+			for (auto& e : view)
 			{
 				Entity entity = Entity(e, m_Scene);
 
@@ -192,6 +240,7 @@ namespace NL
 					Renderer::DrawModel(camera.Gizmos, transform.GetTransform() * nlm::scale(nlm::mat4(1.0f), nlm::vec3(1.0f, 1.0f, -1.0f)), (int)(uint32_t)entity, selectedEntity == entity);
 				}
 			}
+			Renderer::SetCullFace(CullFace::Back);
 		}
 
 		// Render Skybox?
@@ -213,9 +262,10 @@ namespace NL
 			Renderer::SetCullFace(CullFace::Back);
 		}
 
-		// Gizsmo
+		// Gizmos
 		if (renderGizmos)
 		{
+			Renderer::EnableCullFace(false);
 			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
 			{
 				if (pointLightDatas[i].IsValid)
@@ -231,14 +281,15 @@ namespace NL
 					Renderer::DrawSprite(m_GizmosShader, m_DirGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(dirLightDatas[i].Color, 0.7), (int)(uint32_t)entity, selectedEntity == entity);
 				}
 			}
+			Renderer::EnableCullFace(true);
 		}
 
-		UpdateParticleSystem(camera.GetViewMatrix(), camera.GetProjectionMatrix());
+		UpdateParticleSystem();
 
 		Renderer::EndScene();
 	}
 
-	void RenderSystem::UpdateParticleSystem(const nlm::mat4& viewMat, const nlm::mat4& projMat)
+	void RenderSystem::UpdateParticleSystem()
 	{
 		auto view = m_Scene->Registry.view<TransformComponent, ParticleSystemComponent>();
 		for (auto& e : view)
@@ -254,8 +305,8 @@ namespace NL
 			// Pass 1
 			auto& shader1 = particleSystem.Pass1;
 			shader1->Bind();
-			shader1->SetUniformMat4("u_View", viewMat);
-			shader1->SetUniformMat4("u_Projection", projMat);
+			// shader1->SetUniformMat4("u_View", viewMat);
+			// shader1->SetUniformMat4("u_Projection", projMat);
 			shader1->SetUniformMat4("u_Transform", transform.GetTransform());
 			shader1->SetUniformFloat("u_DeltaTime", m_DeltaTime);
 
@@ -266,7 +317,17 @@ namespace NL
 
 			Renderer::BeginTransformFeedback_Points();
 			// test
-			Renderer::DrawArrays_Points(0, 1);
+			
+			if (particleSystem.IsFirstDraw)
+			{
+				Renderer::DrawArrays_Points(0, 1);
+			}
+			else
+			{
+				inputBuffer->Draw_Points();
+				particleSystem.IsFirstDraw = false;
+			}
+
 			Renderer::EndTransformFeedback();
 
 			// Rasterizer discard off

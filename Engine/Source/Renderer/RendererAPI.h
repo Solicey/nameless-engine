@@ -47,6 +47,8 @@ namespace NL
 
 		virtual void SetCullFace(CullFace face) = 0;
 
+		virtual void EnableCullFace(bool enable) = 0;
+
 		virtual void BeginTransformFeedback_Points() = 0;
 
 		virtual void EndTransformFeedback() = 0;

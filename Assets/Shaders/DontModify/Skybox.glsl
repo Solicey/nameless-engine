@@ -9,8 +9,13 @@
 
 layout (location = 0) in vec3 a_Position;
 
-uniform mat4 u_View;
-uniform mat4 u_Projection;
+layout(std140, binding = 0) uniform Camera
+{
+	mat4 u_View;
+	mat4 u_Projection;
+	vec3 u_CameraPosition;
+};
+
 uniform mat4 u_Transform;
 			
 layout (location = 0) out vec3 v_TexCoords;

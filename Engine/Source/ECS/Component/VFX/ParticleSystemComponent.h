@@ -25,5 +25,6 @@ namespace NL
 		Ref<Shader>				Pass1, Pass2;
 
 		int						Input = 0, Output = 1;
+		bool					IsFirstDraw = true;
 	};
 }

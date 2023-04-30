@@ -75,4 +75,9 @@ namespace NL
 		vertexBuffer->SetTransformFeedbackTarget();
 
 	}
+
+	void OpenGLTransformFeedback::Draw_Points() const
+	{
+		glDrawTransformFeedback(GL_POINTS, m_RendererID);
+	}
 }

@@ -19,6 +19,8 @@ namespace NL
 
 		virtual void SetVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) override;
 
+		virtual void Draw_Points() const override;
+
 	private:
 		Ref<VertexArray> m_VertexArray;
 		uint32_t m_RendererID;

@@ -12,13 +12,13 @@ namespace NL
 	public:
 		Library(Singleton::token)
 		{
-			Add(m_DefaultTextureName, Texture2D::Create(128, 128));
+			Add(m_DefaultTextureName, Texture2D::Create(1, 1));
 		}
 
 		// Use this function instead of Add or Get 
 		Ref<Texture2D> Fetch(const std::string& texPath)
 		{
-			Ref<Texture2D> tex;
+			Ref<Texture2D> tex = nullptr;
 			if (Library<Texture2D>::GetInstance().Contains(texPath))
 			{
 				tex = Library<Texture2D>::GetInstance().Get(texPath);
@@ -33,23 +33,23 @@ namespace NL
 
 		const std::string& GetDefaultTextureName() const { return m_DefaultTextureName; }
 
-		void Delete(const std::string& name)
+		void Delete(const std::string& texPath)
 		{
-			if (Contains(name))
+			if (Contains(texPath))
 			{
-				const auto& item = Get(name);
-				int useCount = item.use_count();
-				if (useCount <= 1 && name.compare(m_DefaultTextureName) != 0)
+				int useCount = GetUseCount(texPath);
+				if (useCount <= 1 && texPath.compare(m_DefaultTextureName) != 0)
 				{
-					NL_ENGINE_TRACE("Texture {0} reference no more than 1, will be deleted!", name);
-					Remove(name);
-					//m_Library.erase(name);
+					NL_ENGINE_TRACE("Texture {0} reference no more than 1, will be deleted!", texPath);
+					Remove(texPath);
+					//m_Library.erase(texPath);
 				}
 				else
 				{
-					NL_ENGINE_TRACE("Texture {0} reference count is {1}, will not be deleted!", name, useCount);
+					NL_ENGINE_TRACE("Texture {0} reference count is {1}, will not be deleted!", texPath, useCount);
 				}
 			}
+			NL_ENGINE_TRACE("Texture {0} not found in library!", texPath);
 		}
 
 		// Avoid memory leak, buggy

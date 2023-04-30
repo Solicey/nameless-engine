@@ -99,6 +99,12 @@ namespace NL
 		glCullFace(Utils::CullFace2OpenGLCullFace(face));
 	}
 
+	void OpenGLRendererAPI::EnableCullFace(bool enable)
+	{
+		if (enable) glEnable(GL_CULL_FACE);
+		else glDisable(GL_CULL_FACE);
+	}
+
 	void OpenGLRendererAPI::BeginTransformFeedback_Points()
 	{
 		glBeginTransformFeedback(GL_POINTS);

@@ -33,7 +33,7 @@ namespace NL
 	public:
 		static void BeginScene(OrthographicCamera& camera);
 		static void BeginScene(EditorCamera& camera);
-		static void BeginScene(Camera& camera, const nlm::mat4& transform);
+		static void BeginScene(Camera& camera, const nlm::mat4& transform, const nlm::vec3& position);
 		static void EndScene();
 
 		static void Submit(
@@ -88,12 +88,6 @@ namespace NL
 				s_DirLightDatas[i] = data[i];
 		}
 
-		struct SceneData
-		{
-			nlm::mat4 ViewMatrix;
-			nlm::mat4 ProjectionMatrix;
-		};
-
 #pragma region Commands
 
 		inline static void Init()
@@ -136,6 +130,11 @@ namespace NL
 			s_RendererAPI->SetCullFace(face);
 		}
 
+		inline static void EnableCullFace(bool enable)
+		{
+			s_RendererAPI->EnableCullFace(enable);
+		}
+
 		// tmp
 		inline static void BeginTransformFeedback_Points()
 		{
@@ -156,7 +155,7 @@ namespace NL
 #pragma endregion
 
 	private:
-		static Scope<SceneData> s_SceneData;
+		// static Scope<SceneData> s_SceneData;
 		static Scope<RendererAPI> s_RendererAPI;
 
 		static PointLightShadingData s_PointLightDatas[MAX_LIGHT_COUNT];

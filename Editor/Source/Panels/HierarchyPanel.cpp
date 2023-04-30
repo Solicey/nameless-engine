@@ -173,6 +173,21 @@ namespace NL
 			return isModified;
 		}
 
+		static bool ImageReplaceStyle1(const std::string& label, float width, const Ref<Texture2D>& tex)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - width);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+
+			bool isClicked = ImGui::ImageButton((ImTextureID)tex->GetRendererID(), ImVec2(64, 64), ImVec2(0, 0), ImVec2(1, 1), 0);
+
+			ImGui::Columns(1);
+			ImGui::PopItemWidth();
+			return isClicked;
+		}
 	}
 
 	HierarchyPanel::HierarchyPanel(const Ref<Scene>& scene)
@@ -315,6 +330,7 @@ namespace NL
 			InspectorAddComponent<TransformComponent>("Transform");
 			InspectorAddComponent<CameraComponent>("Camera");
 			InspectorAddComponent<ModelRendererComponent>("Model Renderer");
+			InspectorAddComponent<SpriteRendererComponent>("Sprite Renderer");
 			InspectorAddComponent<LightComponent>("Light");
 			InspectorAddComponent<ParticleSystemComponent>("Particle System");
 			InspectorAddComponent<ScriptComponent>("Scripting");
@@ -720,6 +736,38 @@ namespace NL
 
 #pragma endregion
 
+#pragma region Sprite Renderer
+
+		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [scene = m_Scene](auto& entity, auto& component) {
+
+			// SpriteRendererComponent& comp = component;
+			
+			Utils::ColorEdit4Style1("Color", RIGHT_COLUMN_WIDTH, component.Color);
+
+			const Ref<Texture2D>& tex = component.SpriteTexture;
+			// if (tex == nullptr) tex = Library<Texture2D>::GetInstance().Fetch(Library<Texture2D>::GetInstance().GetDefaultTextureName());
+
+			if (Utils::ImageReplaceStyle1("Sprite", RIGHT_COLUMN_WIDTH, tex == nullptr ? Library<Texture2D>::GetInstance().Fetch(Library<Texture2D>::GetInstance().GetDefaultTextureName()) : tex))
+			{
+				std::string filepath = Application::GetInstance().OpenFileDialogue(L"Texture2D(*.png)\0*.png\0\0");
+
+				size_t pos = filepath.find("Assets");
+				if (pos != std::string::npos)
+				{
+					filepath = PathConfig::GetInstance().GetAssetsFolder().string() + filepath.substr(pos + 6);
+					NL_ENGINE_INFO("New Sprite: {0}", filepath);
+					component.ReplaceTexture(filepath);
+				}
+				else if (!filepath.empty())
+				{
+					NL_ENGINE_ASSERT(false, "Only support textures from Assets Folder!");
+				}
+			}
+
+		});
+
+#pragma endregion
+
 #pragma region Draw Scripting
 
 		DrawComponent<ScriptComponent>("Scripting", entity, [scene = m_Scene](auto& entity, auto& component) {
@@ -943,7 +991,31 @@ namespace NL
 			}
 			case ShaderUniformType::Sampler2D:
 			{
-				ImGui::PushID(&prop);
+				const std::string& oldTexPath = std::get<std::string>(prop.Value);
+				Ref<Texture2D> oldTex = Library<Texture2D>::GetInstance().Fetch(oldTexPath);
+				
+				if (Utils::ImageReplaceStyle1(prop.Name, RIGHT_COLUMN_WIDTH, oldTex))
+				{
+					std::string filepath = Application::GetInstance().OpenFileDialogue(L"Texture2D(*.png)\0*.png\0\0");
+
+					size_t pos = filepath.find("Assets");
+					if (pos != std::string::npos)
+					{
+						filepath = PathConfig::GetInstance().GetAssetsFolder().string() + filepath.substr(pos + 6);
+						Ref<Texture2D> newTex = Library<Texture2D>::GetInstance().Fetch(filepath);
+
+						oldTex.reset();
+						mat->ReplaceTexture(prop.Name, newTex);
+
+						prop.Value = filepath;
+					}
+					else if (!filepath.empty())
+					{
+						NL_ENGINE_ASSERT(false, "Only support textures from Assets Folder!");
+					}
+				}
+
+				/*ImGui::PushID(&prop);
 				if (ImGui::TreeNode(prop.Name.c_str()))
 				{
 					const std::string& oldTexPath = std::get<std::string>(prop.Value);
@@ -967,7 +1039,7 @@ namespace NL
 							{
 								newTex = Texture2D::Create(filepath);
 								Library<Texture2D>::GetInstance().Add(filepath, newTex);
-							}*/
+							}
 
 							oldTex.reset();
 							mat->ReplaceTexture(prop.Name, newTex);
@@ -977,13 +1049,13 @@ namespace NL
 						}
 						else if (!filepath.empty())
 						{
-							NL_ENGINE_ASSERT(false, "Only support textures from Textures Folder!");
+							NL_ENGINE_ASSERT(false, "Only support textures from Assets Folder!");
 						}
 					}
 
 					ImGui::TreePop();
 				}
-				ImGui::PopID();
+				ImGui::PopID();*/
 				break;
 			}
 			case ShaderUniformType::Float:

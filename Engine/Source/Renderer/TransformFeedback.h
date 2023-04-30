@@ -18,6 +18,8 @@ namespace NL
 
 		virtual void SetVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) = 0;
 
+		virtual void Draw_Points() const = 0;
+
 		static Ref<TransformFeedback> Create();
 	};
 }

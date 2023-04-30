@@ -106,6 +106,13 @@ namespace NL
                 model->DeleteMeshesAndTexturesReference();
         }
 
+        if (entity.HasComponent<SpriteRendererComponent>())
+        {
+            auto& comp = entity.GetComponent<SpriteRendererComponent>();
+            comp.SpriteTexture.reset();
+            Library<Texture2D>::GetInstance().Delete(comp.Path);
+        }
+
         m_EntityMap.erase(entity.GetID());
         Registry.destroy(entity);
     }
@@ -252,6 +259,12 @@ namespace NL
         NL_ENGINE_INFO("Add Particle System!");
     }
 
+    template<>
+    void Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
+    {
+        NL_ENGINE_INFO("Add Sprite Renderer Component!");
+    }
+
 #pragma endregion
 
 #pragma region OnComponentRemoved
@@ -303,6 +316,16 @@ namespace NL
     void Scene::OnComponentRemoved<ParticleSystemComponent>(Entity entity, ParticleSystemComponent& component)
     {
 
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
+    {
+        if (component.SpriteTexture != nullptr)
+        {
+            component.SpriteTexture.reset();
+            Library<Texture2D>::GetInstance().Delete(component.Path);
+        }
     }
 
 
