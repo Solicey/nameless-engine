@@ -27,7 +27,7 @@ namespace NL
 
 	Material::Material(const Material* src)
 		: m_Name(src->m_Name), m_ShaderName(src->m_ShaderName), m_Shader(src->m_Shader),
-		m_Properties(src->m_Properties), m_TextureMap(src->m_TextureMap)
+		m_Properties(src->m_Properties), m_TextureMap(src->m_TextureMap), m_CustomTextureMap(src->m_CustomTextureMap)
 	{
 	}
 
@@ -36,9 +36,16 @@ namespace NL
 		NL_ENGINE_INFO("Material {0} Deleted!", m_Name);
 		for (auto& item : m_TextureMap)
 		{
-			std::string name = item.second->GetPath();
+			std::string path = item.second->GetPath();
 			item.second.reset();
-			Library<Texture2D>::GetInstance().Delete(name);
+			Library<Texture2D>::GetInstance().Delete(path);
+		}
+
+		for (auto& item : m_CustomTextureMap)
+		{
+			std::string path = item.second->GetPath();
+			item.second.reset();
+			Library<Texture2D>::GetInstance().Delete(path);
 		}
 	}
 
@@ -55,6 +62,16 @@ namespace NL
 			}
 			m_TextureMap[type] = texture;
 		}
+		else
+		{
+			if (m_CustomTextureMap.contains(name))
+			{
+				std::string oldTex = m_CustomTextureMap[name]->GetPath();
+				m_CustomTextureMap[name].reset();
+				Library<Texture2D>::GetInstance().Delete(oldTex);
+			}
+			m_CustomTextureMap[name] = texture;
+		}
 	}
 
 	const Ref<Texture2D>& Material::GetTexture(const std::string& name)
@@ -62,6 +79,10 @@ namespace NL
 		if (s_String2TexTypeMap.contains(name))
 		{
 			return m_TextureMap[s_String2TexTypeMap[name]];
+		}
+		else if (m_CustomTextureMap.contains(name))
+		{
+			return m_CustomTextureMap[name];
 		}
 		else return nullptr;
 	}
@@ -133,7 +154,14 @@ namespace NL
 				}
 				else
 				{
-					prop.Value = std::string(Library<Texture2D>::GetInstance().GetDefaultTextureName());
+					if (m_CustomTextureMap.contains(prop.Name))
+					{
+						prop.Value = std::string(m_CustomTextureMap.at(prop.Name)->GetPath());
+					}
+					else
+					{
+						prop.Value = std::string(Library<Texture2D>::GetInstance().GetDefaultTextureName());
+					}
 				}
 			}
 		}

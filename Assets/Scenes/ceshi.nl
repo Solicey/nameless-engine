@@ -4,23 +4,49 @@ MSAASamples: 4
 EditorCameraClearFlag: 0
 ShowGizmos: 1
 Entities:
-  - ID: 10128353695108268252
+  - ID: 14086869688480717263
     Name: Entity
     TransformComponent:
-      Translation: [2.69148731, 0, 0]
+      Translation: [3.07579136, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    LightComponent:
-      LightType: 1
-      Color: [1, 1, 1]
-      Intensity: 1
-  - ID: 4544652128984583931
+    ModelRendererComponent:
+      ModelPath: ../Assets/Models/Box.obj
+      Materials:
+        - MaterialName: Material
+          ShaderName: TexUnlit.glsl
+          ShaderProperties:
+            - Type: 6
+              Name: u_Color
+              Value: [1, 1, 1]
+            - Type: 15
+              Name: u_Custom
+              Value: ../Assets\Models\Firekeeper\Textures\c1400_hair_a.png
+            - Type: 15
+              Name: u_Diffuse
+              Value: ../Assets\Models\Firekeeper\Textures\c1400_leg_a.png
+      Bones:
+        []
+  - ID: 18432890832883670623
     Name: Entity
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    SpriteRendererComponent:
-      Color: [1, 1, 1, 1]
-      Reaction: 2
-      Path: ../Assets\Models\vampire\test\textures\Vampire_specular.png
+    ModelRendererComponent:
+      ModelPath: ../Assets/Models/Sphere.obj
+      Materials:
+        - MaterialName: None
+          ShaderName: TexUnlit.glsl
+          ShaderProperties:
+            - Type: 6
+              Name: u_Color
+              Value: [1, 1, 1]
+            - Type: 15
+              Name: u_Custom
+              Value: ../Assets\Models\nanosuit\glass_dif.png
+            - Type: 15
+              Name: u_Diffuse
+              Value: ../Assets\Models\nanosuit\glass_ddn.png
+      Bones:
+        []

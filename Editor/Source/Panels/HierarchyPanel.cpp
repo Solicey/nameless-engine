@@ -182,7 +182,9 @@ namespace NL
 			ImGui::Text(label.c_str());
 			ImGui::NextColumn();
 
+			ImGui::PushID(&label);
 			bool isClicked = ImGui::ImageButton((ImTextureID)tex->GetRendererID(), ImVec2(64, 64), ImVec2(0, 0), ImVec2(1, 1), 0);
+			ImGui::PopID();
 
 			ImGui::Columns(1);
 			ImGui::PopItemWidth();
@@ -1040,48 +1042,6 @@ namespace NL
 						NL_ENGINE_ASSERT(false, "Only support textures from Assets Folder!");
 					}
 				}
-
-				/*ImGui::PushID(&prop);
-				if (ImGui::TreeNode(prop.Name.c_str()))
-				{
-					const std::string& oldTexPath = std::get<std::string>(prop.Value);
-					Ref<Texture2D> oldTex = Library<Texture2D>::GetInstance().Fetch(oldTexPath);
-
-					if (ImGui::ImageButton((ImTextureID)oldTex->GetRendererID(), ImVec2(64, 64), ImVec2(0, 0), ImVec2(1, 1), 0))
-					{
-						std::string filepath = Application::GetInstance().OpenFileDialogue(L"Texture2D(*.png)\0*.png\0\0");
-
-						size_t pos = filepath.find("Assets");
-						if (pos != std::string::npos)
-						{
-							filepath = PathConfig::GetInstance().GetAssetsFolder().string() + filepath.substr(pos + 6);
-							Ref<Texture2D> newTex = Library<Texture2D>::GetInstance().Fetch(filepath);
-
-							/*if (Library<Texture2D>::GetInstance().Contains(filepath))
-							{
-								newTex = Library<Texture2D>::GetInstance().Get(filepath);
-							}
-							else
-							{
-								newTex = Texture2D::Create(filepath);
-								Library<Texture2D>::GetInstance().Add(filepath, newTex);
-							}
-
-							oldTex.reset();
-							mat->ReplaceTexture(prop.Name, newTex);
-
-							prop.Value = filepath;
-
-						}
-						else if (!filepath.empty())
-						{
-							NL_ENGINE_ASSERT(false, "Only support textures from Assets Folder!");
-						}
-					}
-
-					ImGui::TreePop();
-				}
-				ImGui::PopID();*/
 				break;
 			}
 			case ShaderUniformType::Float:

@@ -59,6 +59,7 @@ namespace NL
         std::string m_ShaderName;
 		Ref<Shader>	m_Shader;
         std::vector<ShaderProperty> m_Properties;
+        std::unordered_map<std::string, Ref<Texture2D>> m_CustomTextureMap;
         std::unordered_map<TextureType, Ref<Texture2D>, EnumClassHash> m_TextureMap;
         // std::unordered_map<TextureType, bool, EnumClassHash> m_UseDefaultTexture;
         static std::unordered_map<std::string, TextureType> s_String2TexTypeMap;

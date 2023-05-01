@@ -10,6 +10,7 @@ namespace NL
 {
 	enum class TextureType
 	{
+		Custom,
 		Diffuse,
 		Specular,
 		Ambient,

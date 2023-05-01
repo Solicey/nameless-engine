@@ -5,6 +5,7 @@
 #prop
 
 color3 u_Color;
+sampler2D u_Custom;
 sampler2D u_Diffuse;
 
 #end
@@ -53,6 +54,7 @@ layout (location = 2) out vec4 color3;
 
 uniform vec3 u_Color;
 uniform sampler2D u_Diffuse;
+uniform sampler2D u_Custom;
 uniform bool u_IsSelected;
 uniform int u_EntityId;
 			
