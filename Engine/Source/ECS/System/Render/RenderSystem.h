@@ -28,7 +28,6 @@ namespace NL
 		Ref<Model> m_Skybox;
 
 		Ref<Shader> m_GizmosShader;
-		Ref<Model> m_Gizmos;
 		Ref<Texture2D> m_PointGizmosTexture, m_DirGizmosTexture;
 
 		Ref<Shader> m_SpriteShader;

@@ -21,7 +21,6 @@ namespace NL
 		m_SkyboxTextureCubemap = Library<TextureCubeMap>::GetInstance().FetchDefault();
 
 		m_GizmosShader = Library<Shader>::GetInstance().Fetch("Gizmos.glsl");
-		m_Gizmos = ModelLoader::Create(modelsFolder + "/DontModify/Gizmos.obj", ModelLoaderFlags::Triangulate);
 
 		std::string assetFolder = PathConfig::GetInstance().GetAssetsFolder().string();
 		m_PointGizmosTexture = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Icons/PointLight.png");
@@ -86,7 +85,7 @@ namespace NL
 
 		// Render Sprites
 		{
-			Renderer::SetCullFace(CullFace::Front);
+			// Renderer::SetCullFace(CullFace::Front);
 			auto view = m_Scene->Registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto& e : view)
 			{
@@ -97,10 +96,10 @@ namespace NL
 
 				if (sprite.SpriteTexture != nullptr)
 				{
-					Renderer::DrawSprite(m_SpriteShader, sprite.SpriteTexture, transform.GetTransform(), sprite.Color, (int)(uint32_t)entity);
+					Renderer::DrawSprite(m_SpriteShader, sprite.SpriteTexture, transform.GetTransform(), sprite.Color, sprite.Reaction, (int)(uint32_t)entity);
 				}
 			}
-			Renderer::SetCullFace(CullFace::Back);
+			// Renderer::SetCullFace(CullFace::Back);
 		}
 
 		if (clearFlag == Camera::ClearFlagType::Skybox)
@@ -206,7 +205,7 @@ namespace NL
 
 		// Render Sprites
 		{
-			Renderer::SetCullFace(CullFace::Front);
+			// Renderer::SetCullFace(CullFace::Front);
 			auto view = m_Scene->Registry.view<TransformComponent, SpriteRendererComponent>();
 			for (auto& e : view)
 			{
@@ -217,10 +216,10 @@ namespace NL
 
 				if (sprite.SpriteTexture != nullptr)
 				{
-					Renderer::DrawSprite(m_SpriteShader, sprite.SpriteTexture, transform.GetTransform(), sprite.Color, (int)(uint32_t)entity, selectedEntity == entity);
+					Renderer::DrawSprite(m_SpriteShader, sprite.SpriteTexture, transform.GetTransform(), sprite.Color, sprite.Reaction, (int)(uint32_t)entity, selectedEntity == entity);
 				}
 			}
-			Renderer::SetCullFace(CullFace::Back);
+			// Renderer::SetCullFace(CullFace::Back);
 		}
 
 		if (renderGizmos)
@@ -265,23 +264,21 @@ namespace NL
 		// Gizmos
 		if (renderGizmos)
 		{
-			Renderer::EnableCullFace(false);
 			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
 			{
 				if (pointLightDatas[i].IsValid)
 				{
 					auto& entity = pointEntites[i];
 					const auto& transform = entity.GetComponent<TransformComponent>();
-					Renderer::DrawSprite(m_GizmosShader, m_PointGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(pointLightDatas[i].Color, 0.7), (int)(uint32_t)entity, selectedEntity == entity);
+					Renderer::DrawSprite(m_GizmosShader, m_PointGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(pointLightDatas[i].Color, 0.7), SpriteCameraReaction::LookAt, (int)(uint32_t)entity, selectedEntity == entity);
 				}
 				if (dirLightDatas[i].IsValid)
 				{
 					auto& entity = dirEntites[i];
 					const auto& transform = entity.GetComponent<TransformComponent>();
-					Renderer::DrawSprite(m_GizmosShader, m_DirGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(dirLightDatas[i].Color, 0.7), (int)(uint32_t)entity, selectedEntity == entity);
+					Renderer::DrawSprite(m_GizmosShader, m_DirGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(dirLightDatas[i].Color, 0.7), SpriteCameraReaction::LookAt, (int)(uint32_t)entity, selectedEntity == entity);
 				}
 			}
-			Renderer::EnableCullFace(true);
 		}
 
 		UpdateParticleSystem();

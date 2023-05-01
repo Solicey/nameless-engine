@@ -14,6 +14,13 @@ namespace NL
 {
 #define MAX_LIGHT_COUNT 4
 
+	enum class SpriteCameraReaction
+	{
+		Normal,
+		LookAt,
+		Billboarding
+	};
+
 	struct PointLightShadingData
 	{
 		nlm::vec3 Position;
@@ -49,15 +56,6 @@ namespace NL
 			const Ref<Shader>& shader, 
 			const nlm::mat4& transform = nlm::mat4(1.0f));
 
-		static void SubmitSprite(
-			const Ref<VertexArray>& vertexArray,
-			const Ref<Shader>& shader,
-			const Ref<Texture2D>& texture,
-			const nlm::vec4& color,
-			const nlm::mat4& transform = nlm::mat4(1.0f),
-			int entityId = -1,
-			bool isSelected = false);
-
 		static void DrawModel(const Ref<Model>& model, 
 			const Ref<Shader>& shader,
 			const nlm::mat4& transform);
@@ -66,6 +64,7 @@ namespace NL
 			const Ref<Texture2D>& texture,
 			const nlm::mat4& transform,
 			const nlm::vec4& color,
+			SpriteCameraReaction camReact = SpriteCameraReaction::Normal,
 			int entityId = -1,
 			bool isSelected = false);
 
@@ -161,6 +160,5 @@ namespace NL
 		static PointLightShadingData s_PointLightDatas[MAX_LIGHT_COUNT];
 		static DirLightShadingData s_DirLightDatas[MAX_LIGHT_COUNT];
 
-		static Ref<Model> s_Sprite;
 	};
 }

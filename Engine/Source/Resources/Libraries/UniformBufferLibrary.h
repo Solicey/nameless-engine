@@ -6,6 +6,7 @@
 
 namespace NL
 {
+	// size: 144
 	struct CameraData
 	{
 		nlm::mat4	ViewMatrix;
@@ -19,7 +20,7 @@ namespace NL
 	public:
 		Library(Singleton::token)
 		{
-			Ref<UniformBuffer>	CameraUniformBuffer = UniformBuffer::Create(sizeof(CameraData), 0);
+			Ref<UniformBuffer>	CameraUniformBuffer = UniformBuffer::Create(144, 0);
 			Add("CameraUniform", CameraUniformBuffer);
 		}
 

@@ -298,6 +298,16 @@ namespace NL
 				//comp.UpdateBoneInfos();
 			}
 
+			auto spriteRendererComponent = entity["SpriteRendererComponent"];
+			if (spriteRendererComponent)
+			{
+				auto& comp = deserializedEntity.AddComponent<SpriteRendererComponent>();
+				comp.Color = spriteRendererComponent["Color"].as<nlm::vec4>();
+				comp.Reaction = (SpriteCameraReaction)spriteRendererComponent["Reaction"].as<int>();
+				std::string path = spriteRendererComponent["Path"].as<std::string>();
+				comp.ReplaceTexture(path);
+			}
+
 			auto cameraComponent = entity["CameraComponent"];
 			if (cameraComponent)
 			{
@@ -482,6 +492,19 @@ namespace NL
 			out << YAML::EndSeq; // Bones
 
 			out << YAML::EndMap; // ModelRendererComponent
+		}
+
+		if (entity.HasComponent<SpriteRendererComponent>())
+		{
+			out << YAML::Key << "SpriteRendererComponent";
+			out << YAML::BeginMap; // SpriteRendererComponent
+
+			auto& comp = entity.GetComponent<SpriteRendererComponent>();
+			out << YAML::Key << "Color" << YAML::Value << comp.Color;
+			out << YAML::Key << "Reaction" << YAML::Value << (int)comp.Reaction;
+			out << YAML::Key << "Path" << YAML::Value << comp.Path;
+
+			out << YAML::EndMap; // SpriteRendererComponent
 		}
 
 		if (entity.HasComponent<CameraComponent>())

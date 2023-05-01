@@ -11,7 +11,6 @@ namespace NL
 	Scope<RendererAPI> Renderer::s_RendererAPI = RendererAPI::Create();
 	PointLightShadingData Renderer::s_PointLightDatas[MAX_LIGHT_COUNT] = {};
 	DirLightShadingData Renderer::s_DirLightDatas[MAX_LIGHT_COUNT] = {};
-	Ref<Model> Renderer::s_Sprite = nullptr;
 
 	void Renderer::BeginScene(OrthographicCamera& camera)
 	{
@@ -161,15 +160,37 @@ namespace NL
 		vertexArray->Unbind();
 	}
 
-	void Renderer::SubmitSprite(
-		const Ref<VertexArray>& vertexArray,
-		const Ref<Shader>& shader,
+	void Renderer::DrawModel(const Ref<Model>& model, const Ref<Shader>& shader, const nlm::mat4& transform)
+	{
+		const auto& meshes = model->GetMeshes();
+
+		for (const auto& mesh : meshes)
+		{
+			Submit(mesh->GetVertexArray(), shader, transform);
+		}
+	}
+
+	void Renderer::DrawSprite(const Ref<Shader>& shader,
 		const Ref<Texture2D>& texture,
-		const nlm::vec4& color,
 		const nlm::mat4& transform,
+		const nlm::vec4& color,
+		SpriteCameraReaction camReact,
 		int entityId,
 		bool isSelected)
 	{
+		static Ref<VertexArray> vao = nullptr;
+		if (vao == nullptr)
+		{
+			vao = VertexArray::Create();
+			BufferLayout layout = {
+				{ ShaderDataType::Float3, "a_Position" }
+			};
+			float vertices[] = { 0.0f, 0.0f, 0.0f };
+			Ref<VertexBuffer> vbo = VertexBuffer::Create(vertices, sizeof(vertices));
+			vbo->SetLayout(layout);
+			vao->AddVertexBuffer(vbo);
+		}
+
 		NL_ENGINE_ASSERT(shader, "Shader is nullptr!");
 		NL_ENGINE_ASSERT(texture, "Texture is nullptr!");
 
@@ -186,44 +207,16 @@ namespace NL
 		shader->SetUniformInt("u_EntityId", entityId);
 		shader->SetUniformFloat4("u_Color", color);
 		shader->SetUniformInt("u_Sprite", 0);
+		shader->SetUniformInt("u_CameraReaction", (int)camReact);
 		texture->Bind(0);
 
-		vertexArray->Bind();
+		vao->Bind();
 
-		DrawIndices(vertexArray);
+		Renderer::DrawArrays_Points(0, 1);
 
 		shader->Unbind();
-		vertexArray->Unbind();
-	}
+		vao->Unbind();
 
-	void Renderer::DrawModel(const Ref<Model>& model, const Ref<Shader>& shader, const nlm::mat4& transform)
-	{
-		const auto& meshes = model->GetMeshes();
-
-		for (const auto& mesh : meshes)
-		{
-			Submit(mesh->GetVertexArray(), shader, transform);
-		}
-	}
-
-	void Renderer::DrawSprite(const Ref<Shader>& shader,
-		const Ref<Texture2D>& texture,
-		const nlm::mat4& transform,
-		const nlm::vec4& color,
-		int entityId,
-		bool isSelected)
-	{
-		if (s_Sprite == nullptr)
-		{
-			s_Sprite = ModelLoader::Create(PathConfig::GetInstance().GetModelsFolder().string() + "/DontModify/Sprite.obj", ModelLoaderFlags::Triangulate);
-		}
-
-		const auto& meshes = s_Sprite->GetMeshes();
-
-		for (const auto& mesh : meshes)
-		{
-			SubmitSprite(mesh->GetVertexArray(), shader, texture, color, transform, entityId, isSelected);
-		}
 	}
 
 	void Renderer::DrawModel(const Ref<Model>& model, const nlm::mat4& transform, int entityId, bool isSelected)

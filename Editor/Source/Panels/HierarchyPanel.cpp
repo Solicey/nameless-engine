@@ -764,6 +764,32 @@ namespace NL
 				}
 			}
 
+			// Utils::CheckBoxStyle1("Billboarding", RIGHT_COLUMN_WIDTH, component.IsBillboarding);
+
+			const char* reactTypeStrings[] = { "Normal", "LookAt", "Billboard" };
+			const char* currentReactTypeString = reactTypeStrings[(int)component.Reaction];
+			// if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentLightTypeString))
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - RIGHT_COLUMN_WIDTH);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+			ImGui::Text("Reaction");
+			ImGui::NextColumn();
+			if (ImGui::BeginCombo("##Reaction", currentReactTypeString))
+			{
+				for (int i = 0; i < 3; i++)
+				{
+					bool isSelected = (currentReactTypeString == reactTypeStrings[i]);
+					if (ImGui::Selectable(reactTypeStrings[i], isSelected))
+					{
+						currentReactTypeString = reactTypeStrings[i];
+						component.Reaction = (SpriteCameraReaction)i;
+					}
+				}
+				ImGui::EndCombo();
+			}
+			ImGui::PopItemWidth();
+			ImGui::Columns(1);
+
 		});
 
 #pragma endregion
