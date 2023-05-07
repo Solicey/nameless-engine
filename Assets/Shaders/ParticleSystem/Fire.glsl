@@ -25,14 +25,7 @@ out vec4 v_Color;
 out float v_Size;
 out float v_TotalLifetime;
 
-layout(std140, binding = 0) uniform Camera
-{
-	mat4 u_View;
-	mat4 u_Projection;
-	vec3 u_CameraPosition;
-};
 
-uniform mat4 u_Transform;
 			
 void main()
 {
@@ -43,8 +36,6 @@ void main()
 	v_Color = a_Color;
 	v_Size = a_Size;
 	v_TotalLifetime = a_TotalLifetime;
-	
-	// gl_Position = u_Projection * u_View * u_Transform * vec4(v_Position, 1.0);
 }
 
 #type geometry
@@ -76,6 +67,15 @@ uniform vec3 u_MinVelocity;
 uniform vec3 u_MaxVelocity;
 uniform float u_MinTotalLifetime;
 uniform float u_MaxTotalLifetime;
+
+layout(std140, binding = 0) uniform Camera
+{
+	mat4 u_View;
+	mat4 u_Projection;
+	vec3 u_CameraPosition;
+};
+
+uniform mat4 u_Transform;
 
 #define PARTICLE_TYPE_LAUNCHER 0.0f
 #define PARTICLE_TYPE_SHELL 1.0f
@@ -115,6 +115,7 @@ void main()
 			g_Color = v_Color[0];
 			g_Size = v_Size[0];
 			
+			gl_Position = u_Projection * u_View * u_Transform * vec4(g_Position, 1.0);
 			EmitVertex();
             EndPrimitive();
 
@@ -129,6 +130,7 @@ void main()
 		g_Size = v_Size[0];
 		g_TotalLifetime = v_TotalLifetime[0];
 
+		gl_Position = u_Projection * u_View * u_Transform * vec4(g_Position, 1.0);
 		EmitVertex();
         EndPrimitive();
 	}
@@ -147,6 +149,7 @@ void main()
 			g_Color = v_Color[0];
 			g_Size = v_Size[0];
 
+			gl_Position = u_Projection * u_View * u_Transform * vec4(g_Position, 1.0);
 			EmitVertex();
         	EndPrimitive();
 		}

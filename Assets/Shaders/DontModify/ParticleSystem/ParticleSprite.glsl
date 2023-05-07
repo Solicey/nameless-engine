@@ -9,7 +9,7 @@
 #type vertex
 #version 450 core
 
-layout(location = 1) in vec3 a_Position;
+layout (location = 1) in vec3 a_Position;
 layout (location = 4) in vec4 a_Color;
 layout (location = 5) in float a_Size;
 
@@ -35,8 +35,6 @@ layout(std140, binding = 0) uniform Camera
 };
 
 layout(location = 0) out vec2 g_TexCoord;
-
-uniform mat4 u_Transform;
 
 void main()
 {

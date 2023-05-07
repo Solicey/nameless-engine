@@ -150,6 +150,19 @@ namespace NL
 			s_RendererAPI->DrawArrays_Points(first, count);
 		}
 
+		inline static void RasterizerDiscard(bool enable)
+		{
+			s_RendererAPI->RasterizerDiscard(enable);
+		}
+
+		/// <summary>
+		/// enable write into depth buffer
+		/// </summary>
+		/// <param name="enable"></param>
+		inline static void DepthMask(bool enable)
+		{
+			s_RendererAPI->DepthMask(enable);
+		}
 
 #pragma endregion
 

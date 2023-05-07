@@ -10,19 +10,19 @@ namespace NL
 			TFB[i] = TransformFeedback::Create();
 		}
 
-		Pass1 = Library<Shader>::GetInstance().Fetch("SingleParticle.glsl");
+		Pass1 = Library<Shader>::GetInstance().Fetch("Fire.glsl");
 		Pass2 = Library<Shader>::GetInstance().Fetch("ParticleSprite.glsl");
 
 		std::string assetFolder = PathConfig::GetInstance().GetAssetsFolder().string();
 		Tex = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Textures/DontModify/DefaultParticle.png");
 
-		LauncherNum = 2;
+		LauncherNum = 10;
 		SpawnAreaShape = ParticleSpawnAreaShape::Circle;
-		MinVelocity = nlm::vec3(0.2f);
-		MaxVelocity = nlm::vec3(2.0f);
-		MaxTotalLifetime = 10;
-		MinTotalLifetime = 5;
-		SpawnAreaRadius = 3;
+		MinVelocity = nlm::vec3(0.0f, 0.2f, 0.0f);
+		MaxVelocity = nlm::vec3(0.0f, 2.0f, 0.0f);
+		MaxTotalLifetime = 5;
+		MinTotalLifetime = 3;
+		SpawnAreaRadius = 0.3f;
 		InitSize = 1;
 		InitColor = nlm::vec4(1.0f);
 
@@ -89,7 +89,7 @@ namespace NL
 
 			particles.push_back(particle);
 
-			NL_ENGINE_INFO("Spawn Particle {0}, pos: ({1}, {2}, {3})", i, pos.x, pos.y, pos.z);
+			//NL_ENGINE_INFO("Spawn Particle {0}, pos: ({1}, {2}, {3})", i, pos.x, pos.y, pos.z);
 		}
 
 		BufferLayout layout = {

@@ -119,4 +119,16 @@ namespace NL
 	{
 		glDrawArrays(GL_POINTS, first, count);
 	}
+
+	void OpenGLRendererAPI::RasterizerDiscard(bool enable)
+	{
+		if (enable)
+			glEnable(GL_RASTERIZER_DISCARD);
+		else glDisable(GL_RASTERIZER_DISCARD);
+	}
+
+	void OpenGLRendererAPI::DepthMask(bool enable)
+	{
+		glDepthMask(enable ? GL_TRUE : GL_FALSE);
+	}
 }

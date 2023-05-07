@@ -289,6 +289,7 @@ namespace NL
 	void RenderSystem::UpdateParticleSystem()
 	{
 		auto view = m_Scene->Registry.view<TransformComponent, ParticleSystemComponent>();
+		Renderer::DepthMask(false);
 		for (auto& e : view)
 		{
 			Entity entity = Entity(e, m_Scene);
@@ -317,6 +318,7 @@ namespace NL
 			outputBuffer->BindTransformFeedback();
 
 			// Rasterizer discard on
+			Renderer::RasterizerDiscard(true);
 
 			Renderer::BeginTransformFeedback_Points();
 			// test
@@ -324,16 +326,17 @@ namespace NL
 			if (particleSystem.IsFirstDraw)
 			{
 				Renderer::DrawArrays_Points(0, particleSystem.LauncherNum);
+				particleSystem.IsFirstDraw = false;
 			}
 			else
 			{
 				inputBuffer->Draw_Points();
-				particleSystem.IsFirstDraw = false;
 			}
 
 			Renderer::EndTransformFeedback();
 
 			// Rasterizer discard off
+			Renderer::RasterizerDiscard(false);
 
 			shader1->Unbind();
 			inputBuffer->UnbindBuffer();
@@ -343,7 +346,7 @@ namespace NL
 			auto& shader2 = particleSystem.Pass2;
 			shader2->Bind();
 
-			shader1->SetUniformMat4("u_Transform", transform.GetTransform());
+			shader2->SetUniformMat4("u_Transform", transform.GetTransform());
 			shader2->SetUniformInt("u_Sprite", 0);
 			particleSystem.Tex->Bind(0);
 
@@ -358,5 +361,6 @@ namespace NL
 			particleSystem.Input = particleSystem.Output;
 			particleSystem.Output = 1 - particleSystem.Output;
 		}
+		Renderer::DepthMask(true);
 	}
 }

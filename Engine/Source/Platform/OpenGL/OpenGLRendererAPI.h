@@ -30,5 +30,9 @@ namespace NL
 		virtual void EndTransformFeedback() override;
 
 		virtual void DrawArrays_Points(int first, uint32_t count) override;
+
+		virtual void RasterizerDiscard(bool enable) override;
+
+		virtual void DepthMask(bool enable) override;
 	};
 }

@@ -24,27 +24,16 @@ out float v_Lifetime;
 out vec4 v_Color;
 out float v_Size;
 out float v_TotalLifetime;
-
-layout(std140, binding = 0) uniform Camera
-{
-	mat4 u_View;
-	mat4 u_Projection;
-	vec3 u_CameraPosition;
-};
-
-uniform mat4 u_Transform;
-uniform float u_DeltaTime;
 			
 void main()
 {
 	v_Type = a_Type;
-    v_Position = a_Position + vec3(0.0, u_DeltaTime * 1.0, 0.0);
+    v_Position = a_Position;
     v_Velocity = a_Velocity;
     v_Lifetime = a_Lifetime;
 	v_Color = a_Color;
 	v_Size = a_Size;
 	v_TotalLifetime = a_TotalLifetime;
-	// gl_Position = u_Projection * u_View * u_Transform * vec4(v_Position, 1.0);
 }
 
 #type geometry
@@ -69,6 +58,14 @@ out vec4 g_Color;
 out float g_Size;
 out float g_TotalLifetime;
 
+layout(std140, binding = 0) uniform Camera
+{
+	mat4 u_View;
+	mat4 u_Projection;
+	vec3 u_CameraPosition;
+};
+
+uniform mat4 u_Transform;
 uniform float u_DeltaTime;
 
 void main()
@@ -81,7 +78,9 @@ void main()
 	g_Size = v_Size[0];
 	g_TotalLifetime = v_TotalLifetime[0];
 
+	gl_Position = u_Projection * u_View * u_Transform * vec4(g_Position, 1.0);
+
 	EmitVertex();
     EndPrimitive();
 }
-
+	

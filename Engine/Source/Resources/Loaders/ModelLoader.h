@@ -3,9 +3,10 @@
 #include "Resources/Model.h"
 #include "Resources/Loaders/ModelLoaderFlags.h"
 
-extern struct aiScene;
-extern struct aiNode;
-extern struct aiMesh;
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/matrix4x4.h>
+#include <assimp/postprocess.h>
 
 namespace NL
 {
