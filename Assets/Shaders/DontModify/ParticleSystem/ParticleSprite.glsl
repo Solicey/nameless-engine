@@ -81,18 +81,16 @@ layout (location = 2) out vec4 color3;
 
 uniform sampler2D u_Sprite;
 // uniform vec4 u_Color;
-// uniform bool u_IsSelected;
-// uniform int u_EntityId;
+uniform bool u_IsSelected;
+uniform int u_EntityId;
 			
 void main()
 {
 	color = texture2D(u_Sprite, g_TexCoord);
-	if (color.a <= 0)
-		discard;
 	
-	color2 = -1;
+	color2 = u_EntityId;
 
 	color3 = vec4(0.1, 0.1, 0.1, 1);
-	// if (u_IsSelected)
-		// color3 = vec4(1, 1, 1, 1);
+	if (u_IsSelected)
+		color3 = vec4(1, 1, 1, 1);
 }			

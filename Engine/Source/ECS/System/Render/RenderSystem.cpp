@@ -262,6 +262,7 @@ namespace NL
 		}
 
 		// Gizmos
+		Renderer::DepthMask(false);
 		if (renderGizmos)
 		{
 			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
@@ -280,13 +281,14 @@ namespace NL
 				}
 			}
 		}
+		Renderer::DepthMask(true);
 
-		UpdateParticleSystem();
+		UpdateParticleSystem(selectedEntity);
 
 		Renderer::EndScene();
 	}
 
-	void RenderSystem::UpdateParticleSystem()
+	void RenderSystem::UpdateParticleSystem(Entity selectedEntity)
 	{
 		auto view = m_Scene->Registry.view<TransformComponent, ParticleSystemComponent>();
 		Renderer::DepthMask(false);
@@ -300,53 +302,58 @@ namespace NL
 			auto& inputBuffer = particleSystem.TFB[particleSystem.Input];
 			auto& outputBuffer = particleSystem.TFB[particleSystem.Output];
 
-			// Pass 1
-			auto& shader1 = particleSystem.Pass1;
-			shader1->Bind();
-			// shader1->SetUniformMat4("u_View", viewMat);
-			// shader1->SetUniformMat4("u_Projection", projMat);
-			shader1->SetUniformMat4("u_Transform", transform.GetTransform());
-			shader1->SetUniformFloat("u_DeltaTime", m_DeltaTime);
-			shader1->SetUniformFloat("u_TotalTime", m_TotalTime);
-			shader1->SetUniformFloat("u_Radius", particleSystem.SpawnAreaRadius);
-			shader1->SetUniformFloat3("u_MinVelocity", particleSystem.MinVelocity);
-			shader1->SetUniformFloat3("u_MaxVelocity", particleSystem.MaxVelocity);
-			shader1->SetUniformFloat("u_MinTotalLifetime", particleSystem.MinTotalLifetime);
-			shader1->SetUniformFloat("u_MaxTotalLifetime", particleSystem.MaxTotalLifetime);
-
-			inputBuffer->BindBuffer();
-			outputBuffer->BindTransformFeedback();
-
-			// Rasterizer discard on
-			Renderer::RasterizerDiscard(true);
-
-			Renderer::BeginTransformFeedback_Points();
-			// test
-			
-			if (particleSystem.IsFirstDraw)
+			if (!particleSystem.IsPaused)
 			{
-				Renderer::DrawArrays_Points(0, particleSystem.LauncherNum);
-				particleSystem.IsFirstDraw = false;
+				// Pass 1
+				auto& shader1 = particleSystem.Pass1;
+				shader1->Bind();
+				// shader1->SetUniformMat4("u_View", viewMat);
+				// shader1->SetUniformMat4("u_Projection", projMat);
+				shader1->SetUniformMat4("u_Transform", transform.GetTransform());
+				shader1->SetUniformFloat("u_DeltaTime", m_DeltaTime);
+				shader1->SetUniformFloat("u_TotalTime", m_TotalTime);
+				shader1->SetUniformFloat("u_Radius", particleSystem.SpawnAreaRadius);
+				shader1->SetUniformFloat3("u_MinVelocity", particleSystem.MinVelocity);
+				shader1->SetUniformFloat3("u_MaxVelocity", particleSystem.MaxVelocity);
+				shader1->SetUniformFloat("u_MinTotalLifetime", particleSystem.MinTotalLifetime);
+				shader1->SetUniformFloat("u_MaxTotalLifetime", particleSystem.MaxTotalLifetime);
+
+				inputBuffer->BindBuffer();
+				outputBuffer->BindTransformFeedback();
+
+				// Rasterizer discard on
+				Renderer::RasterizerDiscard(true);
+
+				Renderer::BeginTransformFeedback_Points();
+				// test
+
+				if (particleSystem.IsFirstDraw)
+				{
+					Renderer::DrawArrays_Points(0, particleSystem.LauncherNum);
+					particleSystem.IsFirstDraw = false;
+				}
+				else
+				{
+					inputBuffer->Draw_Points();
+				}
+
+				Renderer::EndTransformFeedback();
+
+				// Rasterizer discard off
+				Renderer::RasterizerDiscard(false);
+
+				shader1->Unbind();
+				inputBuffer->UnbindBuffer();
+				outputBuffer->UnbindTransformFeedback();
 			}
-			else
-			{
-				inputBuffer->Draw_Points();
-			}
-
-			Renderer::EndTransformFeedback();
-
-			// Rasterizer discard off
-			Renderer::RasterizerDiscard(false);
-
-			shader1->Unbind();
-			inputBuffer->UnbindBuffer();
-			outputBuffer->UnbindTransformFeedback();
 
 			// Pass 2 Sprite
 			auto& shader2 = particleSystem.Pass2;
 			shader2->Bind();
 
 			shader2->SetUniformMat4("u_Transform", transform.GetTransform());
+			shader2->SetUniformInt("u_IsSelected", entity == selectedEntity);
+			shader2->SetUniformInt("u_EntityId", (uint32_t)entity);
 			shader2->SetUniformInt("u_Sprite", 0);
 			particleSystem.Tex->Bind(0);
 
@@ -358,8 +365,11 @@ namespace NL
 			outputBuffer->UnbindBuffer();
 
 			// Switch buffer
-			particleSystem.Input = particleSystem.Output;
-			particleSystem.Output = 1 - particleSystem.Output;
+			if (!particleSystem.IsPaused)
+			{
+				particleSystem.Input = particleSystem.Output;
+				particleSystem.Output = 1 - particleSystem.Output;
+			}
 		}
 		Renderer::DepthMask(true);
 	}

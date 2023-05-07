@@ -84,6 +84,22 @@ namespace NL
 			return isModified;
 		}
 
+		static bool DragIntStyle1(const std::string& label, float dragIntWidth, int& value, float speed, int min, int max)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - dragIntWidth);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+
+			std::string emitLabel = "##" + label;
+			bool isModified = ImGui::DragInt(emitLabel.c_str(), &value, speed, min, max);
+			ImGui::Columns(1);
+			ImGui::PopItemWidth();
+
+			return isModified;
+		}
+
 		static bool DragFloat3Style1(const std::string& label, float dragIntWidth, nlm::vec3& value)
 		{
 			ImGui::Columns(2);
@@ -135,7 +151,7 @@ namespace NL
 		}
 
 		// Remember to ImGui::Columns(1); manually
-		static bool ComboStyle1(const std::string& label, float comboWidth, const char* value)
+		static int ComboStyle1(const std::string& label, float comboWidth, const char** list, int current, int total)
 		{
 			ImGui::Columns(2);
 			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - comboWidth);
@@ -146,14 +162,29 @@ namespace NL
 			ImGui::NextColumn();
 
 			std::string emitLabel = "##" + label;
-			bool isModified = ImGui::BeginCombo(emitLabel.c_str(), value);
+
+			const char* value = list[current];
+			int newlyChosen = current;
+			if (ImGui::BeginCombo(emitLabel.c_str(), value))
+			{
+				for (int i = 0; i < total; i++)
+				{
+					bool isSelected = i == current;
+					if (ImGui::Selectable(list[i], isSelected))
+					{
+						newlyChosen = i;
+						NL_INFO("Newly chosen: {0}", i);
+					}
+				}
+				ImGui::EndCombo();
+			}
 
 			// NL_INFO("Combo Modified!");
 			
-			if (!isModified)
-				ImGui::Columns(1);
+			ImGui::Columns(1);
 			ImGui::PopItemWidth();
-			return isModified;
+
+			return newlyChosen;
 		}
 
 		static bool InputTextStyle1(const std::string& label, float textWidth, char* buffer, int size)
@@ -318,7 +349,7 @@ namespace NL
 			}
 		}
 
-		ImGui::SameLine();
+		ImGui::SameLine(0, 4);
 
 		ImGui::SetNextItemWidth(addComponentButtonWidth);
 		if (ImGui::Button("Add Component"))
@@ -732,7 +763,50 @@ namespace NL
 #pragma region Particle System
 
 		DrawComponent<ParticleSystemComponent>("Particle System", entity, [scene = m_Scene](auto& entity, auto& component) {
-			
+
+		ParticleSystemComponent& comp = component;
+		ImGui::PushID("ParticleSystem");
+
+		// Controls
+		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+		float width = ImGui::GetWindowContentRegionWidth() / 2.0f - 4.0f;
+		if (ImGui::Button("Init", ImVec2(width, lineHeight)))
+		{
+			comp.Init();
+		}
+		ImGui::SameLine(0, 4);
+		if (ImGui::Button(comp.IsPaused ? "Play" : "Pause", ImVec2(width, lineHeight)))
+		{
+			comp.IsPaused = !comp.IsPaused;
+		}
+
+		// Init
+		if (Utils::TreeNodeExStyle1((void*)"Init", "Initialization"))
+		{
+			Utils::DragIntStyle1("Particles Count", RIGHT_COLUMN_WIDTH, comp.LauncherNum, 10, 0, 20000);
+			const char* list[3] = { "Point", "Circle", "Sphere" };
+			comp.SpawnAreaShape = (ParticleSpawnAreaShape)Utils::ComboStyle1("Spawn Area Shape", RIGHT_COLUMN_WIDTH, list, (int)comp.SpawnAreaShape, 3);
+			Utils::DragFloatStyle1("Max Life Span", RIGHT_COLUMN_WIDTH, comp.MaxTotalLifetime);
+			Utils::DragFloatStyle1("Min Life Span", RIGHT_COLUMN_WIDTH, comp.MinTotalLifetime);
+			DrawVec3Control("Max Velocity", comp.MaxVelocity);
+			DrawVec3Control("Min Velocity", comp.MinVelocity);
+			ImGui::Dummy(ImVec2{ 0, 1 });
+			ImGui::TreePop();
+		}
+
+		// Pass 1
+		if (Utils::TreeNodeExStyle1((void*)"Pass1", "Transform Feedback Pass"))
+		{
+			ImGui::TreePop();
+		}
+
+		// Pass 2
+		if (Utils::TreeNodeExStyle1((void*)"Pass2", "Render Pass"))
+		{
+			ImGui::TreePop();
+		}
+
+		ImGui::PopID();
 
 		});
 
@@ -939,7 +1013,8 @@ namespace NL
 
 		// NL_ENGINE_INFO("CalcItemWidth: {0}", ImGui::CalcItemWidth());
 		float width = ImGui::CalcItemWidth();
-		ImGui::PushMultiItemsWidths(3, width);
+		ImGui::PushMultiItemsWidths(3, width); 
+
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
 
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });

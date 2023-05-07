@@ -2,6 +2,7 @@
 
 #include "ECS/System/System.h"
 #include "Resources/Shader.h"
+#include "ECS/Entity/Entity.h"
 
 namespace NL
 {
@@ -18,7 +19,7 @@ namespace NL
 		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity) override;
 
 	private:
-		void UpdateParticleSystem();
+		void UpdateParticleSystem(Entity selectedEntity = {});
 		
 
 	private:

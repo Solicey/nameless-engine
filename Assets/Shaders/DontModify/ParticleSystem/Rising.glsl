@@ -71,7 +71,9 @@ uniform float u_DeltaTime;
 void main()
 {
 	g_Type = v_Type[0];
-	g_Position = v_Position[0];
+	g_Position = v_Position[0] + vec3(0, u_DeltaTime * v_Velocity[0].y, 0);
+	if (g_Position.y > 30)
+		g_Position.y = 0; 
 	g_Velocity = v_Velocity[0];
 	g_Lifetime = v_Lifetime[0];
 	g_Color = v_Color[0];

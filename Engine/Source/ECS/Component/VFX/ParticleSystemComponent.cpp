@@ -10,19 +10,19 @@ namespace NL
 			TFB[i] = TransformFeedback::Create();
 		}
 
-		Pass1 = Library<Shader>::GetInstance().Fetch("Fire.glsl");
+		Pass1 = Library<Shader>::GetInstance().Fetch("Rising.glsl");
 		Pass2 = Library<Shader>::GetInstance().Fetch("ParticleSprite.glsl");
 
 		std::string assetFolder = PathConfig::GetInstance().GetAssetsFolder().string();
 		Tex = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Textures/DontModify/DefaultParticle.png");
 
-		LauncherNum = 10;
-		SpawnAreaShape = ParticleSpawnAreaShape::Circle;
+		LauncherNum = 10000;
+		SpawnAreaShape = ParticleSpawnAreaShape::Sphere;
 		MinVelocity = nlm::vec3(0.0f, 0.2f, 0.0f);
 		MaxVelocity = nlm::vec3(0.0f, 2.0f, 0.0f);
 		MaxTotalLifetime = 5;
 		MinTotalLifetime = 3;
-		SpawnAreaRadius = 0.3f;
+		SpawnAreaRadius = 200;
 		InitSize = 1;
 		InitColor = nlm::vec4(1.0f);
 
@@ -31,7 +31,8 @@ namespace NL
 
 	void ParticleSystemComponent::Init()
 	{
-		static int randomTime = 10;
+		// static int randomTime = 10;
+		IsFirstDraw = true;
 
 		std::vector<Particle> particles;
 		nlm::vec3 DelVelocity = MaxVelocity - MinVelocity;
@@ -48,24 +49,27 @@ namespace NL
 				break;
 			case NL::ParticleSpawnAreaShape::Circle:
 			{
-				for (int j = 0; j < randomTime; j++)
+				nlm::vec2 dir = nlm::vec2(0);
+				/*for (int j = 0; j < randomTime; j++)
 				{
-					pos.x += (2.0 * float(rand()) / float(RAND_MAX) - 1.0f);
-					pos.z += (2.0 * float(rand()) / float(RAND_MAX) - 1.0f);
-				}
-				pos.x *= SpawnAreaRadius;
-				pos.z *= SpawnAreaRadius;
+					dir.x += (2.0 * float(rand()) / float(RAND_MAX) - 1.0f);
+					dir.y += (2.0 * float(rand()) / float(RAND_MAX) - 1.0f);
+				}*/
+				dir.x = (float(rand()) / float(RAND_MAX) * 2.0f - 1.0f);
+				dir.y = (float(rand()) / float(RAND_MAX) * 2.0f - 1.0f);
+				float mag = float(rand()) / float(RAND_MAX) * SpawnAreaRadius;
+				dir = nlm::normalize(dir) * mag;
+				pos.x = dir.x;
+				pos.z = dir.y;
 				break;
 			}
 			case NL::ParticleSpawnAreaShape::Sphere:
 			{
-				for (int j = 0; j < randomTime; j++)
-				{
-					pos.x += (2.0 * float(rand()) / float(RAND_MAX) - 1.0f);
-					pos.y += (2.0 * float(rand()) / float(RAND_MAX) - 1.0f);
-					pos.z += (2.0 * float(rand()) / float(RAND_MAX) - 1.0f);
-				}
-				pos *= SpawnAreaRadius;
+				pos.x = (2.0 * float(rand()) / float(RAND_MAX) - 1.0f);
+				pos.y = (2.0 * float(rand()) / float(RAND_MAX) - 1.0f);
+				pos.z = (2.0 * float(rand()) / float(RAND_MAX) - 1.0f);
+				float mag = float(rand()) / float(RAND_MAX) * SpawnAreaRadius;
+				pos = nlm::normalize(pos) * mag;
 				break;
 			}
 			default:

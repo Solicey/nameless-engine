@@ -24,12 +24,15 @@ namespace NL
 		Point, Circle, Sphere
 	};
 
+	enum class ParticleDistribution
+	{
+		Uniform, Normal
+	};
+
 	class ParticleSystemComponent : public ComponentBase
 	{
 	public:
 		ParticleSystemComponent();
-
-	private:
 		void Init();
 
 	public:
@@ -40,6 +43,7 @@ namespace NL
 
 		int						Input = 0, Output = 1;
 		bool					IsFirstDraw = true;
+		bool					IsPaused = false;
 
 		// Init Options
 		int						LauncherNum;
