@@ -7,8 +7,8 @@ namespace NL
 	class OpenGLVertexBuffer : public VertexBuffer
 	{
 	public:
-		OpenGLVertexBuffer(void* vertices, uint32_t size);
-		OpenGLVertexBuffer(std::vector<float>& vertices);
+		OpenGLVertexBuffer(void* vertices, uint32_t size, BufferUsage usage);
+		OpenGLVertexBuffer(std::vector<float>& vertices, BufferUsage usage);
 
 		virtual ~OpenGLVertexBuffer();
 

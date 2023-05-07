@@ -13,11 +13,17 @@ layout (location = 0) in float a_Type;
 layout (location = 1) in vec3 a_Position;
 layout (location = 2) in vec3 a_Velocity;
 layout (location = 3) in float a_Lifetime;
+layout (location = 4) in vec4 a_Color;
+layout (location = 5) in float a_Size;
+layout (location = 6) in float a_TotalLifetime;
 
 out float v_Type;
 out vec3 v_Position;
 out vec3 v_Velocity;
 out float v_Lifetime;
+out vec4 v_Color;
+out float v_Size;
+out float v_TotalLifetime;
 
 layout(std140, binding = 0) uniform Camera
 {
@@ -32,36 +38,50 @@ uniform float u_DeltaTime;
 void main()
 {
 	v_Type = a_Type;
-    v_Position = a_Position + vec3(0, u_DeltaTime * 1, 0);
+    v_Position = a_Position + vec3(0.0, u_DeltaTime * 1.0, 0.0);
     v_Velocity = a_Velocity;
     v_Lifetime = a_Lifetime;
-	gl_Position = u_Projection * u_View * u_Transform * vec4(v_Position, 1.0);
+	v_Color = a_Color;
+	v_Size = a_Size;
+	v_TotalLifetime = a_TotalLifetime;
+	// gl_Position = u_Projection * u_View * u_Transform * vec4(v_Position, 1.0);
 }
 
-#type fragment
+#type geometry
 #version 450 core
 
-layout (location = 0) in float v_Type;
-layout (location = 1) in vec3 v_Position;
-layout (location = 2) in vec3 v_Velocity;
-layout (location = 3) in float v_Lifetime;
+layout (points) in;
+layout (points) out;
 
-layout (location = 0) out vec4 color;
-layout (location = 1) out int color2;
-layout (location = 2) out vec4 color3;
+in float v_Type[];
+in vec3 v_Position[];
+in vec3 v_Velocity[];
+in float v_Lifetime[];
+in vec4 v_Color[];
+in float v_Size[];
+in float v_TotalLifetime[];
 
-// uniform vec3 u_Color;
-// uniform bool u_IsSelected;
-// uniform int u_EntityId;
-			
+out float g_Type;
+out vec3 g_Position;
+out vec3 g_Velocity;
+out float g_Lifetime;
+out vec4 g_Color;
+out float g_Size;
+out float g_TotalLifetime;
+
+uniform float u_DeltaTime;
+
 void main()
 {
-	color = vec4(1, 1, 1, 1);
-	
-	//color2 = u_EntityId;
+	g_Type = v_Type[0];
+	g_Position = v_Position[0];
+	g_Velocity = v_Velocity[0];
+	g_Lifetime = v_Lifetime[0];
+	g_Color = v_Color[0];
+	g_Size = v_Size[0];
+	g_TotalLifetime = v_TotalLifetime[0];
 
-	color2 = -1;
-	color3 = vec4(0.1, 0.1, 0.1, 1);
-	//if (u_IsSelected)
-		//color3 = vec4(1, 1, 1, 1);
-}			
+	EmitVertex();
+    EndPrimitive();
+}
+

@@ -246,13 +246,18 @@ namespace NL
 		// For testing purpose
 		if (m_Use == ShaderUse::Particle)
 		{
-			const GLchar* Varyings[4];
-			Varyings[0] = "v_Type";
-			Varyings[1] = "v_Position";
-			Varyings[2] = "v_Velocity";
-			Varyings[3] = "v_Lifetime";
+			const GLchar* Varyings[7];
+			Varyings[0] = "g_Type";
+			Varyings[1] = "g_Position";
+			Varyings[2] = "g_Velocity";
+			Varyings[3] = "g_Lifetime";
 
-			glTransformFeedbackVaryings(program, 4, Varyings, GL_INTERLEAVED_ATTRIBS);
+			Varyings[4] = "g_Color";
+			Varyings[5] = "g_Size";
+			Varyings[6] = "g_TotalLifetime";
+
+			glTransformFeedbackVaryings(program, 7, Varyings, GL_INTERLEAVED_ATTRIBS);
+			NL_ENGINE_INFO("This shader is for particle!");
 		}
 
 		// Link our program

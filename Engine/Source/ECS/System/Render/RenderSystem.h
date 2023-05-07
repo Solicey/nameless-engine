@@ -33,7 +33,7 @@ namespace NL
 		Ref<Shader> m_SpriteShader;
 
 		// Time
-		float m_Duration = 0.0f;
+		float m_TotalTime = 0.0f;
 		float m_DeltaTime = 0.0f;
 	};
 }

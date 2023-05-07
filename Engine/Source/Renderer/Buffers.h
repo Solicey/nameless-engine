@@ -13,6 +13,12 @@ FBOÔÚFramebuffer.h
 
 namespace NL
 {
+	enum class BufferUsage
+	{
+		StaticDraw,
+		DynamicDraw
+	};
+
 	struct BufferElement
 	{
 		std::string Name;
@@ -106,7 +112,7 @@ namespace NL
 		//  Remember to bind TFO first
 		virtual void SetTransformFeedbackTarget() const = 0;
 
-		static Ref<VertexBuffer> Create(void* vertices, uint32_t size);
+		static Ref<VertexBuffer> Create(void* vertices, uint32_t size, BufferUsage usage = BufferUsage::StaticDraw);
 
 	};
 

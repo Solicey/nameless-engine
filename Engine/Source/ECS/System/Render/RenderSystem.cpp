@@ -31,17 +31,17 @@ namespace NL
 
 	void RenderSystem::OnStartRuntime()
 	{
-		m_Duration = m_DeltaTime = 0;
+		m_TotalTime = m_DeltaTime = 0;
 	}
 
 	void RenderSystem::OnStopRuntime(Scene* editorScene)
 	{
-		m_Duration = m_DeltaTime = 0;
+		m_TotalTime = m_DeltaTime = 0;
 	}
 
 	void RenderSystem::OnUpdateRuntime(TimeStep ts, Entity cameraEntity)
 	{
-		m_Duration += ts;
+		m_TotalTime += ts;
 		m_DeltaTime = ts;
 
 		if (!cameraEntity.HasComponent<CameraComponent>())
@@ -126,12 +126,12 @@ namespace NL
 
 	void RenderSystem::OnStartEditor()
 	{
-		m_Duration = m_DeltaTime = 0;
+		m_TotalTime = m_DeltaTime = 0;
 	}
 
 	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity)
 	{
-		m_Duration += ts;
+		m_TotalTime += ts;
 		m_DeltaTime = ts;
 
 		Renderer::BeginScene(camera);
@@ -306,6 +306,12 @@ namespace NL
 			// shader1->SetUniformMat4("u_Projection", projMat);
 			shader1->SetUniformMat4("u_Transform", transform.GetTransform());
 			shader1->SetUniformFloat("u_DeltaTime", m_DeltaTime);
+			shader1->SetUniformFloat("u_TotalTime", m_TotalTime);
+			shader1->SetUniformFloat("u_Radius", particleSystem.SpawnAreaRadius);
+			shader1->SetUniformFloat3("u_MinVelocity", particleSystem.MinVelocity);
+			shader1->SetUniformFloat3("u_MaxVelocity", particleSystem.MaxVelocity);
+			shader1->SetUniformFloat("u_MinTotalLifetime", particleSystem.MinTotalLifetime);
+			shader1->SetUniformFloat("u_MaxTotalLifetime", particleSystem.MaxTotalLifetime);
 
 			inputBuffer->BindBuffer();
 			outputBuffer->BindTransformFeedback();
@@ -317,7 +323,7 @@ namespace NL
 			
 			if (particleSystem.IsFirstDraw)
 			{
-				Renderer::DrawArrays_Points(0, 1);
+				Renderer::DrawArrays_Points(0, particleSystem.LauncherNum);
 			}
 			else
 			{
@@ -333,11 +339,20 @@ namespace NL
 			inputBuffer->UnbindBuffer();
 			outputBuffer->UnbindTransformFeedback();
 
-			// Pass 2
-			//particleSystem.Pass2->Bind();
+			// Pass 2 Sprite
+			auto& shader2 = particleSystem.Pass2;
+			shader2->Bind();
 
+			shader1->SetUniformMat4("u_Transform", transform.GetTransform());
+			shader2->SetUniformInt("u_Sprite", 0);
+			particleSystem.Tex->Bind(0);
 
-			//particleSystem.Pass2->Unbind();
+			outputBuffer->BindBuffer();
+
+			outputBuffer->Draw_Points();
+
+			shader2->Unbind();
+			outputBuffer->UnbindBuffer();
 
 			// Switch buffer
 			particleSystem.Input = particleSystem.Output;

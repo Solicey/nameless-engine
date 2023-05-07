@@ -7,7 +7,7 @@
 
 namespace NL
 {
-	Ref<VertexBuffer> VertexBuffer::Create(void* vertices, uint32_t size)
+	Ref<VertexBuffer> VertexBuffer::Create(void* vertices, uint32_t size, BufferUsage usage)
 	{
 		switch (RendererAPI::GetCurrent())
 		{
@@ -15,7 +15,7 @@ namespace NL
 			NL_ENGINE_ASSERT(false, "RendererAPI::None is currently not supported!");
 			return nullptr;
 		case RendererAPI::API::OpenGL:
-			return CreateRef<OpenGLVertexBuffer>(vertices, size);
+			return CreateRef<OpenGLVertexBuffer>(vertices, size, usage);
 			return nullptr;
 		}
 
