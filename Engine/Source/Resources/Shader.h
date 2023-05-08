@@ -11,7 +11,7 @@ namespace NL
 {
 	enum class ShaderUse
 	{
-		Unknown, Model, PostProcess, Particle
+		Unknown, Model, PostProcess, Particle1, Particle2
 	};
 
 	class Shader

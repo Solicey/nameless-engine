@@ -567,86 +567,11 @@ namespace NL
 				std::string matName = item.first;
 				Ref<Material> mat = item.second;
 
-				ImGui::PushID(&mat);
-
-				std::string shaderName = mat->GetShaderName();	
-
-				
-				if (ImGui::TreeNode(matName.c_str()))
-				{
-					bool hasCompiledSuccessfully = mat->GetShader()->HasCompiledSuccessfully();
-					if (!hasCompiledSuccessfully)
-						ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
-
-					// Select Shaders
-					if (ImGui::BeginCombo("Shader", shaderName.c_str()))
+				DrawShaderCombo<ModelRendererComponent>(mat, matName, shaderSelectClick, [](auto& comp, const std::string& shaderName)
 					{
-						if (!hasCompiledSuccessfully)
-							ImGui::PopStyleColor();
-
-						if (!shaderSelectClick)
-						{
-							Library<Shader>::GetInstance().TraverseShadersFolder();
-							shaderSelectClick = true;
-						}
-
-						//const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
-						const auto& shaderUseMap = Library<Shader>::GetInstance().GetShaderUseMap();
-
-						if (!shaderUseMap.contains(shaderName))
-							shaderName = Library<Shader>::GetInstance().GetDefaultShaderName();
-
-						for (const auto& pair : shaderUseMap)
-						{
-							if (pair.second != ShaderUse::Model)
-								continue;
-
-							std::string name = pair.first;
-							bool isSelected = name == shaderName;
-							if (ImGui::Selectable(name.c_str(), isSelected))
-							{
-								if (!isSelected)
-								{
-									shaderName = name;
-									mat->LoadShaderAndUpdateProps(shaderName);
-									mat->UpdateSampler2DinProperties();
-								}
-							}
-						}
-						
-						ImGui::EndCombo();
-					}
-					else
-					{
-						if (!hasCompiledSuccessfully)
-							ImGui::PopStyleColor();
-						shaderSelectClick = false;
-					}
-
-					ImGui::SameLine();
-
-					if (ImGui::Button("Reload"))
-					{
-						auto shader = Library<Shader>::GetInstance().Reload(shaderName);
-						if (shader->HasCompiledSuccessfully())
-						{
-							auto view = scene->Registry.view<ModelRendererComponent>();
-							for (auto entity : view)
-							{
-								ModelRendererComponent& comp = view.get<ModelRendererComponent>(entity);
-								comp._Model->UpdateShaderProperties(shaderName);
-							}
-							NL_INFO("Reload Shader {0}, shader compiled success: {1}", shaderName, shader->HasCompiledSuccessfully());
-						}
-					}
-
-					// Exposed Shader Properties
-					DrawShaderProperties(mat);
-
-					ImGui::TreePop();
-				}
-
-				ImGui::PopID();
+						ModelRendererComponent& modelComp = comp;
+						modelComp._Model->UpdateShaderProperties(shaderName);
+					}, ShaderUse::Model, scene);
 			}
 
 			ImGui::TreePop();
@@ -762,7 +687,7 @@ namespace NL
 
 #pragma region Particle System
 
-		DrawComponent<ParticleSystemComponent>("Particle System", entity, [scene = m_Scene](auto& entity, auto& component) {
+		DrawComponent<ParticleSystemComponent>("Particle System", entity, [scene = m_Scene, &shaderSelectClicked = m_ParticleSystemCompShaderSelectOpen](auto& entity, auto& component) {
 
 		ParticleSystemComponent& comp = component;
 		ImGui::PushID("ParticleSystem");
@@ -795,14 +720,22 @@ namespace NL
 		}
 
 		// Pass 1
-		if (Utils::TreeNodeExStyle1((void*)"Pass1", "Transform Feedback Pass"))
+		if (Utils::TreeNodeExStyle1((void*)"Shader Pass", "Shader Pass"))
 		{
-			ImGui::TreePop();
-		}
+			DrawShaderCombo<ParticleSystemComponent>(comp.Pass1, comp.Pass1->GetName(), shaderSelectClicked, [](auto& comp, const std::string& shaderName)
+				{
+					NL_INFO("Reload TF Pass!");
+					ParticleSystemComponent& partComp = comp;
+					partComp.UpdateShaderProperties(shaderName);
+				}, ShaderUse::Particle1, scene);
 
-		// Pass 2
-		if (Utils::TreeNodeExStyle1((void*)"Pass2", "Render Pass"))
-		{
+			DrawShaderCombo<ParticleSystemComponent>(comp.Pass2, comp.Pass2->GetName(), shaderSelectClicked, [](auto& comp, const std::string& shaderName)
+				{
+					NL_INFO("Reload R Pass!");
+				ParticleSystemComponent& partComp = comp;
+				partComp.UpdateShaderProperties(shaderName);
+				}, ShaderUse::Particle2, scene);
+
 			ImGui::TreePop();
 		}
 
@@ -1217,6 +1150,91 @@ namespace NL
 
 			ImGui::TreePop();
 		}
+		ImGui::PopID();
+	}
+
+	template<Component C, typename UIFunction>
+	void HierarchyPanel::DrawShaderCombo(Ref<Material>& mat, const std::string& matName, bool& shaderSelectClick, UIFunction uiFunction, ShaderUse shaderUse, const Ref<Scene>& scene)
+	{
+		ImGui::PushID(&mat);
+
+		std::string shaderName = mat->GetShaderName();
+
+		if (ImGui::TreeNode(matName.c_str()))
+		{
+			bool hasCompiledSuccessfully = mat->GetShader()->HasCompiledSuccessfully();
+			if (!hasCompiledSuccessfully)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
+
+			// Select Shaders
+			if (ImGui::BeginCombo("Shader", shaderName.c_str()))
+			{
+				if (!hasCompiledSuccessfully)
+					ImGui::PopStyleColor();
+
+				if (!shaderSelectClick)
+				{
+					Library<Shader>::GetInstance().TraverseShadersFolder();
+					shaderSelectClick = true;
+				}
+
+				//const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
+				const auto& shaderUseMap = Library<Shader>::GetInstance().GetShaderUseMap();
+
+				if (!shaderUseMap.contains(shaderName))
+					shaderName = Library<Shader>::GetInstance().GetDefaultShaderName();
+
+				for (const auto& pair : shaderUseMap)
+				{
+					if (pair.second != shaderUse)
+						continue;
+
+					std::string name = pair.first;
+					bool isSelected = name == shaderName;
+					if (ImGui::Selectable(name.c_str(), isSelected))
+					{
+						if (!isSelected)
+						{
+							shaderName = name;
+							mat->LoadShaderAndUpdateProps(shaderName);
+							mat->UpdateSampler2DinProperties();
+						}
+					}
+				}
+
+				ImGui::EndCombo();
+			}
+			else
+			{
+				if (!hasCompiledSuccessfully)
+					ImGui::PopStyleColor();
+				shaderSelectClick = false;
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Reload"))
+			{
+				auto shader = Library<Shader>::GetInstance().Reload(shaderName);
+				if (shader->HasCompiledSuccessfully())
+				{
+					auto view = scene->Registry.view<C>();
+					for (auto entity : view)
+					{
+						C& comp = view.get<C>(entity);
+						// comp._Model->UpdateShaderProperties(shaderName);
+						uiFunction(comp, shaderName);
+					}
+					NL_INFO("Reload Shader {0}, shader compiled success: {1}", shaderName, shader->HasCompiledSuccessfully());
+				}
+			}
+
+			// Exposed Shader Properties
+			DrawShaderProperties(mat);
+
+			ImGui::TreePop();
+		}
+
 		ImGui::PopID();
 	}
 

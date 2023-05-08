@@ -25,6 +25,12 @@ namespace NL
 		LoadShaderAndUpdateProps(Library<Shader>::GetInstance().GetDefaultShaderName());
 	}
 
+	Material::Material(const std::string& shaderName, const std::string& matName)
+		: m_Name(matName)
+	{
+		LoadShaderAndUpdateProps(shaderName);
+	}
+
 	Material::Material(const Material* src)
 		: m_Name(src->m_Name), m_ShaderName(src->m_ShaderName), m_Shader(src->m_Shader),
 		m_Properties(src->m_Properties), m_TextureMap(src->m_TextureMap), m_CustomTextureMap(src->m_CustomTextureMap)

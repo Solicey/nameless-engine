@@ -12,7 +12,8 @@ namespace NL
 	{
 		{"model", ShaderUse::Model},
 		{"post", ShaderUse::PostProcess},
-		{"particle", ShaderUse::Particle}
+		{"particle1", ShaderUse::Particle1},
+		{"particle2", ShaderUse::Particle2}
 	};
 
 	ShaderUse Shader::ParseAndGetShaderUse(const std::string& path)

@@ -244,7 +244,7 @@ namespace NL
 
 		// Transform Feedback Varyings
 		// For testing purpose
-		if (m_Use == ShaderUse::Particle)
+		if (m_Use == ShaderUse::Particle1)
 		{
 			const GLchar* Varyings[7];
 			Varyings[0] = "g_Type";

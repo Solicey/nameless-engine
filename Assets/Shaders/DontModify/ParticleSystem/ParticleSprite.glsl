@@ -1,5 +1,7 @@
 // sprite
 
+#use particle2
+
 #prop
 #end
 
@@ -86,7 +88,7 @@ uniform int u_EntityId;
 			
 void main()
 {
-	color = texture2D(u_Sprite, g_TexCoord);
+	color = texture2D(u_Sprite, g_TexCoord) * vec4(0.5, 1, 1, 1);
 	
 	color2 = u_EntityId;
 

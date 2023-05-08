@@ -48,10 +48,14 @@ namespace NL
 		static void DrawBonesHierarchy(Ref<Model> model, std::pair<int, int>& adjust);
 		static void DrawBonesRecursive(BoneInfo& boneInfo, std::map<int, BoneInfo>& bones, std::pair<int, int>& adjust);
 
+		template<Component C, typename UIFunction>
+		static void DrawShaderCombo(Ref<Material>& mat, const std::string& matName, bool& shaderSelectClick, UIFunction uiFunction, ShaderUse shaderUse, const Ref<Scene>& scene);
+
 	private:
 		Ref<Scene> m_Scene;
 		Entity m_EntitySelected;
 		Callback m_RuntimeCameraUpdateCallback;
 		bool m_ModelRendererCompShaderSelectOpen = false;
+		bool m_ParticleSystemCompShaderSelectOpen = false;
 	};
 }

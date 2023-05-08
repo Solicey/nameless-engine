@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ECS/Component/Component.h"
+#include "Resources/Material.h"
 #include "Resources/Libraries/ShaderLibrary.h"
 #include "Resources/Libraries/TextureLibrary.h"
 #include "Renderer/TransformFeedback.h"
@@ -34,11 +35,13 @@ namespace NL
 	public:
 		ParticleSystemComponent();
 		void Init();
+		void UpdateShaderProperties(const std::string& shaderName);
 
 	public:
 		Ref<TransformFeedback>	TFB[2];
 		// Uses TFB in Pass1
-		Ref<Shader>				Pass1, Pass2;
+		Ref<Material>			Pass1, Pass2;
+		// Ref<Shader>				Pass1, Pass2;
 		Ref<Texture2D>			Tex;
 
 		int						Input = 0, Output = 1;
@@ -58,5 +61,6 @@ namespace NL
 
 		nlm::vec4				InitColor;
 		float					InitSize;
+
 	};
 }

@@ -305,7 +305,7 @@ namespace NL
 			if (!particleSystem.IsPaused)
 			{
 				// Pass 1
-				auto& shader1 = particleSystem.Pass1;
+				auto& shader1 = particleSystem.Pass1->GetShader();
 				shader1->Bind();
 				// shader1->SetUniformMat4("u_View", viewMat);
 				// shader1->SetUniformMat4("u_Projection", projMat);
@@ -348,7 +348,7 @@ namespace NL
 			}
 
 			// Pass 2 Sprite
-			auto& shader2 = particleSystem.Pass2;
+			auto& shader2 = particleSystem.Pass2->GetShader();
 			shader2->Bind();
 
 			shader2->SetUniformMat4("u_Transform", transform.GetTransform());

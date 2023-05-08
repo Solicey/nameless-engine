@@ -94,7 +94,8 @@ namespace NL
 		// NL_ENGINE_INFO("Update Shader Properties: {0}, {1}", m_Path, shaderName);
 		for (auto& mat : m_Materials)
 		{
-			mat.second->LoadShaderAndUpdateProps(shaderName);
+			if (mat.second->GetShaderName() == shaderName)
+				mat.second->LoadShaderAndUpdateProps(shaderName);
 		}
 	}
 

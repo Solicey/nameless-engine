@@ -4,14 +4,17 @@
 namespace NL
 {
 	ParticleSystemComponent::ParticleSystemComponent()
+//		: Pass1("Rising.glsl"), Pass2("ParticleSprite.glsl")
 	{
 		for (int i = 0; i < 2; i++)
 		{
 			TFB[i] = TransformFeedback::Create();
 		}
 
-		Pass1 = Library<Shader>::GetInstance().Fetch("Rising.glsl");
-		Pass2 = Library<Shader>::GetInstance().Fetch("ParticleSprite.glsl");
+		Pass1 = CreateRef<Material>("Rising.glsl", "Transform Feedback Pass");
+		Pass2 = CreateRef<Material>("ParticleSprite.glsl", "Render Pass");
+		//Pass1 = Library<Shader>::GetInstance().Fetch("Rising.glsl");
+		//Pass2 = Library<Shader>::GetInstance().Fetch("ParticleSprite.glsl");
 
 		std::string assetFolder = PathConfig::GetInstance().GetAssetsFolder().string();
 		Tex = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Textures/DontModify/DefaultParticle.png");
@@ -116,6 +119,14 @@ namespace NL
 
 		NL_ENGINE_INFO("Particle System Init Done!");
 
+	}
+
+	void ParticleSystemComponent::UpdateShaderProperties(const std::string& shaderName)
+	{
+		if (Pass1->GetShaderName() == shaderName)
+			Pass1->LoadShaderAndUpdateProps(shaderName);
+		if (Pass2->GetShaderName() == shaderName)
+			Pass2->LoadShaderAndUpdateProps(shaderName);
 	}
 
 }

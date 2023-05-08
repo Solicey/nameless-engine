@@ -24,6 +24,7 @@ namespace NL
 	{
     public:
         Material();
+        Material(const std::string& shaderName, const std::string& matName = "Default Material");
         Material(const Material* src);
 
         void DeleteTexturesReference();
@@ -44,6 +45,7 @@ namespace NL
         const std::vector<ShaderProperty>& GetShaderProperties() const { return m_Properties; }
         std::vector<ShaderProperty>& GetShaderPropertiesNotConst() { return m_Properties; }
         void LoadShaderAndUpdateProps(const std::string name);
+        const std::string& GetName() const { return m_Name; }
 
         // called after all textures are sent to lib
         void UpdateSampler2DinProperties();
