@@ -25,8 +25,6 @@ out vec4 v_Color;
 out float v_Size;
 out float v_TotalLifetime;
 
-
-			
 void main()
 {
 	v_Type = a_Type;
@@ -42,7 +40,8 @@ void main()
 #version 450 core
 
 layout (points) in;
-layout (points, max_vertices = 10) out;
+layout (points) out;
+layout (max_vertices = 4) out;
 
 in float v_Type[];
 in vec3 v_Position[];
@@ -104,9 +103,9 @@ void main()
 			// launch shell
 			g_Type = PARTICLE_TYPE_SHELL;
 			g_Position = v_Position[0];
-			g_Velocity = (u_MaxVelocity - u_MinVelocity) * Random(v_Position[0].x) + u_MinVelocity;
+			g_Velocity = (u_MaxVelocity - u_MinVelocity) * Random(v_Position[0].x + u_DeltaTime) + u_MinVelocity;
 			
-			g_Lifetime = (u_MaxTotalLifetime - u_MinTotalLifetime) * Random(v_Position[0].y) + u_MinTotalLifetime;
+			g_Lifetime = (u_MaxTotalLifetime - u_MinTotalLifetime) * Random(v_Position[0].y - u_DeltaTime) + u_MinTotalLifetime;
 			float dist = sqrt(g_Position.x * g_Position.x + g_Position.z * g_Position.z);
 			if (dist <= u_Radius)
 				g_Lifetime *= 1.3;
@@ -119,7 +118,7 @@ void main()
 			EmitVertex();
             EndPrimitive();
 
-			lifetime = (u_MaxTotalLifetime - u_MinTotalLifetime) * Random(v_Position[0].z) + u_MinTotalLifetime;
+			lifetime = (u_MaxTotalLifetime - u_MinTotalLifetime) * Random(v_Position[0].z + u_DeltaTime) + u_MinTotalLifetime;
 		}
 
 		g_Type = PARTICLE_TYPE_LAUNCHER;

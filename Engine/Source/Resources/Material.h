@@ -35,7 +35,7 @@ namespace NL
             m_TextureMap[type] = texture;
         }
 
-        // Delete old tex to avoid memory leaking
+        // Delete old tex to avoid memory leaking, update prop value BY YOURSELF!
         void ReplaceTexture(const std::string& name, Ref<Texture2D> texture);
 
         const Ref<Texture2D>& GetTexture(TextureType type) { return m_TextureMap[type]; }
@@ -47,7 +47,7 @@ namespace NL
         void LoadShaderAndUpdateProps(const std::string name);
         const std::string& GetName() const { return m_Name; }
 
-        // called after all textures are sent to lib
+        // called after all textures are sent to lib, or LoadShaderAndUpdateProps
         void UpdateSampler2DinProperties();
 
         // void SetShaderName(const std::string& name) { m_ShaderName = name; }

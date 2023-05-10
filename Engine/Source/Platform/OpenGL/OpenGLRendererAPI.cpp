@@ -37,6 +37,22 @@ namespace NL
 			}
 		}
 
+		static GLenum BlendFactor2OpenGLFactor(BlendFactor factor)
+		{
+			switch (factor)
+			{
+			case NL::BlendFactor::One:
+				return GL_ONE;
+			case NL::BlendFactor::SrcAlpha:
+				return GL_SRC_ALPHA;
+			case NL::BlendFactor::OneMinusSrcAlpha:
+				return GL_ONE_MINUS_SRC_ALPHA;
+			default:
+				break;
+			}
+			return GL_ONE;
+		}
+
 	}
 
 	void OpenGLRendererAPI::Init()
@@ -130,5 +146,10 @@ namespace NL
 	void OpenGLRendererAPI::DepthMask(bool enable)
 	{
 		glDepthMask(enable ? GL_TRUE : GL_FALSE);
+	}
+
+	void OpenGLRendererAPI::BlendFunc(BlendFactor srcFactor, BlendFactor dstFactor)
+	{
+		glBlendFunc(Utils::BlendFactor2OpenGLFactor(srcFactor), Utils::BlendFactor2OpenGLFactor(dstFactor));
 	}
 }

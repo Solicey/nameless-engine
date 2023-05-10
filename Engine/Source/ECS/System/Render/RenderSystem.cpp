@@ -290,19 +290,23 @@ namespace NL
 
 	void RenderSystem::UpdateParticleSystem(Entity selectedEntity)
 	{
-		auto view = m_Scene->Registry.view<TransformComponent, ParticleSystemComponent>();
 		Renderer::DepthMask(false);
+		Renderer::BlendFunc(BlendFactor::SrcAlpha, BlendFactor::One);
+
+		auto view = m_Scene->Registry.view<TransformComponent, ParticleSystemComponent>();
 		for (auto& e : view)
 		{
 			Entity entity = Entity(e, m_Scene);
 
 			auto& transform = entity.GetComponent<TransformComponent>();
 			auto& particleSystem = entity.GetComponent<ParticleSystemComponent>();
+			auto& prop = particleSystem.Prop;
 
-			auto& inputBuffer = particleSystem.TFB[particleSystem.Input];
-			auto& outputBuffer = particleSystem.TFB[particleSystem.Output];
+			auto& inputBuffer = particleSystem.TFB[prop.Input];
+			auto& outputBuffer = particleSystem.TFB[prop.Output];
 
-			if (!particleSystem.IsPaused)
+			// if is playing
+			if ((!prop.IsPaused && m_Scene->IsEditor()) || (m_Scene->IsPlaying() && !m_Scene->IsEditor()))
 			{
 				// Pass 1
 				auto& shader1 = particleSystem.Pass1->GetShader();
@@ -312,11 +316,13 @@ namespace NL
 				shader1->SetUniformMat4("u_Transform", transform.GetTransform());
 				shader1->SetUniformFloat("u_DeltaTime", m_DeltaTime);
 				shader1->SetUniformFloat("u_TotalTime", m_TotalTime);
-				shader1->SetUniformFloat("u_Radius", particleSystem.SpawnAreaRadius);
-				shader1->SetUniformFloat3("u_MinVelocity", particleSystem.MinVelocity);
-				shader1->SetUniformFloat3("u_MaxVelocity", particleSystem.MaxVelocity);
-				shader1->SetUniformFloat("u_MinTotalLifetime", particleSystem.MinTotalLifetime);
-				shader1->SetUniformFloat("u_MaxTotalLifetime", particleSystem.MaxTotalLifetime);
+				shader1->SetUniformFloat("u_Radius", prop.SpawnAreaRadius);
+				shader1->SetUniformFloat3("u_MinVelocity", prop.MinVelocity);
+				shader1->SetUniformFloat3("u_MaxVelocity", prop.MaxVelocity);
+				shader1->SetUniformFloat("u_MinTotalLifetime", prop.MinTotalLifetime);
+				shader1->SetUniformFloat("u_MaxTotalLifetime", prop.MaxTotalLifetime);
+
+				Renderer::BindCustomShaderProperties(particleSystem.Pass1);
 
 				inputBuffer->BindBuffer();
 				outputBuffer->BindTransformFeedback();
@@ -327,10 +333,10 @@ namespace NL
 				Renderer::BeginTransformFeedback_Points();
 				// test
 
-				if (particleSystem.IsFirstDraw)
+				if (prop.IsFirstDraw)
 				{
-					Renderer::DrawArrays_Points(0, particleSystem.LauncherNum);
-					particleSystem.IsFirstDraw = false;
+					Renderer::DrawArrays_Points(0, prop.LauncherNum);
+					prop.IsFirstDraw = false;
 				}
 				else
 				{
@@ -354,8 +360,9 @@ namespace NL
 			shader2->SetUniformMat4("u_Transform", transform.GetTransform());
 			shader2->SetUniformInt("u_IsSelected", entity == selectedEntity);
 			shader2->SetUniformInt("u_EntityId", (uint32_t)entity);
-			shader2->SetUniformInt("u_Sprite", 0);
-			particleSystem.Tex->Bind(0);
+			//shader2->SetUniformInt("u_Sprite", 0);
+			//particleSystem.Tex->Bind(0);
+			Renderer::BindCustomShaderProperties(particleSystem.Pass2);
 
 			outputBuffer->BindBuffer();
 
@@ -365,12 +372,14 @@ namespace NL
 			outputBuffer->UnbindBuffer();
 
 			// Switch buffer
-			if (!particleSystem.IsPaused)
+			if ((!prop.IsPaused && m_Scene->IsEditor()) || (m_Scene->IsPlaying() && !m_Scene->IsEditor()))
 			{
-				particleSystem.Input = particleSystem.Output;
-				particleSystem.Output = 1 - particleSystem.Output;
+				prop.Input = prop.Output;
+				prop.Output = 1 - prop.Output;
 			}
 		}
+
 		Renderer::DepthMask(true);
+		Renderer::BlendFunc(BlendFactor::SrcAlpha, BlendFactor::OneMinusSrcAlpha);
 	}
 }

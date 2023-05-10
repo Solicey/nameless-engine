@@ -73,6 +73,9 @@ namespace NL
 			int entityId,
 			bool isSelected);
 
+		// Bind shader first!
+		static void BindCustomShaderProperties(const Ref<Material>& mat);
+
 		static void OnWindowResize(unsigned int width, unsigned int height);
 
 		static void SetPointLightData(const PointLightShadingData data[MAX_LIGHT_COUNT])
@@ -162,6 +165,16 @@ namespace NL
 		inline static void DepthMask(bool enable)
 		{
 			s_RendererAPI->DepthMask(enable);
+		}
+
+		inline static void BlendFunc(BlendFactor src, BlendFactor dst)
+		{
+			s_RendererAPI->BlendFunc(src, dst);
+		}
+
+		inline static void BlendEquation()
+		{
+
 		}
 
 #pragma endregion

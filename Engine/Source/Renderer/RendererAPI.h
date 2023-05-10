@@ -20,6 +20,18 @@ namespace NL
 		FrontAndBack
 	};
 
+	enum class BlendFactor
+	{
+		One,
+		SrcAlpha,
+		OneMinusSrcAlpha
+	};
+
+	enum class BlendOp
+	{
+		Add
+	};
+
 	class RendererAPI
 	{
 	public:
@@ -58,6 +70,8 @@ namespace NL
 		virtual void RasterizerDiscard(bool enable) = 0;
 
 		virtual void DepthMask(bool enable) = 0;
+
+		virtual void BlendFunc(BlendFactor srcFactor, BlendFactor dstFactor) = 0;
 
 		inline static API GetCurrent() { return s_API; }
 

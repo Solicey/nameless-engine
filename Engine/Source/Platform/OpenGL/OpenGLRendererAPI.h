@@ -34,5 +34,7 @@ namespace NL
 		virtual void RasterizerDiscard(bool enable) override;
 
 		virtual void DepthMask(bool enable) override;
+
+		virtual void BlendFunc(BlendFactor srcFactor, BlendFactor dstFactor) override;
 	};
 }

@@ -21,7 +21,10 @@ uniform mat4 u_Transform;
 
 void main()
 {
-	gl_Position = u_Transform * vec4(a_Position, 1.0);
+    float r = a_Position.x;
+	float theta = a_Position.y;
+	float y = a_Position.z;
+	gl_Position = u_Transform * vec4(r * cos(theta), y, r * sin(theta), 1.0);
 }
 
 #type geometry
@@ -94,7 +97,7 @@ void main()
 	
 	color2 = u_EntityId;
 
-	color3 = vec4(0, 0, 0, 1);
+	color3 = vec4(0.1, 0.1, 0.1, 1);
 	if (u_IsSelected)
 		color3 = vec4(1, 1, 1, 1);
 }			

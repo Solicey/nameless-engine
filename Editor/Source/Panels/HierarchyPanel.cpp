@@ -700,21 +700,24 @@ namespace NL
 			comp.Init();
 		}
 		ImGui::SameLine(0, 4);
-		if (ImGui::Button(comp.IsPaused ? "Play" : "Pause", ImVec2(width, lineHeight)))
+		if (ImGui::Button(scene->IsEditor() ? (comp.Prop.IsPaused ? "Play" : "Pause") : "\\", ImVec2(width, lineHeight)))
 		{
-			comp.IsPaused = !comp.IsPaused;
+			comp.Prop.IsPaused = !comp.Prop.IsPaused;
 		}
 
 		// Init
 		if (Utils::TreeNodeExStyle1((void*)"Init", "Initialization"))
 		{
-			Utils::DragIntStyle1("Particles Count", RIGHT_COLUMN_WIDTH, comp.LauncherNum, 10, 0, 20000);
+			Utils::DragIntStyle1("Particles Count", RIGHT_COLUMN_WIDTH, comp.Prop.LauncherNum, 10, 0, 20000);
 			const char* list[3] = { "Point", "Circle", "Sphere" };
-			comp.SpawnAreaShape = (ParticleSpawnAreaShape)Utils::ComboStyle1("Spawn Area Shape", RIGHT_COLUMN_WIDTH, list, (int)comp.SpawnAreaShape, 3);
-			Utils::DragFloatStyle1("Max Life Span", RIGHT_COLUMN_WIDTH, comp.MaxTotalLifetime);
-			Utils::DragFloatStyle1("Min Life Span", RIGHT_COLUMN_WIDTH, comp.MinTotalLifetime);
-			DrawVec3Control("Max Velocity", comp.MaxVelocity);
-			DrawVec3Control("Min Velocity", comp.MinVelocity);
+			const char* list2[2] = { "Uniform", "Normal" };
+			comp.Prop.SpawnAreaShape = (ParticleSpawnAreaShape)Utils::ComboStyle1("Spawn Area Shape", RIGHT_COLUMN_WIDTH, list, (int)comp.Prop.SpawnAreaShape, 3);
+			comp.Prop.SpawnPositionDistribution = (ParticleSpawnDistribution)Utils::ComboStyle1("Spawn Position Distribution", RIGHT_COLUMN_WIDTH, list2, (int)comp.Prop.SpawnPositionDistribution, 2);
+			Utils::DragFloatStyle1("Spawn Area Radius", RIGHT_COLUMN_WIDTH, comp.Prop.SpawnAreaRadius, 0.1f, 0.0f, 1000.0f);
+			Utils::DragFloatStyle1("Max Life Span", RIGHT_COLUMN_WIDTH, comp.Prop.MaxTotalLifetime);
+			Utils::DragFloatStyle1("Min Life Span", RIGHT_COLUMN_WIDTH, comp.Prop.MinTotalLifetime);
+			DrawVec3Control("Max Velocity", comp.Prop.MaxVelocity);
+			DrawVec3Control("Min Velocity", comp.Prop.MinVelocity);
 			ImGui::Dummy(ImVec2{ 0, 1 });
 			ImGui::TreePop();
 		}

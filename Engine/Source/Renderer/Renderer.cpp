@@ -106,33 +106,7 @@ namespace NL
 			shader->SetUniformMat4Array("u_FinalBoneMatrices", finalMatrices);
 		}
 
-		// Custom
-		int cntSampler2D = 0;
-		for (const auto& prop : material->GetShaderProperties())
-		{
-			switch (prop.Type)
-			{
-			case ShaderUniformType::Color3:
-				shader->SetUniformFloat3(prop.Name.c_str(), std::get<nlm::vec3>(prop.Value));
-				break;
-
-			case ShaderUniformType::Sampler2D:
-				//NL_ENGINE_TRACE("Sampler2D name: {0}", prop.Name);
-				//NL_ENGINE_TRACE("Sampler2D filepath: {0}", std::get<std::string>(prop.Value));
-				shader->SetUniformInt(prop.Name.c_str(), cntSampler2D);
-				// std::get<std::string>(prop.Value)
-				Library<Texture2D>::GetInstance().Fetch(std::get<std::string>(prop.Value))->Bind(cntSampler2D);
-				cntSampler2D++;
-				break;
-
-			case ShaderUniformType::Float:
-				shader->SetUniformFloat(prop.Name.c_str(), std::get<float>(prop.Value));
-				break;
-
-			default:
-				break;
-			}
-		}
+		BindCustomShaderProperties(material);
 
 		vertexArray->Bind();
 
@@ -229,6 +203,38 @@ namespace NL
 		{
 			const auto& material = model->GetMaterial(mesh);
 			Submit(mesh->GetVertexArray(), material, transform, hasBones ? model->GetFinalBoneMatrices() : emptyMatrices, entityId, isSelected);
+		}
+	}
+
+	void Renderer::BindCustomShaderProperties(const Ref<Material>& material)
+	{
+		const auto& shader = material->GetShader();
+		// Custom
+		int cntSampler2D = 0;
+		for (const auto& prop : material->GetShaderProperties())
+		{
+			switch (prop.Type)
+			{
+			case ShaderUniformType::Color3:
+				shader->SetUniformFloat3(prop.Name.c_str(), std::get<nlm::vec3>(prop.Value));
+				break;
+
+			case ShaderUniformType::Sampler2D:
+				//NL_ENGINE_TRACE("Sampler2D name: {0}", prop.Name);
+				//NL_ENGINE_TRACE("Sampler2D filepath: {0}", std::get<std::string>(prop.Value));
+				shader->SetUniformInt(prop.Name.c_str(), cntSampler2D);
+				// std::get<std::string>(prop.Value)
+				Library<Texture2D>::GetInstance().Fetch(std::get<std::string>(prop.Value))->Bind(cntSampler2D);
+				cntSampler2D++;
+				break;
+
+			case ShaderUniformType::Float:
+				shader->SetUniformFloat(prop.Name.c_str(), std::get<float>(prop.Value));
+				break;
+
+			default:
+				break;
+			}
 		}
 	}
 

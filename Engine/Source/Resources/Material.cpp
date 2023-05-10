@@ -23,12 +23,14 @@ namespace NL
 	Material::Material()
 	{
 		LoadShaderAndUpdateProps(Library<Shader>::GetInstance().GetDefaultShaderName());
+		UpdateSampler2DinProperties();
 	}
 
 	Material::Material(const std::string& shaderName, const std::string& matName)
 		: m_Name(matName)
 	{
 		LoadShaderAndUpdateProps(shaderName);
+		UpdateSampler2DinProperties();
 	}
 
 	Material::Material(const Material* src)

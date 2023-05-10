@@ -113,6 +113,12 @@ namespace NL
             Library<Texture2D>::GetInstance().Delete(comp.Path);
         }
 
+        if (entity.HasComponent<ParticleSystemComponent>())
+        {
+            auto& comp = entity.GetComponent<ParticleSystemComponent>();
+            comp.DeleteTexturesReference();
+        }
+
         m_EntityMap.erase(entity.GetID());
         Registry.destroy(entity);
     }
@@ -315,7 +321,7 @@ namespace NL
     template<>
     void Scene::OnComponentRemoved<ParticleSystemComponent>(Entity entity, ParticleSystemComponent& component)
     {
-
+        component.DeleteTexturesReference();
     }
 
     template<>

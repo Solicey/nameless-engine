@@ -25,7 +25,7 @@ namespace NL
 		Point, Circle, Sphere
 	};
 
-	enum class ParticleDistribution
+	enum class ParticleSpawnDistribution
 	{
 		Uniform, Normal
 	};
@@ -34,33 +34,39 @@ namespace NL
 	{
 	public:
 		ParticleSystemComponent();
+		ParticleSystemComponent(const ParticleSystemComponent& comp);
 		void Init();
 		void UpdateShaderProperties(const std::string& shaderName);
+		void DeleteTexturesReference();
 
 	public:
 		Ref<TransformFeedback>	TFB[2];
 		// Uses TFB in Pass1
 		Ref<Material>			Pass1, Pass2;
 		// Ref<Shader>				Pass1, Pass2;
-		Ref<Texture2D>			Tex;
+		//Ref<Texture2D>			Tex;
 
-		int						Input = 0, Output = 1;
-		bool					IsFirstDraw = true;
-		bool					IsPaused = false;
+		struct Property
+		{
+			int						Input = 0, Output = 1;
+			bool					IsFirstDraw = true;
+			bool					IsPaused = false;
 
-		// Init Options
-		int						LauncherNum;
-		ParticleSpawnAreaShape	SpawnAreaShape;
-		float					SpawnAreaRadius;
+			// Init Options
+			int						LauncherNum;
+			ParticleSpawnAreaShape	SpawnAreaShape;
+			float					SpawnAreaRadius;
+			ParticleSpawnDistribution	SpawnPositionDistribution;
 
-		nlm::vec3				MinVelocity;
-		nlm::vec3				MaxVelocity;
+			nlm::vec3				MinVelocity;
+			nlm::vec3				MaxVelocity;
 
-		float					MinTotalLifetime;
-		float					MaxTotalLifetime;
+			float					MinTotalLifetime;
+			float					MaxTotalLifetime;
 
-		nlm::vec4				InitColor;
-		float					InitSize;
+			nlm::vec4				InitColor;
+			float					InitSize;
+		} Prop;
 
 	};
 }

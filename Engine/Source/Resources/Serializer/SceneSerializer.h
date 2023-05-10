@@ -18,6 +18,9 @@ namespace NL
 
 	private:
 		void SerializeEntity(YAML::Emitter& out, Entity entity);
+		// Call BeginSeq outside
+		void SerializeShaderProperties(YAML::Emitter& out, const Ref<Material>& material);
+		void DeserializeShaderProperties(YAML::Node& props, std::vector<ShaderProperty>& properties, Ref<Material>& material);
 
 	private:
 		Ref<Scene> m_Scene;

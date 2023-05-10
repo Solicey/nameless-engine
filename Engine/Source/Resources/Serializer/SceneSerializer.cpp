@@ -238,53 +238,8 @@ namespace NL
 						continue;
 
 					auto& properties = material->GetShaderPropertiesNotConst();
-					properties.clear();
-					for (auto prop : props)
-					{
-						ShaderProperty newProp;
-						newProp.Type = static_cast<ShaderUniformType>(prop["Type"].as<int>());
-						newProp.Name = prop["Name"].as<std::string>();
-						// variant TODO
-						switch (newProp.Type)
-						{
-						case ShaderUniformType::Color3:
-							newProp.Value = prop["Value"].as<nlm::vec3>();
-							break;
-						case ShaderUniformType::Sampler2D:
-						{
-							newProp.Value = prop["Value"].as<std::string>();
-							const std::string& path = std::get<std::string>(newProp.Value);
 
-							Ref<Texture2D> newTex = Library<Texture2D>::GetInstance().Fetch(path);
-
-							/*if (Library<Texture2D>::GetInstance().Contains(path))
-							{
-								newTex = Library<Texture2D>::GetInstance().Get(path);
-							}
-							else
-							{
-								newTex = Texture2D::Create(path);
-								Library<Texture2D>::GetInstance().Add(path, newTex);
-							}*/
-
-							material->ReplaceTexture(newProp.Name, newTex);
-
-							newProp.Value = path;
-
-							// Avoid memory leak
-
-							break;
-						}
-						case ShaderUniformType::Float:
-						{
-							newProp.Value = prop["Value"].as<float>();
-							break;
-						}
-						default:
-							break;
-						}
-						properties.emplace_back(newProp);
-					}
+					DeserializeShaderProperties(props, properties, material);
 				}
 
 				auto bones = modelRendererComponent["Bones"];
@@ -335,6 +290,33 @@ namespace NL
 				comp.Type = (LightType)lightComponent["LightType"].as<int>();
 				comp.Color = lightComponent["Color"].as<nlm::vec3>();
 				comp.Intensity = lightComponent["Intensity"].as<float>();
+			}
+
+			auto particleSystemComponent = entity["ParticleSystemComponent"];
+			if (particleSystemComponent)
+			{
+				auto& comp = deserializedEntity.AddComponent<ParticleSystemComponent>();
+				auto& prop = comp.Prop;
+				prop.LauncherNum = particleSystemComponent["LauncherNum"].as<int>();
+				prop.SpawnAreaShape = (ParticleSpawnAreaShape)particleSystemComponent["SpawnAreaShape"].as<int>();
+				prop.SpawnPositionDistribution = (ParticleSpawnDistribution)particleSystemComponent["SpawnPositionDistribution"].as<int>();
+				prop.SpawnAreaRadius = particleSystemComponent["SpawnAreaRadius"].as<float>();
+				prop.MaxVelocity = particleSystemComponent["MaxVelocity"].as<nlm::vec3>();
+				prop.MinVelocity = particleSystemComponent["MinVelocity"].as<nlm::vec3>();
+				prop.MaxTotalLifetime = particleSystemComponent["MaxTotalLifetime"].as<float>();
+				prop.MinTotalLifetime = particleSystemComponent["MinTotalLifetime"].as<float>();
+				prop.InitColor = particleSystemComponent["InitColor"].as<nlm::vec4>();
+				prop.InitSize = particleSystemComponent["InitSize"].as<float>();
+				
+				comp.Pass1->LoadShaderAndUpdateProps(particleSystemComponent["Pass1Name"].as<std::string>());
+				auto pass1Props = particleSystemComponent["Pass1Props"];
+				DeserializeShaderProperties(pass1Props, comp.Pass1->GetShaderPropertiesNotConst(), comp.Pass1);
+
+				comp.Pass2->LoadShaderAndUpdateProps(particleSystemComponent["Pass2Name"].as<std::string>());
+				auto pass2Props = particleSystemComponent["Pass2Props"];
+				DeserializeShaderProperties(pass2Props, comp.Pass2->GetShaderPropertiesNotConst(), comp.Pass2);
+
+				comp.Init();
 			}
 
 			// Always at the bottom!!!!
@@ -441,30 +423,7 @@ namespace NL
 
 				out << YAML::Key << "ShaderProperties" << YAML::Value << YAML::BeginSeq; // ShaderProperties
 
-				for (const auto& prop : mat->GetShaderPropertiesNotConst())
-				{
-					out << YAML::BeginMap; // ShaderProperty
-					out << YAML::Key << "Type" << YAML::Value << (int)prop.Type;
-					out << YAML::Key << "Name" << YAML::Value << prop.Name;
-					int index = prop.Value.index();
-					// ShaderUniform.h
-					// variant TODO
-					switch (index)
-					{
-					case 0:		// std::string
-						out << YAML::Key << "Value" << YAML::Value << std::get<0>(prop.Value);
-						break;
-					case 1:		// nlm::vec3
-						out << YAML::Key << "Value" << YAML::Value << std::get<1>(prop.Value);
-						break;
-					case 2:		// float
-						out << YAML::Key << "Value" << YAML::Value << std::get<2>(prop.Value);
-						break;
-					default:
-						break;
-					}
-					out << YAML::EndMap; // ShaderProperty
-				}
+				SerializeShaderProperties(out, mat);
 
 				out << YAML::EndSeq; // ShaderProperties
 
@@ -545,6 +504,38 @@ namespace NL
 			out << YAML::EndMap; // LightComponent
 		}
 
+		// Particle System Component
+		if (entity.HasComponent<ParticleSystemComponent>())
+		{
+			out << YAML::Key << "ParticleSystemComponent";
+			out << YAML::BeginMap; // ParticleSystemComponent
+
+			auto& comp = entity.GetComponent<ParticleSystemComponent>();
+			auto& prop = comp.Prop;
+			out << YAML::Key << "LauncherNum" << YAML::Value << prop.LauncherNum;
+			out << YAML::Key << "SpawnAreaShape" << YAML::Value << (int)prop.SpawnAreaShape;
+			out << YAML::Key << "SpawnPositionDistribution" << YAML::Value << (int)prop.SpawnPositionDistribution;
+			out << YAML::Key << "SpawnAreaRadius" << YAML::Value << prop.SpawnAreaRadius;
+			out << YAML::Key << "MaxVelocity" << YAML::Value << prop.MaxVelocity;
+			out << YAML::Key << "MinVelocity" << YAML::Value << prop.MinVelocity;
+			out << YAML::Key << "MaxTotalLifetime" << YAML::Value << prop.MaxTotalLifetime;
+			out << YAML::Key << "MinTotalLifetime" << YAML::Value << prop.MinTotalLifetime;
+			out << YAML::Key << "InitColor" << YAML::Value << prop.InitColor;
+			out << YAML::Key << "InitSize" << YAML::Value << prop.InitSize;
+
+			out << YAML::Key << "Pass1Name" << YAML::Value << comp.Pass1->GetShaderName();
+			out << YAML::Key << "Pass1Props" << YAML::Value << YAML::BeginSeq; // Pass1Props
+			SerializeShaderProperties(out, comp.Pass1);
+			out << YAML::EndSeq; // Pass1Props
+			
+			out << YAML::Key << "Pass2Name" << YAML::Value << comp.Pass2->GetShaderName();
+			out << YAML::Key << "Pass2Props" << YAML::Value << YAML::BeginSeq; // Pass2Props
+			SerializeShaderProperties(out, comp.Pass2);
+			out << YAML::EndSeq; // Pass2Props
+
+			out << YAML::EndMap; // LightComponent
+		}
+
 		if (entity.HasComponent<ScriptComponent>())
 		{
 			auto& comp = entity.GetComponent<ScriptComponent>();
@@ -605,4 +596,84 @@ namespace NL
 
 		out << YAML::EndMap; // Entity
 	}
+
+	void SceneSerializer::SerializeShaderProperties(YAML::Emitter& out, const Ref<Material>& mat)
+	{
+		for (const auto& prop : mat->GetShaderProperties())
+		{
+			out << YAML::BeginMap; // ShaderProperty
+			out << YAML::Key << "Type" << YAML::Value << (int)prop.Type;
+			out << YAML::Key << "Name" << YAML::Value << prop.Name;
+			int index = prop.Value.index();
+			// ShaderUniform.h
+			// variant TODO
+			switch (index)
+			{
+			case 0:		// std::string
+				out << YAML::Key << "Value" << YAML::Value << std::get<0>(prop.Value);
+				break;
+			case 1:		// nlm::vec3
+				out << YAML::Key << "Value" << YAML::Value << std::get<1>(prop.Value);
+				break;
+			case 2:		// float
+				out << YAML::Key << "Value" << YAML::Value << std::get<2>(prop.Value);
+				break;
+			default:
+				break;
+			}
+			out << YAML::EndMap; // ShaderProperty
+		}
+	}
+
+	void SceneSerializer::DeserializeShaderProperties(YAML::Node& props, std::vector<ShaderProperty>& properties, Ref<Material>& material)
+	{
+		properties.clear();
+		for (auto prop : props)
+		{
+			ShaderProperty newProp;
+			newProp.Type = static_cast<ShaderUniformType>(prop["Type"].as<int>());
+			newProp.Name = prop["Name"].as<std::string>();
+			// variant TODO
+			switch (newProp.Type)
+			{
+			case ShaderUniformType::Color3:
+				newProp.Value = prop["Value"].as<nlm::vec3>();
+				break;
+			case ShaderUniformType::Sampler2D:
+			{
+				newProp.Value = prop["Value"].as<std::string>();
+				const std::string& path = std::get<std::string>(newProp.Value);
+
+				Ref<Texture2D> newTex = Library<Texture2D>::GetInstance().Fetch(path);
+
+				/*if (Library<Texture2D>::GetInstance().Contains(path))
+				{
+					newTex = Library<Texture2D>::GetInstance().Get(path);
+				}
+				else
+				{
+					newTex = Texture2D::Create(path);
+					Library<Texture2D>::GetInstance().Add(path, newTex);
+				}*/
+
+				material->ReplaceTexture(newProp.Name, newTex);
+
+				newProp.Value = path;
+
+				// Avoid memory leak
+
+				break;
+			}
+			case ShaderUniformType::Float:
+			{
+				newProp.Value = prop["Value"].as<float>();
+				break;
+			}
+			default:
+				break;
+			}
+			properties.emplace_back(newProp);
+		}
+	}
+
 }

@@ -44,8 +44,7 @@ namespace NL
 			auto name = modelName + ":" + meshName;
 			if (Contains(name))
 			{
-				const auto& item = Get(name);
-				int useCount = item.use_count();
+				int useCount = GetUseCount(name);
 				if (useCount <= 1)
 				{
 					NL_ENGINE_TRACE("Mesh {0} reference no more than 1, will be deleted!", name);
