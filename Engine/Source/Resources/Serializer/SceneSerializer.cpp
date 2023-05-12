@@ -290,6 +290,7 @@ namespace NL
 				comp.Type = (LightType)lightComponent["LightType"].as<int>();
 				comp.Color = lightComponent["Color"].as<nlm::vec3>();
 				comp.Intensity = lightComponent["Intensity"].as<float>();
+				comp.Attenuation = lightComponent["Attenuation"].as<nlm::vec3>();
 			}
 
 			auto particleSystemComponent = entity["ParticleSystemComponent"];
@@ -500,6 +501,7 @@ namespace NL
 			out << YAML::Key << "LightType" << YAML::Value << (int)comp.Type;
 			out << YAML::Key << "Color" << YAML::Value << comp.Color;
 			out << YAML::Key << "Intensity" << YAML::Value << comp.Intensity;
+			out << YAML::Key << "Attenuation" << YAML::Value << comp.Attenuation;
 
 			out << YAML::EndMap; // LightComponent
 		}
@@ -627,13 +629,12 @@ namespace NL
 
 	void SceneSerializer::DeserializeShaderProperties(YAML::Node& props, std::vector<ShaderProperty>& properties, Ref<Material>& material)
 	{
-		properties.clear();
+		std::unordered_map<std::string, ShaderPropValue> oldProps;
 		for (auto prop : props)
 		{
 			ShaderProperty newProp;
 			newProp.Type = static_cast<ShaderUniformType>(prop["Type"].as<int>());
 			newProp.Name = prop["Name"].as<std::string>();
-			// variant TODO
 			switch (newProp.Type)
 			{
 			case ShaderUniformType::Color3:
@@ -645,16 +646,6 @@ namespace NL
 				const std::string& path = std::get<std::string>(newProp.Value);
 
 				Ref<Texture2D> newTex = Library<Texture2D>::GetInstance().Fetch(path);
-
-				/*if (Library<Texture2D>::GetInstance().Contains(path))
-				{
-					newTex = Library<Texture2D>::GetInstance().Get(path);
-				}
-				else
-				{
-					newTex = Texture2D::Create(path);
-					Library<Texture2D>::GetInstance().Add(path, newTex);
-				}*/
 
 				material->ReplaceTexture(newProp.Name, newTex);
 
@@ -672,7 +663,33 @@ namespace NL
 			default:
 				break;
 			}
-			properties.emplace_back(newProp);
+
+			oldProps.insert(std::make_pair(newProp.Name + std::to_string((int)newProp.Type), newProp.Value));
+		}
+
+		for (auto& prop : properties)
+		{
+			int type = (int)prop.Type;
+			std::string key = prop.Name + std::to_string(type);
+			if (oldProps.contains(key))
+			{
+				prop.Value = oldProps[key];
+				continue;
+			}
+
+			switch (prop.Type)
+			{
+			case ShaderUniformType::Color3:
+				prop.Value = nlm::vec3(1.0, 1.0, 1.0);
+				break;
+
+			case ShaderUniformType::Float:
+				prop.Value = 0.0f;
+				break;
+
+			default:
+				break;
+			}
 		}
 	}
 

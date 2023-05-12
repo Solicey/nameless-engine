@@ -651,35 +651,19 @@ namespace NL
 
 		// Light Type Begin
 		const char* lightTypeStrings[] = { "Dir", "Point" };
-		const char* currentLightTypeString = lightTypeStrings[(int)component.Type];
-		// if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentLightTypeString))
-		ImGui::Columns(2);
-		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - RIGHT_COLUMN_WIDTH);
-		ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
-		ImGui::Text("Type");
-		ImGui::NextColumn();
-		if (ImGui::BeginCombo("##LightType", currentLightTypeString))
-		{
-			for (int i = 0; i < 2; i++)
-			{
-				bool isSelected = (currentLightTypeString == lightTypeStrings[i]);
-				if (ImGui::Selectable(lightTypeStrings[i], isSelected))
-				{
-					currentLightTypeString = lightTypeStrings[i];
-					component.Type = (LightType)i;
-				}
-			}
-			ImGui::EndCombo();
-		}
-		ImGui::PopItemWidth();
-		ImGui::Columns(1);
-		// Light Type End
+		component.Type = (LightType)Utils::ComboStyle1("Type", RIGHT_COLUMN_WIDTH, lightTypeStrings, (int)component.Type, 2);
 
 		float& intensity = component.Intensity;
 		Utils::DragFloatStyle1("Intensity", RIGHT_COLUMN_WIDTH, intensity, 0.01f, 0.0f, 10.0f, "%.2f");
 
 		nlm::vec3& color = component.Color;
 		Utils::ColorEdit3Style1("Color", RIGHT_COLUMN_WIDTH, color);
+
+		if (component.Type == LightType::Point)
+		{
+			nlm::vec3& atten = component.Attenuation;
+			DrawVec3Control("Atten", atten);
+		}
 
 		});
 
@@ -761,7 +745,7 @@ namespace NL
 
 			if (Utils::ImageReplaceStyle1("Sprite", RIGHT_COLUMN_WIDTH, tex == nullptr ? Library<Texture2D>::GetInstance().Fetch(Library<Texture2D>::GetInstance().GetDefaultTextureName()) : tex))
 			{
-				std::string filepath = Application::GetInstance().OpenFileDialogue(L"Texture2D(*.png)\0*.png\0\0");
+				std::string filepath = Application::GetInstance().OpenFileDialogue(L"Texture2D(*.png;*.jpg)\0*.png;*.jpg\0\0");
 
 				size_t pos = filepath.find("Assets");
 				if (pos != std::string::npos)
@@ -779,7 +763,9 @@ namespace NL
 			// Utils::CheckBoxStyle1("Billboarding", RIGHT_COLUMN_WIDTH, component.IsBillboarding);
 
 			const char* reactTypeStrings[] = { "Normal", "LookAt", "Billboard" };
-			const char* currentReactTypeString = reactTypeStrings[(int)component.Reaction];
+			component.Reaction = (SpriteCameraReaction)Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, reactTypeStrings, (int)component.Reaction, 3);
+
+			/*const char* currentReactTypeString = reactTypeStrings[(int)component.Reaction];
 			// if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentLightTypeString))
 			ImGui::Columns(2);
 			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - RIGHT_COLUMN_WIDTH);
@@ -800,7 +786,7 @@ namespace NL
 				ImGui::EndCombo();
 			}
 			ImGui::PopItemWidth();
-			ImGui::Columns(1);
+			ImGui::Columns(1);*/
 
 		});
 
@@ -1035,7 +1021,7 @@ namespace NL
 				
 				if (Utils::ImageReplaceStyle1(prop.Name, RIGHT_COLUMN_WIDTH, oldTex))
 				{
-					std::string filepath = Application::GetInstance().OpenFileDialogue(L"Texture2D(*.png)\0*.png\0\0");
+					std::string filepath = Application::GetInstance().OpenFileDialogue(L"Texture2D(*.png;*.jpg)\0*.png;*.jpg\0\0");
 
 					size_t pos = filepath.find("Assets");
 					if (pos != std::string::npos)

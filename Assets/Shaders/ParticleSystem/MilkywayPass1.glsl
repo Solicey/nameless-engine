@@ -1,7 +1,14 @@
 #use particle1
 
 #prop
+float u_AlphaBias;
 float u_MaxHeight;
+float u_MaxRadius;
+float u_MinRadius;
+float u_GravitationalConst;
+float u_MaxCelestialRadius;
+float u_LuminanceThreshold;
+sampler2D u_Milkyway;
 #end
 
 // nlsl template shader file
@@ -67,10 +74,17 @@ layout(std140, binding = 0) uniform Camera
 
 uniform mat4 u_Transform;
 uniform float u_DeltaTime;
+uniform float u_AlphaBias;
 uniform float u_MaxHeight;
+uniform float u_MaxRadius;
+uniform float u_MinRadius;
+uniform float u_GravitationalConst;
+uniform float u_MaxCelestialRadius;
+uniform float u_LuminanceThreshold;
+uniform sampler2D u_Milkyway;
 
-#define PARTICLE_TYPE_LAUNCHER 0.0f
-#define PARTICLE_TYPE_SHELL 1.0f
+#define PARTICLE_TYPE_LAUNCHER 0.0
+#define PARTICLE_TYPE_SHELL 1.0
 #define PI 3.1415926535897932384626433832795
 
 // 0-1
@@ -78,6 +92,11 @@ float Random(float value)
 {
 	float random = fract(sin(value + 0.546) * 143758.5964);
     return random;
+}
+
+float luminance(vec3 color)
+{
+	return 0.2125 * color.r + 0.7154 * color.g + 0.0721 * color.b;
 }
 
 void main()
@@ -89,21 +108,37 @@ void main()
 		float y = v_Position[0].y;
 		float z = v_Position[0].z;
 		float r = sqrt(x * x + z * z);
-		if (r <= 0.0)
-			return;
+		if (r >= u_MaxRadius)
+			r = Random(z - x + y) * u_MaxRadius;
 
-		y = y + (Random(x * z) * 2.0 - 1.0) * u_MaxHeight;
-		float theta = acos(x / r);
+		y = y + (Random(x - z + r) - 0.5) * 2 * u_MaxHeight * (u_MaxRadius - r) / u_MaxRadius;
+		float theta = asin(z / r) * 2;
 
 		g_Position = vec3(r, theta, y);
-
-		g_Velocity = v_Velocity[0];
 		g_Lifetime = v_Lifetime[0];
-		g_Color = v_Color[0];
-		g_Size = Random(y * z) * 1.3;
+
+		g_Size = v_Size[0] * Random(x - y - z) * u_MaxCelestialRadius;
+
+		if (r > u_MinRadius)
+			g_Velocity = vec3(0, sqrt(u_GravitationalConst / r) / r, 0);
+		else
+			g_Velocity = vec3(0, sqrt(u_GravitationalConst / u_MinRadius) / u_MinRadius, 0);
+
 		g_TotalLifetime = v_TotalLifetime[0];
 
-		gl_Position = u_Projection * u_View * u_Transform * vec4(x, y, z, 1.0);
+		float u = (r / u_MaxRadius * cos(theta)) * 0.5 + 0.5;
+		float v = (r / u_MaxRadius * sin(theta)) * 0.5 + 0.5;
+		g_Color = texture2D(u_Milkyway, vec2(u, v));
+		float lumin = luminance(g_Color.rgb) + (Random(x + y - z) * 2 - 1) * u_AlphaBias ;
+		if (lumin < u_LuminanceThreshold)
+			return;
+		//if (r < u_MinRadius)
+			//lumin =  lumin * 0.4;
+		g_Color.a = lumin * ((r + u_MinRadius) / (u_MaxRadius + u_MinRadius));
+		// float lerp1 = Random(x + y - z), lerp2 = Random(x - y + z) * (1 - lerp1);
+		// g_Color = vec4(lerp1 * u_Color1 + lerp2 * u_Color2 + (1 - lerp1 - lerp2) * u_Color3, min(Random(- x + y - z) * r / u_MaxRadius, 1));
+
+		gl_Position = u_Projection * u_View * u_Transform * vec4(r * cos(theta), y, r * sin(theta), 1.0);
 		EmitVertex();
         EndPrimitive();
 	}

@@ -17,10 +17,15 @@ layout (location = 1) in vec3 a_Position;
 layout (location = 4) in vec4 a_Color;
 layout (location = 5) in float a_Size;
 
+layout (location = 0) out vec4 v_Color;
+layout (location = 1) out float v_Size;
+
 uniform mat4 u_Transform;
 
 void main()
 {
+    v_Color = a_Color;
+    v_Size = a_Size;
     float r = a_Position.x;
 	float theta = a_Position.y;
 	float y = a_Position.z;
@@ -41,15 +46,20 @@ layout(std140, binding = 0) uniform Camera
 	vec3 u_CameraPosition;
 };
 
-layout(location = 0) out vec2 g_TexCoord;
+in vec4 v_Color[];
+in float v_Size[];
+
+out vec2 g_TexCoord;
+out vec4 g_Color;
 
 void main()
 {
+    g_Color = v_Color[0];
 	vec3 Pos = gl_in[0].gl_Position.xyz;
 
 	vec3 forward = normalize(u_CameraPosition - Pos);
-	vec3 right = normalize(cross(forward, vec3(0.0, 1.0, 0.0)));
-	vec3 up = normalize(cross(right, forward));
+	vec3 right = normalize(cross(forward, vec3(0.0, 1.0, 0.0))) * v_Size[0];
+	vec3 up = normalize(cross(right, forward)) * v_Size[0];
 
 	mat4 VP = u_Projection * u_View;
 
@@ -81,6 +91,7 @@ void main()
 #version 450 core
 
 layout (location = 0) in vec2 g_TexCoord;
+layout (location = 1) in vec4 g_Color;
 
 layout (location = 0) out vec4 color;
 layout (location = 1) out int color2;
@@ -93,11 +104,11 @@ uniform int u_EntityId;
 			
 void main()
 {
-	color = texture2D(u_Sprite, g_TexCoord) * vec4(u_Color, 1.0);
+	color = texture2D(u_Sprite, g_TexCoord) * g_Color * vec4(u_Color, 1.0);
 	
 	color2 = u_EntityId;
 
-	color3 = vec4(0.1, 0.1, 0.1, 1);
+	color3 = vec4(0, 0, 0, 1);
 	if (u_IsSelected)
 		color3 = vec4(1, 1, 1, 1);
 }			

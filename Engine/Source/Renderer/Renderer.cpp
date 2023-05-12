@@ -67,6 +67,7 @@ namespace NL
 		// shader->SetUniformMat4("u_View", s_SceneData->ViewMatrix);
 		// shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
 		shader->SetUniformMat4("u_Transform", transform);
+		shader->SetUniformMat4("u_NormalMatrix", nlm::transpose(nlm::inverse(transform)));
 		shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
 		shader->SetUniformInt("u_EntityId", entityId);
 
@@ -78,6 +79,7 @@ namespace NL
 			{
 				shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Color", point.Color);
 				shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Position", point.Position);
+				shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Attenuation", point.Attenuation);
 			}
 			else
 			{

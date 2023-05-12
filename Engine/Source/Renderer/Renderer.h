@@ -25,6 +25,7 @@ namespace NL
 	{
 		nlm::vec3 Position;
 		nlm::vec3 Color;
+		nlm::vec3 Attenuation;
 		bool IsValid = false;
 	};
 

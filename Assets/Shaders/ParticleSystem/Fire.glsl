@@ -144,9 +144,10 @@ void main()
 			g_Velocity = v_Velocity[0] + deltaVelocity;
 			g_Lifetime = lifetime;
 			g_TotalLifetime = v_TotalLifetime[0];
-			//float factor =  1.0f / ((lifetime - g_TotalLifetime / 2.0f) * (lifetime - g_TotalLifetime / 2.0f) + 1);
+			float factor =  1.0 / ((lifetime - g_TotalLifetime / 2.0) * (lifetime - g_TotalLifetime / 2.0) + 1);
 			g_Color = v_Color[0];
-			g_Size = v_Size[0];
+			g_Color.a = factor;
+			g_Size = factor;
 
 			gl_Position = u_Projection * u_View * u_Transform * vec4(g_Position, 1.0);
 			EmitVertex();
@@ -154,34 +155,3 @@ void main()
 		}
 	}
 }
-
-#type fragment
-#version 450 core
-
-layout (location = 0) in float g_Type;
-layout (location = 1) in vec3 g_Position;
-layout (location = 2) in vec3 g_Velocity;
-layout (location = 3) in float g_Lifetime;
-layout (location = 4) in vec4 g_Color;
-layout (location = 5) in float g_Size;
-layout (location = 6) in float g_TotalLifetime;
-
-layout (location = 0) out vec4 color;
-layout (location = 1) out int color2;
-layout (location = 2) out vec4 color3;
-
-// uniform vec3 u_Color;
-// uniform bool u_IsSelected;
-// uniform int u_EntityId;
-			
-void main()
-{
-	color = g_Color;
-	
-	//color2 = u_EntityId;
-
-	color2 = -1;
-	color3 = vec4(0.1, 0.1, 0.1, 1);
-	//if (u_IsSelected)
-		//color3 = vec4(1, 1, 1, 1);
-}			

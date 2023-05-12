@@ -20,7 +20,7 @@ namespace NL
 
 	private:
 		void UpdateParticleSystem(Entity selectedEntity = {});
-		
+		void LightPreparation(PointLightShadingData *pointLightDatas, DirLightShadingData *dirLightDatas, Entity *pointEntities, Entity *dirEntities);
 
 	private:
 		// Ref<Shader> m_GrayScaleShader;
