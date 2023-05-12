@@ -8,9 +8,28 @@ namespace NL
 {
 	enum class DepthComp
 	{
-		EQUAL,
-		LEQUAL,
-		LESS
+		Equal,
+		Lequal,
+		Less
+	};
+
+	enum class CullFace
+	{
+		Front,
+		Back,
+		FrontAndBack
+	};
+
+	enum class BlendFactor
+	{
+		One,
+		SrcAlpha,
+		OneMinusSrcAlpha
+	};
+
+	enum class BlendOp
+	{
+		Add
 	};
 
 	class RendererAPI
@@ -37,6 +56,22 @@ namespace NL
 		virtual void DepthTest(bool enable) = 0;
 
 		virtual void DepthFunc(DepthComp comp) = 0;
+
+		virtual void SetCullFace(CullFace face) = 0;
+
+		virtual void EnableCullFace(bool enable) = 0;
+
+		virtual void BeginTransformFeedback_Points() = 0;
+
+		virtual void EndTransformFeedback() = 0;
+
+		virtual void DrawArrays_Points(int first, uint32_t count) = 0;
+
+		virtual void RasterizerDiscard(bool enable) = 0;
+
+		virtual void DepthMask(bool enable) = 0;
+
+		virtual void BlendFunc(BlendFactor srcFactor, BlendFactor dstFactor) = 0;
 
 		inline static API GetCurrent() { return s_API; }
 

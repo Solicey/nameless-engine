@@ -12,12 +12,36 @@
 
 namespace NL
 {
+#define MAX_LIGHT_COUNT 4
+
+	enum class SpriteCameraReaction
+	{
+		Normal,
+		LookAt,
+		Billboarding
+	};
+
+	struct PointLightShadingData
+	{
+		nlm::vec3 Position;
+		nlm::vec3 Color;
+		nlm::vec3 Attenuation;
+		bool IsValid = false;
+	};
+
+	struct DirLightShadingData
+	{
+		nlm::vec3 Direction;
+		nlm::vec3 Color;
+		bool IsValid = false;
+	};
+
 	class Renderer
 	{
 	public:
 		static void BeginScene(OrthographicCamera& camera);
 		static void BeginScene(EditorCamera& camera);
-		static void BeginScene(Camera& camera, const nlm::mat4& transform);
+		static void BeginScene(Camera& camera, const nlm::mat4& transform, const nlm::vec3& position);
 		static void EndScene();
 
 		static void Submit(
@@ -25,6 +49,7 @@ namespace NL
 			const Ref<Material>& mat,
 			const nlm::mat4& transform = nlm::mat4(1.0f),
 			const std::vector<nlm::mat4>& finalMatrices = {}, 
+			int entityId = -1,
 			bool isSelected = false);
 
 		static void Submit(
@@ -34,18 +59,37 @@ namespace NL
 
 		static void DrawModel(const Ref<Model>& model, 
 			const Ref<Shader>& shader,
-			const nlm::mat4& transform = nlm::mat4(1.0f));
+			const nlm::mat4& transform);
+
+		static void DrawSprite(const Ref<Shader>& shader,
+			const Ref<Texture2D>& texture,
+			const nlm::mat4& transform,
+			const nlm::vec4& color,
+			SpriteCameraReaction camReact = SpriteCameraReaction::Normal,
+			int entityId = -1,
+			bool isSelected = false);
 
 		static void DrawModel(const Ref<Model>& model,
-			const nlm::mat4& transform = nlm::mat4(1.0f),
-			bool isSelected = false);
+			const nlm::mat4& transform,
+			int entityId,
+			bool isSelected);
+
+		// Bind shader first!
+		static void BindCustomShaderProperties(const Ref<Material>& mat);
 
 		static void OnWindowResize(unsigned int width, unsigned int height);
 
-		struct SceneData
+		static void SetPointLightData(const PointLightShadingData data[MAX_LIGHT_COUNT])
 		{
-			nlm::mat4 ViewPositionMatrix;
-		};
+			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
+				s_PointLightDatas[i] = data[i];
+		}
+
+		static void SetDirLightData(const DirLightShadingData data[MAX_LIGHT_COUNT])
+		{
+			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
+				s_DirLightDatas[i] = data[i];
+		}
 
 #pragma region Commands
 
@@ -84,10 +128,64 @@ namespace NL
 			s_RendererAPI->DepthFunc(comp);
 		}
 
+		inline static void SetCullFace(CullFace face)
+		{
+			s_RendererAPI->SetCullFace(face);
+		}
+
+		inline static void EnableCullFace(bool enable)
+		{
+			s_RendererAPI->EnableCullFace(enable);
+		}
+
+		// tmp
+		inline static void BeginTransformFeedback_Points()
+		{
+			s_RendererAPI->BeginTransformFeedback_Points();
+		}
+
+		inline static void EndTransformFeedback()
+		{
+			s_RendererAPI->EndTransformFeedback();
+		}
+
+		inline static void DrawArrays_Points(int first, uint32_t count)
+		{
+			s_RendererAPI->DrawArrays_Points(first, count);
+		}
+
+		inline static void RasterizerDiscard(bool enable)
+		{
+			s_RendererAPI->RasterizerDiscard(enable);
+		}
+
+		/// <summary>
+		/// enable write into depth buffer
+		/// </summary>
+		/// <param name="enable"></param>
+		inline static void DepthMask(bool enable)
+		{
+			s_RendererAPI->DepthMask(enable);
+		}
+
+		inline static void BlendFunc(BlendFactor src, BlendFactor dst)
+		{
+			s_RendererAPI->BlendFunc(src, dst);
+		}
+
+		inline static void BlendEquation()
+		{
+
+		}
+
 #pragma endregion
 
 	private:
-		static Scope<SceneData> s_SceneData;
+		// static Scope<SceneData> s_SceneData;
 		static Scope<RendererAPI> s_RendererAPI;
+
+		static PointLightShadingData s_PointLightDatas[MAX_LIGHT_COUNT];
+		static DirLightShadingData s_DirLightDatas[MAX_LIGHT_COUNT];
+
 	};
 }

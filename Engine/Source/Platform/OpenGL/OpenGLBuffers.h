@@ -7,8 +7,8 @@ namespace NL
 	class OpenGLVertexBuffer : public VertexBuffer
 	{
 	public:
-		OpenGLVertexBuffer(void* vertices, uint32_t size);
-		OpenGLVertexBuffer(std::vector<float>& vertices);
+		OpenGLVertexBuffer(void* vertices, uint32_t size, BufferUsage usage);
+		OpenGLVertexBuffer(std::vector<float>& vertices, BufferUsage usage);
 
 		virtual ~OpenGLVertexBuffer();
 
@@ -17,6 +17,8 @@ namespace NL
 
 		virtual const BufferLayout& GetLayout() const override { return m_Layout; }
 		virtual void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
+
+		virtual void SetTransformFeedbackTarget() const override;
 
 	private:
 		uint32_t m_RendererID;

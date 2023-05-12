@@ -4,12 +4,9 @@
 
 #include "Core/Math/Math.h"
 #include "Core/Log/Log.h"
+#include "Resources/Libraries/MeshLibrary.h"
 #include "Resources/Libraries/TextureLibrary.h"
 
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/matrix4x4.h>
-#include <assimp/postprocess.h>
 #include <regex>
 
 namespace NL
@@ -19,7 +16,7 @@ namespace NL
 		
 	}
 
-	Ref<Model> ModelLoader::Create(const std::string& path, int entityID, ModelLoaderFlags flags)
+	Ref<Model> ModelLoader::Create(const std::string& path, ModelLoaderFlags flags)
 	{
 		NL_ENGINE_INFO("Before regex: {0}", path);
 		std::string normPath = std::regex_replace(path, std::regex("\\\\"), "/");
@@ -27,7 +24,7 @@ namespace NL
 
 		Ref<Model> model = CreateRef<Model>(Model(normPath));
 
-		if (!AssimpLoadModel(normPath, model->m_Meshes, model->m_Materials, model->m_BoneMap, model->m_Bones, entityID, flags))
+		if (!AssimpLoadModel(normPath, model->m_Meshes, model->m_Materials, model->m_BoneMap, model->m_Bones, flags))
 		{
 			NL_ENGINE_WARN("Failed to load model path: {0}", normPath);
 			return nullptr;
@@ -50,7 +47,6 @@ namespace NL
 		std::unordered_map<std::string, Ref<Material>>& materials,
 		std::unordered_map<std::string, int>& boneMap,
 		std::map<int, BoneInfo>& bones,
-		int entityID,
 		ModelLoaderFlags flags)
 	{
 
@@ -63,7 +59,7 @@ namespace NL
 		aiMatrix4x4 identity;
 
 		std::vector<std::pair<std::string, std::string>> bonePairs;
-		ProcessNode(scene, &identity, scene->mRootNode, meshes, materials, boneMap, bones, bonePairs, entityID);
+		ProcessNode(scene, &identity, scene->mRootNode, meshes, materials, boneMap, bones, bonePairs, path);
 		if (!bonePairs.empty())
 			ProcessBoneHierarchy(boneMap, bones, bonePairs, scene->mRootNode);
 
@@ -101,9 +97,9 @@ namespace NL
 
 							NL_ENGINE_INFO("Load Texture: {0}, Type: {1}", texPath, type);
 
-							Ref<Texture2D> tex;
+							Ref<Texture2D> tex = Library<Texture2D>::GetInstance().Fetch(texPath);
 
-							if (Library<Texture2D>::GetInstance().Contains(texPath))
+							/*if (Library<Texture2D>::GetInstance().Contains(texPath))
 							{
 								tex = Library<Texture2D>::GetInstance().Get(texPath);
 							}
@@ -111,7 +107,7 @@ namespace NL
 							{
 								tex = Texture2D::Create(texPath);
 								Library<Texture2D>::GetInstance().Add(texPath, tex);
-							}
+							}*/
 
 							switch (type)
 							{
@@ -127,6 +123,7 @@ namespace NL
 								mat->AddTexture(TextureType::Ambient, tex);
 								break;
 							case aiTextureType_EMISSIVE:
+								mat->AddTexture(TextureType::Emissive, tex);
 								break;
 							case aiTextureType_HEIGHT:
 								mat->AddTexture(TextureType::Height, tex);
@@ -135,6 +132,7 @@ namespace NL
 								mat->AddTexture(TextureType::Normals, tex);
 								break;
 							case aiTextureType_SHININESS:
+								mat->AddTexture(TextureType::Shininess, tex);
 								break;
 							case aiTextureType_OPACITY:
 								break;
@@ -153,8 +151,10 @@ namespace NL
 							case aiTextureType_EMISSION_COLOR:
 								break;
 							case aiTextureType_METALNESS:
+								mat->AddTexture(TextureType::Metalness, tex);
 								break;
 							case aiTextureType_DIFFUSE_ROUGHNESS:
+								mat->AddTexture(TextureType::Roughness, tex);
 								break;
 							case aiTextureType_AMBIENT_OCCLUSION:
 								break;
@@ -191,7 +191,8 @@ namespace NL
 		}
 	}
 
-	void ModelLoader::ProcessNode(const struct aiScene* scene, void* transform, aiNode* node, std::vector<Ref<Mesh>>& meshes, std::unordered_map<std::string, Ref<Material>>& materials, std::unordered_map<std::string, int>& boneMap, std::map<int, BoneInfo>& bones, std::vector<std::pair<std::string, std::string>>& bonePairs, int entityID)
+	void ModelLoader::ProcessNode(const struct aiScene* scene, void* transform, aiNode* node, std::vector<Ref<Mesh>>& meshes, std::unordered_map<std::string, Ref<Material>>& materials, std::unordered_map<std::string, int>& boneMap, std::map<int, BoneInfo>& bones, std::vector<std::pair<std::string, std::string>>& bonePairs,
+		const std::string& modelPath)
 	{
 		aiMatrix4x4 nodeTransformation = *reinterpret_cast<aiMatrix4x4*>(transform) * node->mTransformation;
 
@@ -212,11 +213,11 @@ namespace NL
 			if (mesh->mNumBones > 0)
 			{
 				hasBones = true;
-				ProcessMesh(scene, &nodeTransformation, mesh, skinnedVertices, indices, entityID);
+				ProcessMesh(scene, &nodeTransformation, mesh, skinnedVertices, indices);
 			}
 			else
 			{
-				ProcessMesh(scene, &nodeTransformation, mesh, vertices, indices, entityID);
+				ProcessMesh(scene, &nodeTransformation, mesh, vertices, indices);
 			}
 
 			for (uint32_t j = 0; j < mesh->mNumBones; j++)
@@ -337,13 +338,23 @@ namespace NL
 
 			std::string matName = std::string(scene->mMaterials[mesh->mMaterialIndex]->GetName().C_Str());
 			materials[matName] = nullptr;
-			meshes.push_back(CreateRef<Mesh>(vertices, skinnedVertices, indices, mesh->mMaterialIndex, matName, hasBones)); // The model will handle mesh destruction
+			
+			if (!Library<Mesh>::GetInstance().HasMesh(modelPath, matName))
+			{
+				Ref<Mesh> m = CreateRef<Mesh>(vertices, skinnedVertices, indices, mesh->mMaterialIndex, modelPath, matName, hasBones);
+				meshes.push_back(m); // The model will handle mesh destruction
+				Library<Mesh>::GetInstance().AddMesh(modelPath, matName, m);
+			}
+			else
+			{
+				meshes.push_back(Library<Mesh>::GetInstance().GetMesh(modelPath, matName));
+			}
 		}
 
 		// Then do the same for each of its children
 		for (uint32_t i = 0; i < node->mNumChildren; ++i)
 		{
-			ProcessNode(scene, &nodeTransformation, node->mChildren[i], meshes, materials, boneMap, bones, bonePairs, entityID);
+			ProcessNode(scene, &nodeTransformation, node->mChildren[i], meshes, materials, boneMap, bones, bonePairs, modelPath);
 		}
 
 		// If it is a tip
@@ -365,7 +376,7 @@ namespace NL
 		}*/
 	}
 
-	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, int entityID)
+	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<Vertex>& vertices, std::vector<uint32_t>& indices)
 	{
 		// aiMatrix4x4 meshTransformation = *reinterpret_cast<aiMatrix4x4*>(transform);
 		aiMatrix4x4 meshTransformation = aiMatrix4x4();
@@ -385,8 +396,7 @@ namespace NL
 					nlm::vec2(texCoords.x, texCoords.y),
 					nlm::vec3(normal.x, normal.y, normal.z),
 					nlm::vec3(tangent.x, tangent.y, tangent.z),
-					nlm::vec3(bitangent.x, bitangent.y, bitangent.z),
-					entityID
+					nlm::vec3(bitangent.x, bitangent.y, bitangent.z)
 				}
 			);
 
@@ -403,7 +413,7 @@ namespace NL
 
 	}
 
-	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<SkinnedVertex>& vertices, std::vector<uint32_t>& indices, int entityID)
+	void ModelLoader::ProcessMesh(const struct aiScene* scene, void* transform, aiMesh* mesh, std::vector<SkinnedVertex>& vertices, std::vector<uint32_t>& indices)
 	{
 		//aiMatrix4x4 meshTransformation = *reinterpret_cast<aiMatrix4x4*>(transform);
 		aiMatrix4x4 meshTransformation = aiMatrix4x4();
@@ -424,7 +434,6 @@ namespace NL
 					nlm::vec3(normal.x, normal.y, normal.z),
 					nlm::vec3(tangent.x, tangent.y, tangent.z),
 					nlm::vec3(bitangent.x, bitangent.y, bitangent.z),
-					entityID,
 					nlm::ivec4(0, 0, 0, 0),
 					nlm::vec4(0.0f, 0.0f, 0.0f, 0.0f)
 				}

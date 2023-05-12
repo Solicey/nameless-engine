@@ -94,9 +94,9 @@ namespace NL
         m_Tex1 = m_FBO->GetColorAttachmentRendererID(1);
 
         // Load shaders
-        m_GrayScaleShader = Library<Shader>::GetInstance().LoadShader("Post_GrayScale.glsl");
-        // m_EditorOutlineShader_1 = Library<Shader>::GetInstance().LoadShader("Post_EditorOutline_1.glsl");
-        m_EditorOutlineShader = Library<Shader>::GetInstance().LoadShader("Post_EditorOutline.glsl");
+        m_GrayScaleShader = Library<Shader>::GetInstance().Fetch("Post_GrayScale.glsl");
+        // m_EditorOutlineShader_1 = Library<Shader>::GetInstance().Fetch("Post_EditorOutline_1.glsl");
+        m_EditorOutlineShader = Library<Shader>::GetInstance().Fetch("Post_EditorOutline.glsl");
 	}
 
     void OpenGLPostProcessing::GrayScale(uint32_t srcAttachment, uint32_t dstAttachment)

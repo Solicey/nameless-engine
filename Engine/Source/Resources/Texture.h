@@ -10,6 +10,7 @@ namespace NL
 {
 	enum class TextureType
 	{
+		Custom,
 		Diffuse,
 		Specular,
 		Ambient,
@@ -47,7 +48,12 @@ namespace NL
 	class Texture2D : public Texture
 	{
 	public:
+		template <typename LibType>
+		friend class Library;
+
 		virtual const std::string& GetPath() const = 0;
+
+	private:
 		static Ref<Texture2D> Create(uint32_t width, uint32_t height);
 		static Ref<Texture2D> Create(const std::string& path);
 	};
@@ -65,7 +71,11 @@ namespace NL
 	class TextureCubeMap : public Texture
 	{
 	public:
+		template <typename LibType>
+		friend class Library;
 		// virtual void AddTexturePath(CubeMapFace faceIndex, const std::string& path) = 0;
+
+	private:
 		static Ref<TextureCubeMap> Create(const std::vector<std::string>& texturePaths);
 	};
 }

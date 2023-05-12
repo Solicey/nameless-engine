@@ -14,7 +14,6 @@ namespace NL
 		nlm::vec3	Normal;
 		nlm::vec3	Tangent;
 		nlm::vec3	Bitangent;
-		int			EntityID;
 	};
 
 	struct SkinnedVertex
@@ -24,7 +23,6 @@ namespace NL
 		nlm::vec3	Normal;
 		nlm::vec3	Tangent;
 		nlm::vec3	Bitangent;
-		int			EntityID;
 		nlm::ivec4	BoneIDs;
 		nlm::vec4	Weights;
 		// int			BoneIDs[MAX_BONE_INFLUENCE];

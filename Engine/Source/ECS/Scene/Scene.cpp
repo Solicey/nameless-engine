@@ -7,6 +7,9 @@
 #include "ECS/System/AllSystems.h"
 #include "Scripting/ScriptEngine.h"
 
+#include "Resources/Libraries/TextureLibrary.h"
+#include "Resources/Libraries/MeshLibrary.h"
+
 namespace NL
 {
     Scene::Scene()
@@ -24,7 +27,7 @@ namespace NL
 
     Scene::~Scene()
     {
-        m_Registry.clear();
+        // DestroyScene();
     }
 
     template<Component... C>
@@ -59,8 +62,8 @@ namespace NL
 
         std::unordered_map<ID, entt::entity> enttMap;
 
-        auto& srcSceneRegistry = scene->m_Registry;
-        auto& dstSceneRegistry = newScene->m_Registry;
+        auto& srcSceneRegistry = scene->Registry;
+        auto& dstSceneRegistry = newScene->Registry;
         auto idView = srcSceneRegistry.view<IdentityComponent>();
         for (auto entity : idView)
         {
@@ -84,7 +87,7 @@ namespace NL
 
     Entity Scene::CreateEntityWithID(ID id, const std::string& name)
     {
-        Entity entity = Entity(m_Registry.create(), this);
+        Entity entity = Entity(Registry.create(), this);
         NL_ENGINE_TRACE("Entity entt id: {0}, nl id: {1}", (uint32_t)entity, id.GetID());
         entity.AddComponent<IdentityComponent>(id, name);
         entity.AddComponent<TransformComponent>();
@@ -98,13 +101,40 @@ namespace NL
     {
         if (entity.HasComponent<ModelRendererComponent>())
         {
-            auto& model = entity.GetComponent<ModelRendererComponent>().mModel;
+            auto& model = entity.GetComponent<ModelRendererComponent>()._Model;
             if (model)
-                model->DeleteMaterialTexturesReference();
+                model->DeleteMeshesAndTexturesReference();
+        }
+
+        if (entity.HasComponent<SpriteRendererComponent>())
+        {
+            auto& comp = entity.GetComponent<SpriteRendererComponent>();
+            comp.SpriteTexture.reset();
+            Library<Texture2D>::GetInstance().Delete(comp.Path);
+        }
+
+        if (entity.HasComponent<ParticleSystemComponent>())
+        {
+            auto& comp = entity.GetComponent<ParticleSystemComponent>();
+            comp.DeleteTexturesReference();
         }
 
         m_EntityMap.erase(entity.GetID());
-        m_Registry.destroy(entity);
+        Registry.destroy(entity);
+    }
+
+    void Scene::DestroyScene()
+    {
+        auto view = Registry.view<IdentityComponent>();
+        for (auto entity : view)
+        {
+            DestroyEntity(Entity(entity, this));
+        }
+
+        Registry.clear();
+        m_EntityMap.clear();
+        //Library<Texture2D>::GetInstance().TraverseDelete();
+        //Library<Mesh>::GetInstance().TraverseDelete();
     }
 
     void Scene::OnStartRuntime()
@@ -123,8 +153,6 @@ namespace NL
         {
             system->OnStopRuntime(editorScene);
         }
-
-        m_Registry.clear();
     }
 
     void Scene::OnUpdateRuntime(TimeStep ts, Entity cameraEntity, bool isRuntimeViewportFocused)
@@ -165,7 +193,7 @@ namespace NL
 
     Entity Scene::FindEntityByName(std::string_view name)
     {
-        auto view = m_Registry.view<IdentityComponent>();
+        auto view = Registry.view<IdentityComponent>();
         for (auto entity : view)
         {
             const IdentityComponent& comp = view.get<IdentityComponent>(entity);
@@ -177,7 +205,7 @@ namespace NL
 
     /*nlm::vec2 Scene::OnViewportResize(uint32_t width, uint32_t height)
     {
-        auto view = m_Registry.view<CameraComponent>();
+        auto view = Registry.view<CameraComponent>();
         for (auto entity : view)
         {
             auto& cameraComponent = view.get<CameraComponent>(entity);
@@ -225,6 +253,24 @@ namespace NL
 
     }
 
+    template<>
+    void Scene::OnComponentAdded<LightComponent>(Entity entity, LightComponent& component)
+    {
+
+    }
+
+    template<>
+    void Scene::OnComponentAdded<ParticleSystemComponent>(Entity entity, ParticleSystemComponent& component)
+    {
+        NL_ENGINE_INFO("Add Particle System!");
+    }
+
+    template<>
+    void Scene::OnComponentAdded<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
+    {
+        NL_ENGINE_INFO("Add Sprite Renderer Component!");
+    }
+
 #pragma endregion
 
 #pragma region OnComponentRemoved
@@ -248,9 +294,9 @@ namespace NL
     template<>
     void Scene::OnComponentRemoved<ModelRendererComponent>(Entity entity, ModelRendererComponent& component)
     {
-        if (component.mModel)
+        if (component._Model)
         {
-            component.mModel->DeleteMaterialTexturesReference();
+            component._Model->DeleteMeshesAndTexturesReference();
         }
     }
 
@@ -265,6 +311,29 @@ namespace NL
     {
        
     }
+
+    template<>
+    void Scene::OnComponentRemoved<LightComponent>(Entity entity, LightComponent& component)
+    {
+
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<ParticleSystemComponent>(Entity entity, ParticleSystemComponent& component)
+    {
+        component.DeleteTexturesReference();
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<SpriteRendererComponent>(Entity entity, SpriteRendererComponent& component)
+    {
+        if (component.SpriteTexture != nullptr)
+        {
+            component.SpriteTexture.reset();
+            Library<Texture2D>::GetInstance().Delete(component.Path);
+        }
+    }
+
 
 #pragma endregion
 }

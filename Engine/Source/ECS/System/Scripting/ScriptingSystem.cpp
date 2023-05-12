@@ -10,7 +10,7 @@ namespace NL
 		ScriptEngine::GetInstance().ClearAllInstances();
 		ScriptEngine::GetInstance().SetSceneContext(m_Scene);
 		// Instantiate all script entities for runtime scene
-		auto view = m_Scene->m_Registry.view<ScriptComponent>();
+		auto view = m_Scene->Registry.view<ScriptComponent>();
 		for (auto e : view)
 		{
 			Entity entity = { e, m_Scene };
@@ -30,7 +30,7 @@ namespace NL
 		if (m_Scene->IsPaused())
 			return;
 
-		auto view = m_Scene->m_Registry.view<ScriptComponent>();
+		auto view = m_Scene->Registry.view<ScriptComponent>();
 		for (auto e : view)
 		{
 			Entity entity = { e, m_Scene };
@@ -61,7 +61,7 @@ namespace NL
 		ScriptEngine::GetInstance().ClearAllInstances();
 		ScriptEngine::GetInstance().SetSceneContext(m_Scene);
 		// Instantiate all script entities for editor scene
-		auto view = m_Scene->m_Registry.view<ScriptComponent>();
+		auto view = m_Scene->Registry.view<ScriptComponent>();
 		for (auto e : view)
 		{
 			Entity entity = { e, m_Scene };
@@ -71,7 +71,7 @@ namespace NL
 
 	void ScriptingSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity)
 	{
-		auto view = m_Scene->m_Registry.view<ScriptComponent>();
+		auto view = m_Scene->Registry.view<ScriptComponent>();
 		for (auto e : view)
 		{
 			Entity entity = { e, m_Scene };

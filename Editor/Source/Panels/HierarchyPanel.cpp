@@ -20,6 +20,38 @@ namespace NL
 			return isExpanded;
 		}
 
+		static bool ColorEdit3Style1(const std::string& label, float color3Width, nlm::vec3& color)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - color3Width);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+
+			std::string emitLabel = "##" + label;
+			bool isModified = ImGui::ColorEdit3(emitLabel.c_str(), nlm::value_ptr(color), ImGuiColorEditFlags_NoInputs);
+			ImGui::Columns(1);
+			ImGui::PopItemWidth();
+
+			return isModified;
+		}
+
+		static bool ColorEdit4Style1(const std::string& label, float color4Width, nlm::vec4& color)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - color4Width);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+
+			std::string emitLabel = "##" + label;
+			bool isModified = ImGui::ColorEdit4(emitLabel.c_str(), nlm::value_ptr(color), ImGuiColorEditFlags_NoInputs);
+			ImGui::Columns(1);
+			ImGui::PopItemWidth();
+
+			return isModified;
+		}
+
 		static bool DragFloatStyle1(const std::string& label, float dragFloatWidth, float& value, float speed, float min, float max, const std::string& format = "%.2f")
 		{
 			ImGui::Columns(2);
@@ -46,6 +78,22 @@ namespace NL
 
 			std::string emitLabel = "##" + label;
 			bool isModified = ImGui::DragInt(emitLabel.c_str(), &value);
+			ImGui::Columns(1);
+			ImGui::PopItemWidth();
+
+			return isModified;
+		}
+
+		static bool DragIntStyle1(const std::string& label, float dragIntWidth, int& value, float speed, int min, int max)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - dragIntWidth);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+
+			std::string emitLabel = "##" + label;
+			bool isModified = ImGui::DragInt(emitLabel.c_str(), &value, speed, min, max);
 			ImGui::Columns(1);
 			ImGui::PopItemWidth();
 
@@ -103,7 +151,7 @@ namespace NL
 		}
 
 		// Remember to ImGui::Columns(1); manually
-		static bool ComboStyle1(const std::string& label, float comboWidth, const char* value)
+		static int ComboStyle1(const std::string& label, float comboWidth, const char** list, int current, int total)
 		{
 			ImGui::Columns(2);
 			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - comboWidth);
@@ -114,14 +162,29 @@ namespace NL
 			ImGui::NextColumn();
 
 			std::string emitLabel = "##" + label;
-			bool isModified = ImGui::BeginCombo(emitLabel.c_str(), value);
+
+			const char* value = list[current];
+			int newlyChosen = current;
+			if (ImGui::BeginCombo(emitLabel.c_str(), value))
+			{
+				for (int i = 0; i < total; i++)
+				{
+					bool isSelected = i == current;
+					if (ImGui::Selectable(list[i], isSelected))
+					{
+						newlyChosen = i;
+						NL_INFO("Newly chosen: {0}", i);
+					}
+				}
+				ImGui::EndCombo();
+			}
 
 			// NL_INFO("Combo Modified!");
 			
-			if (!isModified)
-				ImGui::Columns(1);
+			ImGui::Columns(1);
 			ImGui::PopItemWidth();
-			return isModified;
+
+			return newlyChosen;
 		}
 
 		static bool InputTextStyle1(const std::string& label, float textWidth, char* buffer, int size)
@@ -141,6 +204,23 @@ namespace NL
 			return isModified;
 		}
 
+		static bool ImageReplaceStyle1(const std::string& label, float width, const Ref<Texture2D>& tex)
+		{
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - width);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+
+			ImGui::Text(label.c_str());
+			ImGui::NextColumn();
+
+			ImGui::PushID(&label);
+			bool isClicked = ImGui::ImageButton((ImTextureID)tex->GetRendererID(), ImVec2(64, 64), ImVec2(0, 0), ImVec2(1, 1), 0);
+			ImGui::PopID();
+
+			ImGui::Columns(1);
+			ImGui::PopItemWidth();
+			return isClicked;
+		}
 	}
 
 	HierarchyPanel::HierarchyPanel(const Ref<Scene>& scene)
@@ -177,7 +257,7 @@ namespace NL
 					ImGui::EndPopup();
 				}
 
-				m_Scene->m_Registry.each(
+				m_Scene->Registry.each(
 					[&](auto handle)
 					{
 						Entity entity{ handle, m_Scene.get() };
@@ -269,7 +349,7 @@ namespace NL
 			}
 		}
 
-		ImGui::SameLine();
+		ImGui::SameLine(0, 4);
 
 		ImGui::SetNextItemWidth(addComponentButtonWidth);
 		if (ImGui::Button("Add Component"))
@@ -283,6 +363,9 @@ namespace NL
 			InspectorAddComponent<TransformComponent>("Transform");
 			InspectorAddComponent<CameraComponent>("Camera");
 			InspectorAddComponent<ModelRendererComponent>("Model Renderer");
+			InspectorAddComponent<SpriteRendererComponent>("Sprite Renderer");
+			InspectorAddComponent<LightComponent>("Light");
+			InspectorAddComponent<ParticleSystemComponent>("Particle System");
 			InspectorAddComponent<ScriptComponent>("Scripting");
 
 			ImGui::EndPopup();
@@ -311,7 +394,7 @@ namespace NL
 
 		const char* projectionTypeStrings[] = { "Ortho", "Persp" };
 		const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];
-		// if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentProjectionTypeString))
+		// if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentLightTypeString))
 		ImGui::Columns(2);
 		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - RIGHT_COLUMN_WIDTH);
 		ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
@@ -409,18 +492,28 @@ namespace NL
 		ImGui::PopItemWidth();
 		ImGui::Columns(1);
 
+		if (camera.GetClearFlagType() == Camera::ClearFlagType::Color)
+		{
+			/*if (ImGui::TreeNode("Clear Color"))
+			{
+				ImGui::ColorEdit4("##", nlm::value_ptr(component.ClearColor), ImGuiColorEditFlags_NoInputs);
+				ImGui::TreePop();
+			}*/
+			Utils::ColorEdit4Style1("Clear Color", RIGHT_COLUMN_WIDTH, component.ClearColor);
+		}
+
 		});
 
 #pragma endregion
 		
 #pragma region Draw Model Renderer
 
-		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [](auto& entity, auto& component) {
+		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [scene = m_Scene, &shaderSelectClick = m_ModelRendererCompShaderSelectOpen](auto& entity, auto& component) {
 
-		const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
+		//const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
 		// NL_ENGINE_TRACE("Default shader name: {0}", Library<Shader>::GetInstance().GetDefaultShaderName());
 		
-		Ref<Model> model = component.mModel;
+		Ref<Model> model = component._Model;
 
 		ImGui::Columns(2);
 		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - 420.0f);
@@ -454,14 +547,16 @@ namespace NL
 
 			if (!filepath.empty())
 			{
-				component = ModelRendererComponent(path.string(), (uint32_t)entity, component.Flags);
+				if (component._Model)
+					component._Model->DeleteMeshesAndTexturesReference();
+				component = ModelRendererComponent(path.string());
 			}
 		}
 		ImGui::PopID();
 
 		ImGui::Columns(1);
 
-		model = component.mModel;
+		model = component._Model;
 		if (model == nullptr)
 			return;
 
@@ -472,45 +567,11 @@ namespace NL
 				std::string matName = item.first;
 				Ref<Material> mat = item.second;
 
-				ImGui::PushID(&mat);
-
-				std::string shaderName = mat->GetShaderName();				
-				if (ImGui::TreeNode(matName.c_str()))
-				{
-					// Select Shaders
-					if (ImGui::BeginCombo("Shader", shaderName.c_str()))
+				DrawShaderCombo<ModelRendererComponent>(mat, matName, shaderSelectClick, [](auto& comp, const std::string& shaderName)
 					{
-						Library<Shader>::GetInstance().TraverseShadersFolder();
-						const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
-
-						if (!shaderNameMap.contains(shaderName))
-							shaderName = Library<Shader>::GetInstance().GetDefaultShaderName();
-
-						for (const auto& pair : shaderNameMap)
-						{
-							std::string name = pair.first;
-							bool isSelected = name == shaderName;
-							if (ImGui::Selectable(name.c_str(), isSelected))
-							{
-								if (!isSelected)
-								{
-									shaderName = name;
-									mat->LoadShader(shaderName);
-									mat->UpdateSampler2DinProperties();
-								}
-							}
-						}
-						
-						ImGui::EndCombo();
-					}
-
-					// Exposed Shader Properties
-					DrawShaderProperties(mat);
-
-					ImGui::TreePop();
-				}
-
-				ImGui::PopID();
+						ModelRendererComponent& modelComp = comp;
+						modelComp._Model->UpdateShaderProperties(shaderName);
+					}, ShaderUse::Model, scene);
 			}
 
 			ImGui::TreePop();
@@ -579,6 +640,153 @@ namespace NL
 				model->CalculateFinalBoneMatrices();
 			}
 		}
+
+		});
+
+#pragma endregion
+
+#pragma region Draw Lighting
+
+		DrawComponent<LightComponent>("Light", entity, [scene = m_Scene](auto& entity, auto& component) {
+
+		// Light Type Begin
+		const char* lightTypeStrings[] = { "Dir", "Point" };
+		component.Type = (LightType)Utils::ComboStyle1("Type", RIGHT_COLUMN_WIDTH, lightTypeStrings, (int)component.Type, 2);
+
+		float& intensity = component.Intensity;
+		Utils::DragFloatStyle1("Intensity", RIGHT_COLUMN_WIDTH, intensity, 0.01f, 0.0f, 10.0f, "%.2f");
+
+		nlm::vec3& color = component.Color;
+		Utils::ColorEdit3Style1("Color", RIGHT_COLUMN_WIDTH, color);
+
+		if (component.Type == LightType::Point)
+		{
+			nlm::vec3& atten = component.Attenuation;
+			DrawVec3Control("Atten", atten);
+		}
+
+		});
+
+#pragma endregion
+
+#pragma region Particle System
+
+		DrawComponent<ParticleSystemComponent>("Particle System", entity, [scene = m_Scene, &shaderSelectClicked = m_ParticleSystemCompShaderSelectOpen](auto& entity, auto& component) {
+
+		ParticleSystemComponent& comp = component;
+		ImGui::PushID("ParticleSystem");
+
+		// Controls
+		float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+		float width = ImGui::GetWindowContentRegionWidth() / 2.0f - 4.0f;
+		if (ImGui::Button("Init", ImVec2(width, lineHeight)))
+		{
+			comp.Init();
+		}
+		ImGui::SameLine(0, 4);
+		if (ImGui::Button(scene->IsEditor() ? (comp.Prop.IsPaused ? "Play" : "Pause") : "\\", ImVec2(width, lineHeight)))
+		{
+			comp.Prop.IsPaused = !comp.Prop.IsPaused;
+		}
+
+		// Init
+		if (Utils::TreeNodeExStyle1((void*)"Init", "Initialization"))
+		{
+			Utils::DragIntStyle1("Particles Count", RIGHT_COLUMN_WIDTH, comp.Prop.LauncherNum, 10, 0, 20000);
+			const char* list[3] = { "Point", "Circle", "Sphere" };
+			const char* list2[2] = { "Uniform", "Normal" };
+			comp.Prop.SpawnAreaShape = (ParticleSpawnAreaShape)Utils::ComboStyle1("Spawn Area Shape", RIGHT_COLUMN_WIDTH, list, (int)comp.Prop.SpawnAreaShape, 3);
+			comp.Prop.SpawnPositionDistribution = (ParticleSpawnDistribution)Utils::ComboStyle1("Spawn Position Distribution", RIGHT_COLUMN_WIDTH, list2, (int)comp.Prop.SpawnPositionDistribution, 2);
+			Utils::DragFloatStyle1("Spawn Area Radius", RIGHT_COLUMN_WIDTH, comp.Prop.SpawnAreaRadius, 0.1f, 0.0f, 1000.0f);
+			Utils::DragFloatStyle1("Max Life Span", RIGHT_COLUMN_WIDTH, comp.Prop.MaxTotalLifetime);
+			Utils::DragFloatStyle1("Min Life Span", RIGHT_COLUMN_WIDTH, comp.Prop.MinTotalLifetime);
+			DrawVec3Control("Max Velocity", comp.Prop.MaxVelocity);
+			DrawVec3Control("Min Velocity", comp.Prop.MinVelocity);
+			ImGui::Dummy(ImVec2{ 0, 1 });
+			ImGui::TreePop();
+		}
+
+		// Pass 1
+		if (Utils::TreeNodeExStyle1((void*)"Shader Pass", "Shader Pass"))
+		{
+			DrawShaderCombo<ParticleSystemComponent>(comp.Pass1, comp.Pass1->GetName(), shaderSelectClicked, [](auto& comp, const std::string& shaderName)
+				{
+					NL_INFO("Reload TF Pass!");
+					ParticleSystemComponent& partComp = comp;
+					partComp.UpdateShaderProperties(shaderName);
+				}, ShaderUse::Particle1, scene);
+
+			DrawShaderCombo<ParticleSystemComponent>(comp.Pass2, comp.Pass2->GetName(), shaderSelectClicked, [](auto& comp, const std::string& shaderName)
+				{
+					NL_INFO("Reload R Pass!");
+				ParticleSystemComponent& partComp = comp;
+				partComp.UpdateShaderProperties(shaderName);
+				}, ShaderUse::Particle2, scene);
+
+			ImGui::TreePop();
+		}
+
+		ImGui::PopID();
+
+		});
+
+#pragma endregion
+
+#pragma region Sprite Renderer
+
+		DrawComponent<SpriteRendererComponent>("Sprite Renderer", entity, [scene = m_Scene](auto& entity, auto& component) {
+
+			// SpriteRendererComponent& comp = component;
+			
+			Utils::ColorEdit4Style1("Color", RIGHT_COLUMN_WIDTH, component.Color);
+
+			const Ref<Texture2D>& tex = component.SpriteTexture;
+			// if (tex == nullptr) tex = Library<Texture2D>::GetInstance().Fetch(Library<Texture2D>::GetInstance().GetDefaultTextureName());
+
+			if (Utils::ImageReplaceStyle1("Sprite", RIGHT_COLUMN_WIDTH, tex == nullptr ? Library<Texture2D>::GetInstance().Fetch(Library<Texture2D>::GetInstance().GetDefaultTextureName()) : tex))
+			{
+				std::string filepath = Application::GetInstance().OpenFileDialogue(L"Texture2D(*.png;*.jpg)\0*.png;*.jpg\0\0");
+
+				size_t pos = filepath.find("Assets");
+				if (pos != std::string::npos)
+				{
+					filepath = PathConfig::GetInstance().GetAssetsFolder().string() + filepath.substr(pos + 6);
+					NL_ENGINE_INFO("New Sprite: {0}", filepath);
+					component.ReplaceTexture(filepath);
+				}
+				else if (!filepath.empty())
+				{
+					NL_ENGINE_ASSERT(false, "Only support textures from Assets Folder!");
+				}
+			}
+
+			// Utils::CheckBoxStyle1("Billboarding", RIGHT_COLUMN_WIDTH, component.IsBillboarding);
+
+			const char* reactTypeStrings[] = { "Normal", "LookAt", "Billboard" };
+			component.Reaction = (SpriteCameraReaction)Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, reactTypeStrings, (int)component.Reaction, 3);
+
+			/*const char* currentReactTypeString = reactTypeStrings[(int)component.Reaction];
+			// if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentLightTypeString))
+			ImGui::Columns(2);
+			ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - RIGHT_COLUMN_WIDTH);
+			ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+			ImGui::Text("Reaction");
+			ImGui::NextColumn();
+			if (ImGui::BeginCombo("##Reaction", currentReactTypeString))
+			{
+				for (int i = 0; i < 3; i++)
+				{
+					bool isSelected = (currentReactTypeString == reactTypeStrings[i]);
+					if (ImGui::Selectable(reactTypeStrings[i], isSelected))
+					{
+						currentReactTypeString = reactTypeStrings[i];
+						component.Reaction = (SpriteCameraReaction)i;
+					}
+				}
+				ImGui::EndCombo();
+			}
+			ImGui::PopItemWidth();
+			ImGui::Columns(1);*/
 
 		});
 
@@ -727,7 +935,8 @@ namespace NL
 
 		// NL_ENGINE_INFO("CalcItemWidth: {0}", ImGui::CalcItemWidth());
 		float width = ImGui::CalcItemWidth();
-		ImGui::PushMultiItemsWidths(3, width);
+		ImGui::PushMultiItemsWidths(3, width); 
+
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{ 0, 0 });
 
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{ 0.8f, 0.1f, 0.15f, 1.0f });
@@ -796,56 +1005,51 @@ namespace NL
 			switch (prop.Type)
 			{
 			case ShaderUniformType::Color3:
+			{
 				nlm::vec3 color = std::get<nlm::vec3>(prop.Value);
-				if (ImGui::ColorEdit3(prop.Name.c_str(), nlm::value_ptr(color)))
+				if (Utils::ColorEdit3Style1(prop.Name, RIGHT_COLUMN_WIDTH, color))
+				// if (ImGui::ColorEdit3(prop.Name.c_str(), nlm::value_ptr(color)))
 				{
 					prop.Value = color;
 				}
 				break;
+			}
 			case ShaderUniformType::Sampler2D:
-
-				ImGui::PushID(&prop);
-				if (ImGui::TreeNode(prop.Name.c_str()))
+			{
+				const std::string& oldTexPath = std::get<std::string>(prop.Value);
+				Ref<Texture2D> oldTex = Library<Texture2D>::GetInstance().Fetch(oldTexPath);
+				
+				if (Utils::ImageReplaceStyle1(prop.Name, RIGHT_COLUMN_WIDTH, oldTex))
 				{
-					const std::string& oldTexPath = std::get<std::string>(prop.Value);
-					Ref<Texture2D> oldTex = Library<Texture2D>::GetInstance().Get(oldTexPath);
+					std::string filepath = Application::GetInstance().OpenFileDialogue(L"Texture2D(*.png;*.jpg)\0*.png;*.jpg\0\0");
 
-					if (ImGui::ImageButton((ImTextureID)oldTex->GetRendererID(), ImVec2(64, 64), ImVec2(0, 0), ImVec2(1, 1), 0))
+					size_t pos = filepath.find("Assets");
+					if (pos != std::string::npos)
 					{
-						std::string filepath = Application::GetInstance().OpenFileDialogue(L"Texture2D(*.png)\0*.png\0\0");
+						filepath = PathConfig::GetInstance().GetAssetsFolder().string() + filepath.substr(pos + 6);
+						Ref<Texture2D> newTex = Library<Texture2D>::GetInstance().Fetch(filepath);
 
-						size_t pos = filepath.find("Assets");
-						if (pos != std::string::npos)
-						{
-							filepath = PathConfig::GetInstance().GetAssetsFolder().string() + filepath.substr(pos + 6);
-							Ref<Texture2D> newTex;
+						oldTex.reset();
+						mat->ReplaceTexture(prop.Name, newTex);
 
-							if (Library<Texture2D>::GetInstance().Contains(filepath))
-							{
-								newTex = Library<Texture2D>::GetInstance().Get(filepath);
-							}
-							else
-							{
-								newTex = Texture2D::Create(filepath);
-								Library<Texture2D>::GetInstance().Add(filepath, newTex);
-							}
-
-							oldTex.reset();
-							mat->ReplaceTexture(prop.Name, newTex);
-
-							prop.Value = filepath;
-
-						}
-						else if (!filepath.empty())
-						{
-							NL_ENGINE_ASSERT(false, "Only support textures from Textures Folder!");
-						}
+						prop.Value = filepath;
 					}
-
-					ImGui::TreePop();
+					else if (!filepath.empty())
+					{
+						NL_ENGINE_ASSERT(false, "Only support textures from Assets Folder!");
+					}
 				}
-				ImGui::PopID();
 				break;
+			}
+			case ShaderUniformType::Float:
+			{
+				float f = std::get<float>(prop.Value);
+				if (Utils::DragFloatStyle1(prop.Name, RIGHT_COLUMN_WIDTH, f))
+				{
+					prop.Value = f;
+				}
+				break;
+			}
 
 			default:
 				break;
@@ -935,6 +1139,91 @@ namespace NL
 
 			ImGui::TreePop();
 		}
+		ImGui::PopID();
+	}
+
+	template<Component C, typename UIFunction>
+	void HierarchyPanel::DrawShaderCombo(Ref<Material>& mat, const std::string& matName, bool& shaderSelectClick, UIFunction uiFunction, ShaderUse shaderUse, const Ref<Scene>& scene)
+	{
+		ImGui::PushID(&mat);
+
+		std::string shaderName = mat->GetShaderName();
+
+		if (ImGui::TreeNode(matName.c_str()))
+		{
+			bool hasCompiledSuccessfully = mat->GetShader()->HasCompiledSuccessfully();
+			if (!hasCompiledSuccessfully)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.0f));
+
+			// Select Shaders
+			if (ImGui::BeginCombo("Shader", shaderName.c_str()))
+			{
+				if (!hasCompiledSuccessfully)
+					ImGui::PopStyleColor();
+
+				if (!shaderSelectClick)
+				{
+					Library<Shader>::GetInstance().TraverseShadersFolder();
+					shaderSelectClick = true;
+				}
+
+				//const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
+				const auto& shaderUseMap = Library<Shader>::GetInstance().GetShaderUseMap();
+
+				if (!shaderUseMap.contains(shaderName))
+					shaderName = Library<Shader>::GetInstance().GetDefaultShaderName();
+
+				for (const auto& pair : shaderUseMap)
+				{
+					if (pair.second != shaderUse)
+						continue;
+
+					std::string name = pair.first;
+					bool isSelected = name == shaderName;
+					if (ImGui::Selectable(name.c_str(), isSelected))
+					{
+						if (!isSelected)
+						{
+							shaderName = name;
+							mat->LoadShaderAndUpdateProps(shaderName);
+							mat->UpdateSampler2DinProperties();
+						}
+					}
+				}
+
+				ImGui::EndCombo();
+			}
+			else
+			{
+				if (!hasCompiledSuccessfully)
+					ImGui::PopStyleColor();
+				shaderSelectClick = false;
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Reload"))
+			{
+				auto shader = Library<Shader>::GetInstance().Reload(shaderName);
+				if (shader->HasCompiledSuccessfully())
+				{
+					auto view = scene->Registry.view<C>();
+					for (auto entity : view)
+					{
+						C& comp = view.get<C>(entity);
+						// comp._Model->UpdateShaderProperties(shaderName);
+						uiFunction(comp, shaderName);
+					}
+					NL_INFO("Reload Shader {0}, shader compiled success: {1}", shaderName, shader->HasCompiledSuccessfully());
+				}
+			}
+
+			// Exposed Shader Properties
+			DrawShaderProperties(mat);
+
+			ImGui::TreePop();
+		}
+
 		ImGui::PopID();
 	}
 

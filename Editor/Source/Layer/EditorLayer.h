@@ -12,7 +12,7 @@ namespace NL
 		Editor, Runtime
 	};
 
-	enum class AntiAliasingType
+	enum class AntiAliasingType : int
 	{
 		None, MSAA
 	};
@@ -60,6 +60,7 @@ namespace NL
 
 		EditorCamera m_EditorCamera;
 		Ref<Scene> m_EditorScene;
+		// ClearFlagType m_EditorCameraClearFlagType = ClearFlagType::Skybox;
 
 		Entity m_RuntimeCameraEntity = {};
 		Ref<Scene> m_RuntimeScene;
@@ -108,6 +109,10 @@ namespace NL
 		bool m_ShowSceneSettings;
 		int m_MSAASamples = 4;
 		AntiAliasingType m_AntiAliasingType = AntiAliasingType::MSAA;
+		// bool m_ShowGizmos;
+
+		// Resource List
+		bool m_ShowResourceList;
 
 		// Runtime Viewport Cursor
 		bool m_IsRuntimeViewportFocused = false;

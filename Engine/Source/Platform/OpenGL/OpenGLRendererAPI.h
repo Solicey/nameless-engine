@@ -20,5 +20,21 @@ namespace NL
 		virtual void DepthTest(bool enable) override;
 
 		virtual void DepthFunc(DepthComp comp) override;
+
+		virtual void SetCullFace(CullFace face) override;
+
+		virtual void EnableCullFace(bool enable) override;
+
+		virtual void BeginTransformFeedback_Points() override;
+
+		virtual void EndTransformFeedback() override;
+
+		virtual void DrawArrays_Points(int first, uint32_t count) override;
+
+		virtual void RasterizerDiscard(bool enable) override;
+
+		virtual void DepthMask(bool enable) override;
+
+		virtual void BlendFunc(BlendFactor srcFactor, BlendFactor dstFactor) override;
 	};
 }

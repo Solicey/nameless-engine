@@ -44,15 +44,19 @@ namespace NL
 		if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle))
 		{
 			Application::GetInstance().HideCursor();
-			if (m_IsMouseButtonHolding)
-				Pan(delta);
+			if (nlm::abs(delta.x) > 0.4 || nlm::abs(delta.y) > 0.4)
+				delta = nlm::vec2(0.0, 0.0);
+			Pan(delta);
+			// NL_ENGINE_INFO("pan delta: ({0}, {1})", delta.x, delta.y);
 			m_IsMouseButtonHolding = true;
 		}
 		else if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
 		{
 			Application::GetInstance().HideCursor();
-			if (m_IsMouseButtonHolding)
-				Rotate(delta);
+			if (nlm::abs(delta.x) > 0.4 || nlm::abs(delta.y) > 0.4)
+				delta = nlm::vec2(0.0, 0.0);
+			Rotate(delta);
+			//NL_ENGINE_INFO("rotate delta: ({0}, {1})", delta.x, delta.y);
 			m_IsMouseButtonHolding = true;
 		}
 		else
@@ -151,7 +155,7 @@ namespace NL
 		float y = std::min(m_ViewportHeight / 900.0f, 3.0f); // max = 2.4f
 		float yFactor = 0.0366f * (y * y) - 0.1778f * y + 0.3021f;
 
-		return { 2.0 * xFactor, 2.0 * yFactor };
+		return { 4.0 * xFactor, 4.0 * yFactor };
 	}
 
 	float EditorCamera::ZoomSpeed() const

@@ -3,6 +3,7 @@
 #include "OpenGLRendererAPI.h"
 
 #include <glad/glad.h>
+#include <gl/GL.h>
 
 namespace NL
 {
@@ -12,16 +13,46 @@ namespace NL
 		{
 			switch (comp)
 			{
-			case DepthComp::EQUAL:
+			case DepthComp::Equal:
 				return GL_EQUAL;
-			case DepthComp::LEQUAL:
+			case DepthComp::Lequal:
 				return GL_LEQUAL;
-			case DepthComp::LESS:
+			case DepthComp::Less:
 				return GL_LESS;
 			}
 			NL_ENGINE_ASSERT(false, "Unknown Depth Comp");
 			return -1;
 		}
+
+		static GLenum CullFace2OpenGLCullFace(CullFace face)
+		{
+			switch (face)
+			{
+			case NL::CullFace::Front:
+				return GL_FRONT;
+			case NL::CullFace::Back:
+				return GL_BACK;
+			case NL::CullFace::FrontAndBack:
+				return GL_FRONT_AND_BACK;
+			}
+		}
+
+		static GLenum BlendFactor2OpenGLFactor(BlendFactor factor)
+		{
+			switch (factor)
+			{
+			case NL::BlendFactor::One:
+				return GL_ONE;
+			case NL::BlendFactor::SrcAlpha:
+				return GL_SRC_ALPHA;
+			case NL::BlendFactor::OneMinusSrcAlpha:
+				return GL_ONE_MINUS_SRC_ALPHA;
+			default:
+				break;
+			}
+			return GL_ONE;
+		}
+
 	}
 
 	void OpenGLRendererAPI::Init()
@@ -42,6 +73,10 @@ namespace NL
 
 		glEnable(GL_LINE_SMOOTH);
 		glEnable(GL_MULTISAMPLE);
+
+		// glEnable(GL_ALPHA_TEST);
+		// glAlphaFunc(GL_GREATER, 0.1);
+		glEnable(GL_CULL_FACE);
 	}
 
 	void OpenGLRendererAPI::SetClearColor(const nlm::vec4& color)
@@ -73,5 +108,48 @@ namespace NL
 	void OpenGLRendererAPI::DepthFunc(DepthComp comp)
 	{
 		glDepthFunc(Utils::DepthComparison2OpenGLDepthComparison(comp));
+	}
+
+	void OpenGLRendererAPI::SetCullFace(CullFace face)
+	{
+		glCullFace(Utils::CullFace2OpenGLCullFace(face));
+	}
+
+	void OpenGLRendererAPI::EnableCullFace(bool enable)
+	{
+		if (enable) glEnable(GL_CULL_FACE);
+		else glDisable(GL_CULL_FACE);
+	}
+
+	void OpenGLRendererAPI::BeginTransformFeedback_Points()
+	{
+		glBeginTransformFeedback(GL_POINTS);
+	}
+
+	void OpenGLRendererAPI::EndTransformFeedback()
+	{
+		glEndTransformFeedback();
+	}
+
+	void OpenGLRendererAPI::DrawArrays_Points(int first, uint32_t count)
+	{
+		glDrawArrays(GL_POINTS, first, count);
+	}
+
+	void OpenGLRendererAPI::RasterizerDiscard(bool enable)
+	{
+		if (enable)
+			glEnable(GL_RASTERIZER_DISCARD);
+		else glDisable(GL_RASTERIZER_DISCARD);
+	}
+
+	void OpenGLRendererAPI::DepthMask(bool enable)
+	{
+		glDepthMask(enable ? GL_TRUE : GL_FALSE);
+	}
+
+	void OpenGLRendererAPI::BlendFunc(BlendFactor srcFactor, BlendFactor dstFactor)
+	{
+		glBlendFunc(Utils::BlendFactor2OpenGLFactor(srcFactor), Utils::BlendFactor2OpenGLFactor(dstFactor));
 	}
 }

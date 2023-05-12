@@ -2,6 +2,7 @@
 
 #include "ECS/System/System.h"
 #include "Resources/Shader.h"
+#include "ECS/Entity/Entity.h"
 
 namespace NL
 {
@@ -18,8 +19,22 @@ namespace NL
 		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity) override;
 
 	private:
+		void UpdateParticleSystem(Entity selectedEntity = {});
+		void LightPreparation(PointLightShadingData *pointLightDatas, DirLightShadingData *dirLightDatas, Entity *pointEntities, Entity *dirEntities);
+
+	private:
 		// Ref<Shader> m_GrayScaleShader;
+		Ref<TextureCubeMap> m_SkyboxTextureCubemap;
 		Ref<Shader> m_SkyboxShader;
 		Ref<Model> m_Skybox;
+
+		Ref<Shader> m_GizmosShader;
+		Ref<Texture2D> m_PointGizmosTexture, m_DirGizmosTexture;
+
+		Ref<Shader> m_SpriteShader;
+
+		// Time
+		float m_TotalTime = 0.0f;
+		float m_DeltaTime = 0.0f;
 	};
 }

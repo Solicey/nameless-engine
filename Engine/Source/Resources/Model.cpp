@@ -1,6 +1,7 @@
 #include "nlpch.h"
 
 #include "Model.h"
+#include "Resources/Libraries/MeshLibrary.h"
 
 namespace NL
 {
@@ -45,6 +46,56 @@ namespace NL
 				m_Bones[child.parentID].Childrens.erase(childId);
 			parent.Childrens.insert(childId);
 			child.parentID = parentId;
+		}
+	}
+
+	void Model::DeleteMeshesAndTexturesReference()
+	{
+		for (auto& mesh : m_Meshes)
+		{
+			if (mesh != nullptr)
+			{
+				std::string modelPath = mesh->GetModelPath(),
+					meshName = mesh->GetMeshName();
+				mesh.reset();
+				Library<Mesh>::GetInstance().DeleteMesh(modelPath, meshName);
+			}
+		}
+
+		for (auto& item : m_Materials)
+		{
+			Ref<Material> mat = item.second;
+			if (mat != nullptr)
+				mat->DeleteTexturesReference();
+		}
+		// Library<Texture2D>::GetInstance().TraverseDelete();
+	}
+
+	Model::Model(const Model* src)
+		: m_Path(src->m_Path), m_Meshes(src->m_Meshes), m_BoneMap(src->m_BoneMap),
+		m_Bones(src->m_Bones), m_FinalBoneMatrices(src->m_FinalBoneMatrices)
+	{
+		/*m_Path = src->m_Path;
+		m_Meshes = src->m_Meshes;
+		m_BoneMap = src->m_BoneMap;
+		m_Bones = src->m_Bones;
+		m_FinalBoneMatrices = src->m_FinalBoneMatrices;*/
+
+		m_Materials.clear();
+		for (const auto& mat : src->m_Materials)
+		{
+			m_Materials[mat.first] = CreateRef<Material>(mat.second.get());
+		}
+
+	}
+
+	void Model::UpdateShaderProperties(const std::string& shaderName)
+	{
+		// NL_ENGINE_INFO("Update Shader Properties: {0}, {1}", m_Path, shaderName);
+		for (auto& mat : m_Materials)
+		{
+			if (mat.second->GetShaderName() == shaderName)
+				mat.second->LoadShaderAndUpdateProps(shaderName);
 		}
 	}
 

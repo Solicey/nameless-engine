@@ -11,24 +11,26 @@
 namespace NL
 {
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexSrc, const std::string& fragmentSrc)
-		: m_Name(name)
 	{
-		CompileShader(vertexSrc, fragmentSrc);
+		m_Name = name;
+		m_HasCompiledSuccessfully = CompileShader(vertexSrc, fragmentSrc, "");
 	}
 
 	OpenGLShader::OpenGLShader(const std::string& name, const std::string& path)
-		: m_Name(name), m_Path(path)
 	{
+		m_Name = name;
+		m_Path = path;
 		NL_ENGINE_TRACE("Loading Shader {0} ... path: {1}", name, path);
 		std::string src = ReadShaderFile(path);
-		std::string vertexSrc, fragmentSrc;
-		
-		if (ShaderFileParser(src, vertexSrc, fragmentSrc))
+		std::string vertexSrc, fragmentSrc, geometrySrc;
+
+		if (ShaderFileParser(src, vertexSrc, fragmentSrc, geometrySrc))
 		{
-			CompileShader(vertexSrc, fragmentSrc);
+			m_HasCompiledSuccessfully = CompileShader(vertexSrc, fragmentSrc, geometrySrc);
 		}
 		else
 		{
+			m_HasCompiledSuccessfully = false;
 			NL_ENGINE_ERROR("Failed to load shader: {0}", name);
 		}
 	}
@@ -85,6 +87,26 @@ namespace NL
 		glUniformMatrix4fv(GetUniformLocation(name), values.size(), GL_FALSE, (float*)values.data());
 	}
 
+	void OpenGLShader::Reload()
+	{
+		if (m_RendererID)
+			glDeleteProgram(m_RendererID);
+		m_Properties.clear();
+		m_UniformLocationMap.clear();
+
+		std::string src = ReadShaderFile(m_Path);
+		std::string vertexSrc, fragmentSrc, geometrySrc;
+
+		if (ShaderFileParser(src, vertexSrc, fragmentSrc, geometrySrc))
+		{
+			m_HasCompiledSuccessfully = CompileShader(vertexSrc, fragmentSrc, geometrySrc);
+		}
+		else
+		{
+			m_HasCompiledSuccessfully = false;
+		}
+	}
+
 	uint32_t OpenGLShader::GetUniformLocation(const std::string& name)
 	{
 		if (m_UniformLocationMap.find(name) != m_UniformLocationMap.end())
@@ -100,98 +122,7 @@ namespace NL
 		return location;
 	}
 
-	std::string OpenGLShader::ReadShaderFile(const std::string& path)
-	{
-		std::string result;
-		// binary是为了读取\r\n作为换行符
-		std::ifstream in(path, std::ios::in | std::ios::binary);
-		if (in)
-		{
-			in.seekg(0, std::ios::end);
-			result.resize(in.tellg());
-			in.seekg(0, std::ios::beg);
-			in.read(&result[0], result.size());
-			in.close();
-		}
-		else
-		{
-			NL_ENGINE_ERROR("Could not open file '{0}'", path);
-		}
-
-		return result;
-	}
-
-	bool OpenGLShader::ShaderFileParser(const std::string& rawSrc, std::string& vertexSrc, std::string& fragmentSrc)
-	{
-		bool vertexSrcParsed = false, fragmentSrcParsed = false;
-
-		// Parsing props
-		{
-			m_Properties.clear();
-
-			const char* propToken = "#prop";
-			const char* endToken = "#end";
-			size_t propPos = rawSrc.find(propToken, 0);
-			if (propPos != std::string::npos)
-			{
-				size_t endPos = rawSrc.find(endToken, propPos);
-				NL_ENGINE_ASSERT(endPos != std::string::npos, "Shader syntax error!");
-				propPos = rawSrc.find_first_of("\r\n", propPos);
-				propPos = rawSrc.find_first_not_of("\r\n", propPos);
-				while (propPos < endPos)
-				{
-					size_t propEnd = rawSrc.find_first_of(" ", propPos);
-					size_t namePos = rawSrc.find_first_not_of(" ", propEnd);
-					std::string propType = rawSrc.substr(propPos, propEnd - propPos);
-					propPos = rawSrc.find_first_of(";", namePos);
-					std::string propName = rawSrc.substr(namePos, propPos - namePos);
-					propPos = rawSrc.find_first_of("\r\n", propPos);
-					propPos = rawSrc.find_first_not_of("\r\n", propPos);
-					NL_ENGINE_INFO("Shader prop type: {0}, name: {1}", propType, propName);
-					AddProperty(propType, propName);
-				}
-			}
-		}
-
-		const char* typeToken = "#type";
-		size_t typeTokenLength = strlen(typeToken);
-		size_t pos = rawSrc.find(typeToken, 0);
-		// NL_ENGINE_TRACE("rawSrc: {0}", rawSrc);
-		// NL_ENGINE_TRACE("pos: {0}", pos);
-		while (pos != std::string::npos)
-		{
-			size_t eol = rawSrc.find_first_of("\r\n", pos);
-			NL_ENGINE_ASSERT(eol != std::string::npos, "Shader syntax error!");
-			size_t begin = pos + typeTokenLength + 1;
-			std::string type = rawSrc.substr(begin, eol - begin);
-			size_t nextLinePos = rawSrc.find_first_not_of("\r\n", eol);
-			NL_ENGINE_ASSERT(nextLinePos != std::string::npos, "Shader syntax error!");
-			pos = rawSrc.find(typeToken, nextLinePos);
-			
-			if (type == "vertex")
-			{
-				vertexSrc = (pos == std::string::npos) ? rawSrc.substr(nextLinePos) : rawSrc.substr(nextLinePos, pos - nextLinePos);
-				vertexSrcParsed = true;
-				NL_ENGINE_TRACE("Vertex shader parsed!");
-			}
-			else if (type == "fragment")
-			{
-				fragmentSrc = (pos == std::string::npos) ? rawSrc.substr(nextLinePos) : rawSrc.substr(nextLinePos, pos - nextLinePos);
-				fragmentSrcParsed = true;
-				NL_ENGINE_TRACE("Fragment shader parsed!");
-			}	
-			else
-			{
-				NL_ENGINE_ASSERT(false, "Invalid shader type specified!");
-			}
-
-			// NL_ENGINE_TRACE("pos: {0}", pos);
-		}
-
-		return vertexSrcParsed && fragmentSrcParsed;
-	}
-
-	void OpenGLShader::CompileShader(const std::string& vertexSrc, const std::string& fragmentSrc)
+	bool OpenGLShader::CompileShader(const std::string& vertexSrc, const std::string& fragmentSrc, const std::string& geometrySrc)
 	{
 		// Create an empty vertex shader handle
 		GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
@@ -221,9 +152,45 @@ namespace NL
 			// Use the infoLog as you see fit.
 
 			NL_ENGINE_ERROR("{0}", infoLog.data());
-			NL_ENGINE_ASSERT(false, "Vertex shader compilation error!");
+			// NL_ENGINE_ASSERT(false, "Vertex shader compilation error!");
 
-			return;
+			return false;
+		}
+
+		// Geometry Shader
+		GLuint geometryShader;
+		bool isGeometryCompiled = false;
+		if (!geometrySrc.empty())
+		{
+			geometryShader = glCreateShader(GL_GEOMETRY_SHADER);
+
+			const GLchar* source = geometrySrc.c_str();
+			glShaderSource(geometryShader, 1, &source, 0);
+
+			glCompileShader(geometryShader);
+
+			GLint isCompiled = 0;
+			glGetShaderiv(geometryShader, GL_COMPILE_STATUS, &isCompiled);
+			isGeometryCompiled = isCompiled;
+			if (isCompiled == GL_FALSE)
+			{
+				GLint maxLength = 0;
+				glGetShaderiv(geometryShader, GL_INFO_LOG_LENGTH, &maxLength);
+
+				// The maxLength includes the NULL character
+				std::vector<GLchar> infoLog(maxLength);
+				glGetShaderInfoLog(geometryShader, maxLength, &maxLength, &infoLog[0]);
+
+				// We don't need the shader anymore.
+				glDeleteShader(vertexShader);
+				glDeleteShader(geometryShader);
+
+				// Use the infoLog as you see fit.
+
+				NL_ENGINE_ERROR("{0}", infoLog.data());
+
+				return false;
+			}
 		}
 
 		// Create an empty fragment shader handle
@@ -251,14 +218,16 @@ namespace NL
 			glDeleteShader(fragmentShader);
 			// Either of them. Don't leak shaders.
 			glDeleteShader(vertexShader);
+			if (isGeometryCompiled)
+				glDeleteShader(geometryShader);
 
 			// Use the infoLog as you see fit.
 
 			NL_ENGINE_ERROR("{0}", infoLog.data());
-			NL_ENGINE_ASSERT(false, "Fragment shader compilation error!");
+			// NL_ENGINE_ASSERT(false, "Fragment shader compilation error!");
 
 			// In this simple program, we'll just leave
-			return;
+			return false;
 		}
 
 		// Vertex and fragment shaders are successfully compiled.
@@ -269,7 +238,27 @@ namespace NL
 
 		// Attach our shaders to our program
 		glAttachShader(program, vertexShader);
+		if (isGeometryCompiled) 
+			glAttachShader(program, geometryShader);
 		glAttachShader(program, fragmentShader);
+
+		// Transform Feedback Varyings
+		// For testing purpose
+		if (m_Use == ShaderUse::Particle1)
+		{
+			const GLchar* Varyings[7];
+			Varyings[0] = "g_Type";
+			Varyings[1] = "g_Position";
+			Varyings[2] = "g_Velocity";
+			Varyings[3] = "g_Lifetime";
+
+			Varyings[4] = "g_Color";
+			Varyings[5] = "g_Size";
+			Varyings[6] = "g_TotalLifetime";
+
+			glTransformFeedbackVaryings(program, 7, Varyings, GL_INTERLEAVED_ATTRIBS);
+			NL_ENGINE_INFO("This shader is for particle!");
+		}
 
 		// Link our program
 		glLinkProgram(program);
@@ -291,33 +280,25 @@ namespace NL
 			// Don't leak shaders either.
 			glDeleteShader(vertexShader);
 			glDeleteShader(fragmentShader);
+			if (isGeometryCompiled)
+				glDeleteShader(geometryShader);
 
 			// Use the infoLog as you see fit.
 
 			NL_ENGINE_ERROR("{0}", infoLog.data());
-			NL_ENGINE_ASSERT(false, "OpenGLShader link error!");
+			// NL_ENGINE_ASSERT(false, "OpenGLShader link error!");
 
 			// In this simple program, we'll just leave
-			return;
+			return false;
 		}
 
 		// Always detach shaders after a successful link.
 		glDetachShader(program, vertexShader);
 		glDetachShader(program, fragmentShader);
-	}
+		if (isGeometryCompiled)
+			glDetachShader(program, geometryShader);
 
-	void OpenGLShader::AddProperty(const std::string& type, const std::string& name)
-	{
-		if (s_ShaderUniformTypeMap.find(type) == s_ShaderUniformTypeMap.end())
-		{
-			return;
-		}
-
-		ShaderProperty prop;
-		prop.Name = name;
-		prop.Type = s_ShaderUniformTypeMap.at(type);
-		m_Properties.emplace_back(prop);
-
+		return true;
 	}
 
 }

@@ -8,15 +8,27 @@ namespace NL
 {
 	// VertexBuffer /////////////////////////////////////////////////////////
 
-	OpenGLVertexBuffer::OpenGLVertexBuffer(void* vertices, uint32_t size)
+	OpenGLVertexBuffer::OpenGLVertexBuffer(void* vertices, uint32_t size, BufferUsage usage)
 	{
 		glCreateBuffers(1, &m_RendererID);
 		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-		glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
+		GLenum glUsage = GL_STATIC_DRAW;
+		switch (usage)
+		{
+		case NL::BufferUsage::StaticDraw:
+			glUsage = GL_STATIC_DRAW;
+			break;
+		case NL::BufferUsage::DynamicDraw:
+			glUsage = GL_DYNAMIC_DRAW;
+			break;
+		default:
+			break;
+		}
+		glBufferData(GL_ARRAY_BUFFER, size, vertices, glUsage);
 	}
 
-	OpenGLVertexBuffer::OpenGLVertexBuffer(std::vector<float>& vertices)
-		: OpenGLVertexBuffer(vertices.data(), vertices.size())
+	OpenGLVertexBuffer::OpenGLVertexBuffer(std::vector<float>& vertices, BufferUsage usage)
+		: OpenGLVertexBuffer(vertices.data(), vertices.size(), usage)
 	{
 	}
 
@@ -33,6 +45,12 @@ namespace NL
 	void OpenGLVertexBuffer::Unbind() const
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	void OpenGLVertexBuffer::SetTransformFeedbackTarget() const
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_RendererID);
 	}
 
 	// IndexBuffer /////////////////////////////////////////////////////////

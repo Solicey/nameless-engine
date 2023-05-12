@@ -61,7 +61,9 @@ namespace NL
 
         // Post-processing
         m_PostProcessing = PostProcessing::Create();
-        m_EditorPostProcessingQueue = { PostProcessingType::EditorOutline };
+        if (m_EditorCamera.IsRenderGizmos())
+            m_EditorPostProcessingQueue = { PostProcessingType::EditorOutline };
+        else m_EditorPostProcessingQueue.clear();
 
 		// m_EditorCamera = EditorCamera(Camera::ProjectionType::Orthographic, 10.0f, 1280, 720, 0.1f, 1000.0f);
 		m_EditorCamera = EditorCamera(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
@@ -72,8 +74,8 @@ namespace NL
         m_HierarchyPanel->SetUpdateRuntimeCameraCallback([this]() { EditorLayer::UpdateRuntimeAspect(); });
 
         // Icons
-        m_PlayButton = Texture2D::Create(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/PlayButton.png");
-        m_StopButton = Texture2D::Create(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/StopButton.png");
+        m_PlayButton = Library<Texture2D>::GetInstance().Fetch(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/PlayButton.png");
+        m_StopButton = Library<Texture2D>::GetInstance().Fetch(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/StopButton.png");
 
         // Scripting
         ScriptEngine::GetInstance().Init();
@@ -106,11 +108,19 @@ namespace NL
 
         // Framebuffer preparation
         m_MultisampledFramebuffer->Bind();
+
+        /*if (m_EditorCamera.GetClearFlagType() == Camera::ClearFlagType::Color)
+            Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.75f });
+        else if (m_EditorCamera.GetClearFlagType() == Camera::ClearFlagType::Skybox)
+            Renderer::SetClearColor({ 0.0f, 0.0f, 0.0f, 0.0f });*/
         Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.75f });
+
         Renderer::Clear();
+
         m_MultisampledFramebuffer->Unbind();
 
         // Clear entity ID attachment to -1
+        // m_MultisampledFramebuffer->ClearAttachment(0, 1);
         m_MultisampledFramebuffer->ClearAttachment(1, -1);
 
 		//NL_TRACE("Delta Time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
@@ -128,7 +138,7 @@ namespace NL
         {
             if (!m_RuntimeCameraEntity.HasComponent<CameraComponent>())
             {
-                auto camView = m_RuntimeScene->m_Registry.view<CameraComponent>();
+                auto camView = m_RuntimeScene->Registry.view<CameraComponent>();
                 for (auto entity : camView)
                 {
                     m_RuntimeCameraEntity = Entity(entity, m_RuntimeScene.get());
@@ -278,6 +288,7 @@ namespace NL
                 ImGui::MenuItem("Viewport", NULL, &m_ShowViewport);
                 ImGui::MenuItem("Hierarchy", NULL, &m_ShowHierarchy);
                 ImGui::MenuItem("Scene Settings", NULL, &m_ShowSceneSettings);
+                ImGui::MenuItem("Resource List", NULL, &m_ShowResourceList);
                 // ImGui::MenuItem("TRS Toolbar", NULL, &m_ShowTRS);
 
                 ImGui::EndMenu();
@@ -345,11 +356,11 @@ namespace NL
                     if (ImGui::BeginCombo("Runtime Camera", runtimeCameraName.c_str()))
                     {
                         Application::GetInstance().GetImGuiLayer()->BlockEvents(true);
-                        auto camView = m_RuntimeScene->m_Registry.view<CameraComponent>();
+                        auto camView = m_RuntimeScene->Registry.view<CameraComponent>();
                         for (auto entity : camView)
                         {
-                            auto& comp = m_RuntimeScene->m_Registry.get<CameraComponent>(entity);
-                            auto& name = m_RuntimeScene->m_Registry.get<IdentityComponent>(entity).Name;
+                            auto& comp = m_RuntimeScene->Registry.get<CameraComponent>(entity);
+                            auto& name = m_RuntimeScene->Registry.get<IdentityComponent>(entity).Name;
                             bool isSelected = entity == m_RuntimeCameraEntity;
                             if (ImGui::Selectable(name.c_str(), isSelected))
                             {
@@ -415,7 +426,7 @@ namespace NL
 
 
             // Grid
-            if (IsEditorMode())
+            if (IsEditorMode() && m_EditorCamera.IsRenderGizmos() && m_EditorCamera.GetClearFlagType() == Camera::ClearFlagType::Color)
             {
                 ImGuizmo::SetOrthographic(false);
                 ImGuizmo::SetDrawlist();
@@ -456,7 +467,7 @@ namespace NL
             }
 
             // Gizmos
-            if (IsEditorMode())
+            if (IsEditorMode() && m_EditorCamera.IsRenderGizmos())
             {
                 Entity entitySelected = m_HierarchyPanel->GetSelectedEntity();
                 if (entitySelected && entitySelected.HasComponent<TransformComponent>())
@@ -481,6 +492,7 @@ namespace NL
 
                     float snapValues[3] = { snapValue, snapValue, snapValue };
 
+                    ImGuizmo::AllowAxisFlip(false);
                     ImGuizmo::Manipulate(nlm::value_ptr(cameraView), nlm::value_ptr(cameraProjection),
                         (ImGuizmo::OPERATION)m_GuizmoType, ImGuizmo::LOCAL, nlm::value_ptr(transform),
                         nullptr, snap ? snapValues : nullptr);
@@ -522,6 +534,42 @@ namespace NL
         if (m_ShowHierarchy && !(m_IsMaximizeOnPlay && m_ViewportMode == ViewportMode::Runtime))
         {
             m_HierarchyPanel->OnImGuiRender(m_ShowHierarchy, true);
+        }
+
+        // Resource List
+        if (m_ShowResourceList && !(m_IsMaximizeOnPlay && m_ViewportMode == ViewportMode::Runtime))
+        {
+            ImGui::Begin("Resource List");
+
+            std::string texString = "Texture (" + std::to_string(Library<Texture2D>::GetInstance().GetSize()) + ")";
+            std::string meshString = "Mesh (" + std::to_string(Library<Mesh>::GetInstance().GetSize()) + ")";
+            std::string shaderString = "Shader (" + std::to_string(Library<Shader>::GetInstance().GetSize()) + ")";
+
+            if (ImGui::TreeNodeEx("##TexturesList", 0, texString.c_str()))
+            {
+                const auto& names = Library<Texture2D>::GetInstance().GetNames();
+                for (auto& name : names)
+                    ImGui::Text(name.c_str());
+                ImGui::TreePop();
+            }
+
+            if (ImGui::TreeNodeEx("##MeshesList", 0, meshString.c_str()))
+            {
+                const auto& names = Library<Mesh>::GetInstance().GetNames();
+                for (auto& name : names)
+                    ImGui::Text(name.c_str());
+                ImGui::TreePop();
+            }
+
+            if (ImGui::TreeNodeEx("##ShadersList", 0, shaderString.c_str()))
+            {
+                const auto& names = Library<Shader>::GetInstance().GetNames();
+                for (auto& name : names)
+                    ImGui::Text(name.c_str());
+                ImGui::TreePop();
+            }
+
+            ImGui::End();
         }
 
         // Scene Settings
@@ -566,7 +614,33 @@ namespace NL
                 UpdateFramebuffer();
             }
 
-            // Skybox
+            // Editor Camera Clear Flag
+            if (ImGui::TreeNode("Clear Flag"))
+            {
+                Camera::ClearFlagType type = m_EditorCamera.GetClearFlagType();
+                if (ImGui::RadioButton("Color", (type == Camera::ClearFlagType::Color)))
+                {
+                    m_EditorCamera.SetClearFlagType(Camera::ClearFlagType::Color);
+                }
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Skybox", (type == Camera::ClearFlagType::Skybox)))
+                {
+                    m_EditorCamera.SetClearFlagType(Camera::ClearFlagType::Skybox);
+                }
+                ImGui::TreePop();
+            }
+
+            // Editor Viewport Gizmos
+            if (ImGui::TreeNode("Gizmos"))
+            {
+                if (ImGui::Checkbox("Show Gizmos", &m_EditorCamera.GetRenderGizmosRef()))
+                {
+                    if (m_EditorCamera.IsRenderGizmos())
+                        m_EditorPostProcessingQueue = { PostProcessingType::EditorOutline };
+                    else m_EditorPostProcessingQueue.clear();
+                }
+                ImGui::TreePop();
+            }
 
             // Runtime PostEffects
 
@@ -745,7 +819,13 @@ namespace NL
     void EditorLayer::SerializeScene(Ref<Scene> scene, const std::string& path)
     {
         SceneSerializer serializer(scene);
-        serializer.Serialize(path);
+        std::unordered_map<std::string, int> sceneSettingsInt = {
+            {"AntiAliasingType", (int)m_AntiAliasingType},
+            {"MSAASamples", m_MSAASamples},
+            {"EditorCameraClearFlag", (int)m_EditorCamera.GetClearFlagType()},
+            {"ShowGizmos", m_EditorCamera.IsRenderGizmos() ? 1 : 0}
+        };
+        serializer.Serialize(path, sceneSettingsInt);
     }
 
     void EditorLayer::NewScene()
@@ -755,8 +835,10 @@ namespace NL
             OnSceneStop();
         }
 
-        if (m_EditorScene)
-            m_EditorScene->m_Registry.clear();
+        // if (m_EditorScene)
+           // m_EditorScene->Registry.clear();
+        m_EditorScene->DestroyScene();
+        m_EditorScene.reset();
         m_EditorScene = CreateRef<Scene>();
 
         m_EditorScene->OnStartEditor();
@@ -767,7 +849,7 @@ namespace NL
         m_EditorScenePath = "";
 
         // Avoid Memory Leak
-        Library<Texture2D>::GetInstance().TraverseDelete();
+        // Library<Texture2D>::GetInstance().TraverseDelete();
         Application::GetInstance().SetWindowTitle("Nameless Editor - New Scene");
     }
 
@@ -783,7 +865,7 @@ namespace NL
             OpenScene(path);
 
         // Avoid Memory Leak
-        Library<Texture2D>::GetInstance().TraverseDelete();
+        // Library<Texture2D>::GetInstance().TraverseDelete();
     }
 
     void EditorLayer::OpenScene(const std::string& path)
@@ -796,11 +878,19 @@ namespace NL
 
         Ref<Scene> newScene = CreateRef<Scene>();
         SceneSerializer serializer(newScene);
-        if (serializer.Deserialize(path))
+        std::unordered_map<std::string, int> sceneSettingsInt = {
+            {"AntiAliasingType", (int)m_AntiAliasingType},
+            {"MSAASamples", m_MSAASamples},
+            {"EditorCameraClearFlag", (int)m_EditorCamera.GetClearFlagType()},
+            {"ShowGizmos", m_EditorCamera.IsRenderGizmos() ? 1 : 0}
+        };
+        if (serializer.Deserialize(path, sceneSettingsInt))
         {
-            if (m_EditorScene)
-                m_EditorScene->m_Registry.clear();
+            // if (m_EditorScene)
+               // m_EditorScene->Registry.clear();
 
+            m_EditorScene->DestroyScene();
+            m_EditorScene.reset();
             m_EditorScene = newScene;            
             m_EditorScenePath = path;
 
@@ -810,6 +900,13 @@ namespace NL
             m_HierarchyPanel->SetSceneContext(m_EditorScene);
 
             Application::GetInstance().SetWindowTitle("Nameless Editor - " + path.substr(path.find_last_of("/\\") + 1));
+            
+            // Reset Scene Settings
+            m_AntiAliasingType = (AntiAliasingType)sceneSettingsInt.at("AntiAliasingType");
+            m_MSAASamples = sceneSettingsInt.at("MSAASamples");
+            m_EditorCamera.SetClearFlagType((Camera::ClearFlagType)sceneSettingsInt.at("EditorCameraClearFlag"));
+
+            m_EditorCamera.SetRenderGizmos(sceneSettingsInt.at("ShowGizmos"));
             
         }
     }
@@ -868,7 +965,9 @@ namespace NL
         m_ViewportMode = ViewportMode::Editor;
 
         m_RuntimeScene->OnStopRuntime(m_EditorScene.get());
+        m_RuntimeScene->DestroyScene();
         m_RuntimeScene.reset();
+
         m_RuntimeCameraEntity = {};
 
         m_HierarchyPanel->SetSceneContext(m_EditorScene);

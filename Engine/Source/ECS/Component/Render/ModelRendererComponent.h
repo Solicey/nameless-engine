@@ -13,10 +13,12 @@ namespace NL
 	class ModelRendererComponent : public ComponentBase
 	{
 	public:
-		ModelRendererComponent() : Flags(ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace | ModelLoaderFlags::PopulateArmatureData | ModelLoaderFlags::JoinIdenticalVertices | ModelLoaderFlags::GenSmoothNormals) {}
+		ModelRendererComponent() {}
 
-		ModelRendererComponent(const std::string& path, int entityID, ModelLoaderFlags flags = ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace | ModelLoaderFlags::PopulateArmatureData | ModelLoaderFlags::JoinIdenticalVertices | ModelLoaderFlags::GenSmoothNormals)
-			: Path(std::regex_replace(path, std::regex("\\\\"), "/")), Flags(flags), mModel(ModelLoader::Create(path, entityID, flags))
+		ModelRendererComponent(const ModelRendererComponent& comp)
+			: Path(comp.Path), _Model(CreateRef<Model>(comp._Model.get())), Flags(comp.Flags) {}
+
+		ModelRendererComponent(const std::string& path, ModelLoaderFlags flags = ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace | ModelLoaderFlags::PopulateArmatureData | ModelLoaderFlags::JoinIdenticalVertices | ModelLoaderFlags::GenSmoothNormals) : Path(std::regex_replace(path, std::regex("\\\\"), "/")), _Model(ModelLoader::Create(path, flags)), Flags(flags)
 		{
 			// NL_ENGINE_TRACE("Entity entt id: {0}", entityID);
 		}
@@ -25,13 +27,11 @@ namespace NL
 
 		void RecalculateFinalBoneMatrices();
 
+
 	public:
 		// turn all "\" into "/" with std::regex_replace(Path, std::regex("\\\\"), "/");
 		std::string Path = "";
-		Ref<Model> mModel = nullptr;
-
-		// std::vector<ChainInfo> BoneChains;
-		
-		ModelLoaderFlags Flags;
+		Ref<Model> _Model = nullptr;
+		ModelLoaderFlags Flags = ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace | ModelLoaderFlags::PopulateArmatureData | ModelLoaderFlags::JoinIdenticalVertices | ModelLoaderFlags::GenSmoothNormals;
 	};
 }

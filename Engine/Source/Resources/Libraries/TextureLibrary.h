@@ -12,33 +12,52 @@ namespace NL
 	public:
 		Library(Singleton::token)
 		{
-			Add(m_DefaultShaderName, Texture2D::Create(128, 128));
+			Add(m_DefaultTextureName, Texture2D::Create(1, 1));
 		}
 
-		const std::string& GetDefaultTextureName() const { return m_DefaultShaderName; }
-
-		void Delete(const std::string& name)
+		// Use this function instead of Add or Get 
+		Ref<Texture2D> Fetch(const std::string& texPath)
 		{
-			if (m_Library.find(name) != m_Library.end())
+			Ref<Texture2D> tex = nullptr;
+			if (Library<Texture2D>::GetInstance().Contains(texPath))
 			{
-				auto& item = m_Library[name];
-				if (item.use_count() <= 1 && name.compare(m_DefaultShaderName) != 0)
+				tex = Library<Texture2D>::GetInstance().Get(texPath);
+			}
+			else
+			{
+				tex = Texture2D::Create(texPath);
+				Library<Texture2D>::GetInstance().Add(texPath, tex);
+			}
+			return tex;
+		}
+
+		const std::string& GetDefaultTextureName() const { return m_DefaultTextureName; }
+
+		void Delete(const std::string& texPath)
+		{
+			if (Contains(texPath))
+			{
+				int useCount = GetUseCount(texPath);
+				if (useCount <= 1 && texPath.compare(m_DefaultTextureName) != 0)
 				{
-					NL_ENGINE_TRACE("Texture {0} reference no more than 1, will be deleted!", name);
-					item.reset();
-					m_Library.erase(name);
+					NL_ENGINE_TRACE("Texture {0} reference no more than 1, will be deleted!", texPath);
+					Remove(texPath);
+					//m_Library.erase(texPath);
 				}
 				else
 				{
-					NL_ENGINE_TRACE("Texture {0} reference count is {1}, will not be deleted!", name, item.use_count());
+					NL_ENGINE_TRACE("Texture {0} reference count is {1}, will not be deleted!", texPath, useCount);
 				}
 			}
+			NL_ENGINE_TRACE("Texture {0} not found in library!", texPath);
 		}
 
 		// Avoid memory leak, buggy
-		void TraverseDelete()
+		/*void TraverseDelete()
 		{
-			if (m_Library.empty())
+			NL_ENGINE_TRACE("Texture Library Traverse Delete!");
+
+			if (m_Library.size() <= 0)
 				return;
 
 			std::unordered_map<std::string, Ref<Texture2D>>::iterator iter = m_Library.begin();
@@ -48,7 +67,7 @@ namespace NL
 				{
 					m_Library.erase(iter++);
 				}
-				else if (iter->second.use_count() <= 1 && iter->first.compare(m_DefaultShaderName) != 0)
+				else if (iter->second.use_count() <= 1 && iter->first.compare(m_DefaultTextureName) != 0)
 				{
 					NL_ENGINE_TRACE("Texture {0} reference no more than 1, will be deleted!", iter->first);
 					iter->second.reset();
@@ -56,10 +75,10 @@ namespace NL
 				}
 				else iter++;
 			}
-		}
+		}*/
 
 	private:
-		const std::string& m_DefaultShaderName = "Default";
+		const std::string& m_DefaultTextureName = "Default";
 	};
 
 	template <>
@@ -79,6 +98,13 @@ namespace NL
 				texturesFolderPath + "/DontModify/DefaultSkybox/back.jpg"
 			};
 			Add("DefaultSkybox", TextureCubeMap::Create(paths));
+		}
+
+		Ref<TextureCubeMap> FetchDefault()
+		{
+			if (Contains("DefaultSkybox"))
+				return Get("DefaultSkybox");
+			else return nullptr;
 		}
 	};
 }

@@ -34,6 +34,7 @@
 #include "Resources/Texture.h"
 #include "Resources/Libraries/ShaderLibrary.h"
 #include "Resources/Libraries/TextureLibrary.h"
+#include "Resources/Libraries/MeshLibrary.h"
 #include "Resources/Loaders/ModelLoader.h"
 #include "Resources/Loaders/ModelLoaderFlags.h"
 #include "Resources/Serializer/SceneSerializer.h"
@@ -42,6 +43,7 @@
 #include "Renderer/VertexArray.h"
 #include "Renderer/Framebuffer.h"
 #include "Renderer/PostProcessing.h"
+#include "Renderer/TransformFeedback.h"
 
 #include "Scripting/ScriptEngine.h"
 #include "Scripting/ScriptGlue.h"

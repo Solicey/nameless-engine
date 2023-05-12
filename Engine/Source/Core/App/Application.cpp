@@ -58,6 +58,8 @@ namespace NL
 
 	void Application::Init(const std::string& name)
 	{
+		srand(time(NULL));
+
 		Log::Init();
 
 		m_Window = Window::Create(WindowProps(name));

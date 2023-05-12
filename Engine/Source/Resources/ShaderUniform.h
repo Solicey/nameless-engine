@@ -19,12 +19,13 @@ namespace NL
 		Sampler2D, SamplerCube
 	};
 
+	typedef std::variant<std::string, nlm::vec3, float> ShaderPropValue;
 	// variant TODO in SceneSerializer.cpp
 	struct ShaderProperty
 	{
 		ShaderUniformType								Type;
 		std::string										Name;
-		std::variant<std::string, nlm::vec3>			Value;
+		ShaderPropValue									Value;
 	};
 
 	static const std::unordered_map<std::string, ShaderUniformType> s_ShaderUniformTypeMap =

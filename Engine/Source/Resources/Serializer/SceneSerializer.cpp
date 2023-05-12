@@ -138,13 +138,19 @@ namespace NL
 		break;                                         \
 	}
 {
-	void SceneSerializer::Serialize(const std::string& path)
+	void SceneSerializer::Serialize(const std::string& path, const std::unordered_map<std::string, int>& customInt)
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene" << YAML::Value << "Untitled";
+
+		for (auto& pair : customInt)
+		{
+			out << YAML::Key << pair.first << YAML::Value << pair.second;
+		}
+
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
-		m_Scene->m_Registry.each([&](auto entityID)
+		m_Scene->Registry.each([&](auto entityID)
 		{
 
 		Entity entity = { entityID, m_Scene.get() };
@@ -162,7 +168,7 @@ namespace NL
 		fout << out.c_str();
 	}
 
-	bool SceneSerializer::Deserialize(const std::string& path)
+	bool SceneSerializer::Deserialize(const std::string& path, std::unordered_map<std::string, int>& customInt)
 	{
 		YAML::Node data;
 		try
@@ -179,6 +185,11 @@ namespace NL
 
 		std::string sceneName = data["Scene"].as<std::string>();
 		NL_ENGINE_TRACE("Deserializing scene '{0}'", sceneName);
+
+		for (auto& pair : customInt)
+		{
+			pair.second = data[pair.first].as<int>();
+		}
 
 		auto entities = data["Entities"];
 		if (!entities)
@@ -208,8 +219,8 @@ namespace NL
 			if (modelRendererComponent)
 			{
 				std::string path = modelRendererComponent["ModelPath"].as<std::string>();
-				auto& comp = deserializedEntity.AddComponent<ModelRendererComponent>(path, (uint32_t)deserializedEntity);
-				auto& materialMap = comp.mModel->GetMaterialsNotConst();
+				auto& comp = deserializedEntity.AddComponent<ModelRendererComponent>(path);
+				auto& materialMap = comp._Model->GetMaterialsNotConst();
 
 				auto mats = modelRendererComponent["Materials"];
 				for (auto mat : mats)
@@ -220,55 +231,15 @@ namespace NL
 
 					auto& material = materialMap[matName];
 
-					material->LoadShader(mat["ShaderName"].as<std::string>());
+					material->LoadShaderAndUpdateProps(mat["ShaderName"].as<std::string>());
 
 					auto props = mat["ShaderProperties"];
 					if (!props)
 						continue;
 
 					auto& properties = material->GetShaderPropertiesNotConst();
-					properties.clear();
-					for (auto prop : props)
-					{
-						ShaderProperty newProp;
-						newProp.Type = static_cast<ShaderUniformType>(prop["Type"].as<int>());
-						newProp.Name = prop["Name"].as<std::string>();
-						// variant TODO
-						switch (newProp.Type)
-						{
-						case ShaderUniformType::Color3:
-							newProp.Value = prop["Value"].as<nlm::vec3>();
-							break;
-						case ShaderUniformType::Sampler2D:
-						{
-							newProp.Value = prop["Value"].as<std::string>();
-							const std::string& path = std::get<std::string>(newProp.Value);
 
-							Ref<Texture2D> newTex;
-
-							if (Library<Texture2D>::GetInstance().Contains(path))
-							{
-								newTex = Library<Texture2D>::GetInstance().Get(path);
-							}
-							else
-							{
-								newTex = Texture2D::Create(path);
-								Library<Texture2D>::GetInstance().Add(path, newTex);
-							}
-
-							material->ReplaceTexture(newProp.Name, newTex);
-
-							newProp.Value = path;
-
-							// Avoid memory leak
-
-							break;
-						}
-						default:
-							break;
-						}
-						properties.emplace_back(newProp);
-					}
+					DeserializeShaderProperties(props, properties, material);
 				}
 
 				auto bones = modelRendererComponent["Bones"];
@@ -277,9 +248,19 @@ namespace NL
 					std::string parent = bone["Parent"].as<std::string>();
 					std::string child = bone["Child"].as<std::string>();
 					//comp.Bones.push_back(std::make_pair(parent, child));
-					comp.mModel->AddBonePair(std::make_pair(parent, child));
+					comp._Model->AddBonePair(std::make_pair(parent, child));
 				}
 				//comp.UpdateBoneInfos();
+			}
+
+			auto spriteRendererComponent = entity["SpriteRendererComponent"];
+			if (spriteRendererComponent)
+			{
+				auto& comp = deserializedEntity.AddComponent<SpriteRendererComponent>();
+				comp.Color = spriteRendererComponent["Color"].as<nlm::vec4>();
+				comp.Reaction = (SpriteCameraReaction)spriteRendererComponent["Reaction"].as<int>();
+				std::string path = spriteRendererComponent["Path"].as<std::string>();
+				comp.ReplaceTexture(path);
 			}
 
 			auto cameraComponent = entity["CameraComponent"];
@@ -297,10 +278,47 @@ namespace NL
 					cameraComponent["OrthoNear"].as<float>(),
 					cameraComponent["OrthoFar"].as<float>(),
 					cameraComponent["ViewportWidth"].as<uint32_t>(),
-					cameraComponent["ViewportHeight"].as<uint32_t>()
+					cameraComponent["ViewportHeight"].as<uint32_t>(),
+					cameraComponent["ClearFlagType"].as<int>()
 				);
 			}
 
+			auto lightComponent = entity["LightComponent"];
+			if (lightComponent)
+			{
+				auto& comp = deserializedEntity.AddComponent<LightComponent>();
+				comp.Type = (LightType)lightComponent["LightType"].as<int>();
+				comp.Color = lightComponent["Color"].as<nlm::vec3>();
+				comp.Intensity = lightComponent["Intensity"].as<float>();
+				comp.Attenuation = lightComponent["Attenuation"].as<nlm::vec3>();
+			}
+
+			auto particleSystemComponent = entity["ParticleSystemComponent"];
+			if (particleSystemComponent)
+			{
+				auto& comp = deserializedEntity.AddComponent<ParticleSystemComponent>();
+				auto& prop = comp.Prop;
+				prop.LauncherNum = particleSystemComponent["LauncherNum"].as<int>();
+				prop.SpawnAreaShape = (ParticleSpawnAreaShape)particleSystemComponent["SpawnAreaShape"].as<int>();
+				prop.SpawnPositionDistribution = (ParticleSpawnDistribution)particleSystemComponent["SpawnPositionDistribution"].as<int>();
+				prop.SpawnAreaRadius = particleSystemComponent["SpawnAreaRadius"].as<float>();
+				prop.MaxVelocity = particleSystemComponent["MaxVelocity"].as<nlm::vec3>();
+				prop.MinVelocity = particleSystemComponent["MinVelocity"].as<nlm::vec3>();
+				prop.MaxTotalLifetime = particleSystemComponent["MaxTotalLifetime"].as<float>();
+				prop.MinTotalLifetime = particleSystemComponent["MinTotalLifetime"].as<float>();
+				prop.InitColor = particleSystemComponent["InitColor"].as<nlm::vec4>();
+				prop.InitSize = particleSystemComponent["InitSize"].as<float>();
+				
+				comp.Pass1->LoadShaderAndUpdateProps(particleSystemComponent["Pass1Name"].as<std::string>());
+				auto pass1Props = particleSystemComponent["Pass1Props"];
+				DeserializeShaderProperties(pass1Props, comp.Pass1->GetShaderPropertiesNotConst(), comp.Pass1);
+
+				comp.Pass2->LoadShaderAndUpdateProps(particleSystemComponent["Pass2Name"].as<std::string>());
+				auto pass2Props = particleSystemComponent["Pass2Props"];
+				DeserializeShaderProperties(pass2Props, comp.Pass2->GetShaderPropertiesNotConst(), comp.Pass2);
+
+				comp.Init();
+			}
 
 			// Always at the bottom!!!!
 			auto scriptComponent = entity["ScriptComponent"];
@@ -393,7 +411,7 @@ namespace NL
 			out << YAML::Key << "ModelPath" << YAML::Value << comp.Path;
 
 			out << YAML::Key << "Materials" << YAML::Value << YAML::BeginSeq; // Materials
-			const auto& mats = comp.mModel->GetMaterials();
+			const auto& mats = comp._Model->GetMaterials();
 			for (const auto& item : mats)
 			{
 				const auto& matName = item.first;
@@ -406,27 +424,7 @@ namespace NL
 
 				out << YAML::Key << "ShaderProperties" << YAML::Value << YAML::BeginSeq; // ShaderProperties
 
-				for (const auto& prop : mat->GetShaderPropertiesNotConst())
-				{
-					out << YAML::BeginMap; // ShaderProperty
-					out << YAML::Key << "Type" << YAML::Value << (int)prop.Type;
-					out << YAML::Key << "Name" << YAML::Value << prop.Name;
-					int index = prop.Value.index();
-					// ShaderUniform.h
-					// variant TODO
-					switch (index)
-					{
-					case 0:		// std::string
-						out << YAML::Key << "Value" << YAML::Value << std::get<0>(prop.Value);
-						break;
-					case 1:		// nlm::vec3
-						out << YAML::Key << "Value" << YAML::Value << std::get<1>(prop.Value);
-						break;
-					default:
-						break;
-					}
-					out << YAML::EndMap; // ShaderProperty
-				}
+				SerializeShaderProperties(out, mat);
 
 				out << YAML::EndSeq; // ShaderProperties
 
@@ -436,7 +434,7 @@ namespace NL
 
 
 			out << YAML::Key << "Bones" << YAML::Value << YAML::BeginSeq; // Bones
-			auto& bones = comp.mModel->GetBonesNotConst();
+			auto& bones = comp._Model->GetBonesNotConst();
 			std::string empty = "null";
 			for (auto& pair : bones)
 			{
@@ -454,6 +452,19 @@ namespace NL
 			out << YAML::EndSeq; // Bones
 
 			out << YAML::EndMap; // ModelRendererComponent
+		}
+
+		if (entity.HasComponent<SpriteRendererComponent>())
+		{
+			out << YAML::Key << "SpriteRendererComponent";
+			out << YAML::BeginMap; // SpriteRendererComponent
+
+			auto& comp = entity.GetComponent<SpriteRendererComponent>();
+			out << YAML::Key << "Color" << YAML::Value << comp.Color;
+			out << YAML::Key << "Reaction" << YAML::Value << (int)comp.Reaction;
+			out << YAML::Key << "Path" << YAML::Value << comp.Path;
+
+			out << YAML::EndMap; // SpriteRendererComponent
 		}
 
 		if (entity.HasComponent<CameraComponent>())
@@ -475,8 +486,56 @@ namespace NL
 			out << YAML::Key << "PerspNear" << YAML::Value << cam.GetPerspectiveNear();
 			out << YAML::Key << "ViewportWidth" << YAML::Value << cam.GetViewportWidth();
 			out << YAML::Key << "ViewportHeight" << YAML::Value << cam.GetViewportHeight();
+			out << YAML::Key << "ClearFlagType" << YAML::Value << (int)cam.GetClearFlagType();
 
 			out << YAML::EndMap; // CameraComponent
+		}
+
+		// Light Component
+		if (entity.HasComponent<LightComponent>())
+		{
+			out << YAML::Key << "LightComponent";
+			out << YAML::BeginMap; // LightComponent
+
+			auto& comp = entity.GetComponent<LightComponent>();
+			out << YAML::Key << "LightType" << YAML::Value << (int)comp.Type;
+			out << YAML::Key << "Color" << YAML::Value << comp.Color;
+			out << YAML::Key << "Intensity" << YAML::Value << comp.Intensity;
+			out << YAML::Key << "Attenuation" << YAML::Value << comp.Attenuation;
+
+			out << YAML::EndMap; // LightComponent
+		}
+
+		// Particle System Component
+		if (entity.HasComponent<ParticleSystemComponent>())
+		{
+			out << YAML::Key << "ParticleSystemComponent";
+			out << YAML::BeginMap; // ParticleSystemComponent
+
+			auto& comp = entity.GetComponent<ParticleSystemComponent>();
+			auto& prop = comp.Prop;
+			out << YAML::Key << "LauncherNum" << YAML::Value << prop.LauncherNum;
+			out << YAML::Key << "SpawnAreaShape" << YAML::Value << (int)prop.SpawnAreaShape;
+			out << YAML::Key << "SpawnPositionDistribution" << YAML::Value << (int)prop.SpawnPositionDistribution;
+			out << YAML::Key << "SpawnAreaRadius" << YAML::Value << prop.SpawnAreaRadius;
+			out << YAML::Key << "MaxVelocity" << YAML::Value << prop.MaxVelocity;
+			out << YAML::Key << "MinVelocity" << YAML::Value << prop.MinVelocity;
+			out << YAML::Key << "MaxTotalLifetime" << YAML::Value << prop.MaxTotalLifetime;
+			out << YAML::Key << "MinTotalLifetime" << YAML::Value << prop.MinTotalLifetime;
+			out << YAML::Key << "InitColor" << YAML::Value << prop.InitColor;
+			out << YAML::Key << "InitSize" << YAML::Value << prop.InitSize;
+
+			out << YAML::Key << "Pass1Name" << YAML::Value << comp.Pass1->GetShaderName();
+			out << YAML::Key << "Pass1Props" << YAML::Value << YAML::BeginSeq; // Pass1Props
+			SerializeShaderProperties(out, comp.Pass1);
+			out << YAML::EndSeq; // Pass1Props
+			
+			out << YAML::Key << "Pass2Name" << YAML::Value << comp.Pass2->GetShaderName();
+			out << YAML::Key << "Pass2Props" << YAML::Value << YAML::BeginSeq; // Pass2Props
+			SerializeShaderProperties(out, comp.Pass2);
+			out << YAML::EndSeq; // Pass2Props
+
+			out << YAML::EndMap; // LightComponent
 		}
 
 		if (entity.HasComponent<ScriptComponent>())
@@ -539,4 +598,99 @@ namespace NL
 
 		out << YAML::EndMap; // Entity
 	}
+
+	void SceneSerializer::SerializeShaderProperties(YAML::Emitter& out, const Ref<Material>& mat)
+	{
+		for (const auto& prop : mat->GetShaderProperties())
+		{
+			out << YAML::BeginMap; // ShaderProperty
+			out << YAML::Key << "Type" << YAML::Value << (int)prop.Type;
+			out << YAML::Key << "Name" << YAML::Value << prop.Name;
+			int index = prop.Value.index();
+			// ShaderUniform.h
+			// variant TODO
+			switch (index)
+			{
+			case 0:		// std::string
+				out << YAML::Key << "Value" << YAML::Value << std::get<0>(prop.Value);
+				break;
+			case 1:		// nlm::vec3
+				out << YAML::Key << "Value" << YAML::Value << std::get<1>(prop.Value);
+				break;
+			case 2:		// float
+				out << YAML::Key << "Value" << YAML::Value << std::get<2>(prop.Value);
+				break;
+			default:
+				break;
+			}
+			out << YAML::EndMap; // ShaderProperty
+		}
+	}
+
+	void SceneSerializer::DeserializeShaderProperties(YAML::Node& props, std::vector<ShaderProperty>& properties, Ref<Material>& material)
+	{
+		std::unordered_map<std::string, ShaderPropValue> oldProps;
+		for (auto prop : props)
+		{
+			ShaderProperty newProp;
+			newProp.Type = static_cast<ShaderUniformType>(prop["Type"].as<int>());
+			newProp.Name = prop["Name"].as<std::string>();
+			switch (newProp.Type)
+			{
+			case ShaderUniformType::Color3:
+				newProp.Value = prop["Value"].as<nlm::vec3>();
+				break;
+			case ShaderUniformType::Sampler2D:
+			{
+				newProp.Value = prop["Value"].as<std::string>();
+				const std::string& path = std::get<std::string>(newProp.Value);
+
+				Ref<Texture2D> newTex = Library<Texture2D>::GetInstance().Fetch(path);
+
+				material->ReplaceTexture(newProp.Name, newTex);
+
+				newProp.Value = path;
+
+				// Avoid memory leak
+
+				break;
+			}
+			case ShaderUniformType::Float:
+			{
+				newProp.Value = prop["Value"].as<float>();
+				break;
+			}
+			default:
+				break;
+			}
+
+			oldProps.insert(std::make_pair(newProp.Name + std::to_string((int)newProp.Type), newProp.Value));
+		}
+
+		for (auto& prop : properties)
+		{
+			int type = (int)prop.Type;
+			std::string key = prop.Name + std::to_string(type);
+			if (oldProps.contains(key))
+			{
+				prop.Value = oldProps[key];
+				continue;
+			}
+
+			switch (prop.Type)
+			{
+			case ShaderUniformType::Color3:
+				prop.Value = nlm::vec3(1.0, 1.0, 1.0);
+				break;
+
+			case ShaderUniformType::Float:
+				prop.Value = 0.0f;
+				break;
+
+			default:
+				break;
+			}
+		}
+	}
+
 }
