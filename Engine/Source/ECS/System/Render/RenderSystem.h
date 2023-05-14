@@ -16,7 +16,7 @@ namespace NL
 		virtual void OnUpdateRuntime(TimeStep ts, Entity cameraEntity) override;
 
 		virtual void OnStartEditor() override;
-		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity) override;
+		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity, Entity settings) override;
 
 	private:
 		void UpdateParticleSystem(Entity selectedEntity = {});

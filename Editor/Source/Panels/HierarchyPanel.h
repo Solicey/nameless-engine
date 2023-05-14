@@ -32,6 +32,8 @@ namespace NL
 			return -1;
 		}
 
+		void DrawEditorCameraPostProcessShaderCombo(Ref<Material>& mat);
+
 	private:
 		void DrawEntityNode(Entity entity);
 		void DrawComponents(Entity entity);
@@ -49,13 +51,12 @@ namespace NL
 		static void DrawBonesRecursive(BoneInfo& boneInfo, std::map<int, BoneInfo>& bones, std::pair<int, int>& adjust);
 
 		template<Component C, typename UIFunction>
-		static void DrawShaderCombo(Ref<Material>& mat, const std::string& matName, bool& shaderSelectClick, UIFunction uiFunction, ShaderUse shaderUse, const Ref<Scene>& scene);
+		static void DrawShaderCombo(Ref<Material>& mat, const std::string& matName, bool& shaderSelectClick, UIFunction uiFunction, ShaderUse shaderUse, const Ref<Scene>& scene, bool hasTreeNode = true);
 
 	private:
 		Ref<Scene> m_Scene;
 		Entity m_EntitySelected;
 		Callback m_RuntimeCameraUpdateCallback;
-		bool m_ModelRendererCompShaderSelectOpen = false;
-		bool m_ParticleSystemCompShaderSelectOpen = false;
+		bool m_ShaderSelectOpen = false;
 	};
 }

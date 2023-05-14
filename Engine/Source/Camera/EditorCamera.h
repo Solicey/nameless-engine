@@ -29,10 +29,6 @@ namespace NL
 		// For Viewport Interactions
 		bool IsMouseButtonHolding() const { return m_IsMouseButtonHolding; }
 
-		bool& GetRenderGizmosRef() { return m_RenderGizmos; }
-		bool IsRenderGizmos() const { return m_RenderGizmos; }
-		void SetRenderGizmos(bool flag) { m_RenderGizmos = flag; }
-
 		void SetCenter(const nlm::vec3& center);
 
 	private:
@@ -63,6 +59,5 @@ namespace NL
 		nlm::mat4 m_ViewMatrix;
 
 		bool m_IsMouseButtonHolding = false;
-		bool m_RenderGizmos = true;
 	};
 }

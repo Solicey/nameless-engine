@@ -75,7 +75,7 @@ namespace NL
 
 		// Called when the model is deleted (single delete operation)
 		// For multiply delete operations (such as delete of a whole scene, use Scene::DestroyScene)
-		void DeleteMeshesAndTexturesReference();
+		void DeleteMeshesAndMaterialsReference();
 
 		Model(const Model* src);
 

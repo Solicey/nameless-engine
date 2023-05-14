@@ -12,11 +12,6 @@ namespace NL
 		Editor, Runtime
 	};
 
-	enum class AntiAliasingType : int
-	{
-		None, MSAA
-	};
-
 	class EditorLayer : public Layer
 	{
 	public:
@@ -54,12 +49,17 @@ namespace NL
 
 		void UpdateFramebuffer();
 
+		void InitSettingsEntity(Entity entity = {});
+
 	private:
 
 		friend class HierarchyPanel;
 
 		EditorCamera m_EditorCamera;
 		Ref<Scene> m_EditorScene;
+
+		const std::string m_SettingsEntityName = "SceneSettings";
+		Entity m_Settings = {};
 		// ClearFlagType m_EditorCameraClearFlagType = ClearFlagType::Skybox;
 
 		Entity m_RuntimeCameraEntity = {};
@@ -73,9 +73,10 @@ namespace NL
 		Ref<Framebuffer> m_Framebuffer;
 
 		// Post-processing
-		std::vector<PostProcessingType> m_EditorPostProcessingQueue;
-		std::vector<PostProcessingType> m_RuntimePostProcessingQueue;
+		//std::vector<PostProcessingType> m_EditorPostProcessingQueue;
+		//std::vector<PostProcessingType> m_RuntimePostProcessingQueue;
 		Ref<PostProcessing> m_PostProcessing;
+		//std::vector<Ref<Material>> m_EditorPostProcessingQueue;
 
 		// Viewport variables
 		bool m_ShowViewport;
@@ -107,8 +108,8 @@ namespace NL
 		* Runtime PostProcessing
 		*/
 		bool m_ShowSceneSettings;
-		int m_MSAASamples = 4;
-		AntiAliasingType m_AntiAliasingType = AntiAliasingType::MSAA;
+		// int m_MSAASamples = 4;
+		// AntiAliasingType m_AntiAliasingType = AntiAliasingType::MSAA;
 		// bool m_ShowGizmos;
 
 		// Resource List

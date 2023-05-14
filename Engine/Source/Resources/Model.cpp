@@ -49,7 +49,7 @@ namespace NL
 		}
 	}
 
-	void Model::DeleteMeshesAndTexturesReference()
+	void Model::DeleteMeshesAndMaterialsReference()
 	{
 		for (auto& mesh : m_Meshes)
 		{
@@ -66,7 +66,7 @@ namespace NL
 		{
 			Ref<Material> mat = item.second;
 			if (mat != nullptr)
-				mat->DeleteTexturesReference();
+				mat->DeleteTexturesAndShadersReference();
 		}
 		// Library<Texture2D>::GetInstance().TraverseDelete();
 	}

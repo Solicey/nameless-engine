@@ -49,6 +49,18 @@ namespace NL
         using EventCallbackFn = std::function<void(Event&)>;
         ScriptGlue::GetInstance().SetEventCallback(NL_BIND_EVENT_FN(EditorLayer::OnEvent));
 
+        // Scene
+        m_EditorScene = CreateRef<Scene>();
+
+        // Post-processing
+        m_PostProcessing = PostProcessing::Create();
+
+        // m_EditorCamera = EditorCamera(Camera::ProjectionType::Orthographic, 10.0f, 1280, 720, 0.1f, 1000.0f);
+        m_EditorCamera = EditorCamera(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
+
+        // Settings
+        InitSettingsEntity({});
+
         // Multisample framebuffer Setup
         UpdateFramebuffer();
 
@@ -58,16 +70,6 @@ namespace NL
         spec.Width = 1280;
         spec.Height = 720;
         m_Framebuffer = Framebuffer::Create(spec);
-
-        // Post-processing
-        m_PostProcessing = PostProcessing::Create();
-        if (m_EditorCamera.IsRenderGizmos())
-            m_EditorPostProcessingQueue = { PostProcessingType::EditorOutline };
-        else m_EditorPostProcessingQueue.clear();
-
-		// m_EditorCamera = EditorCamera(Camera::ProjectionType::Orthographic, 10.0f, 1280, 720, 0.1f, 1000.0f);
-		m_EditorCamera = EditorCamera(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
-		m_EditorScene = CreateRef<Scene>();
 
         // Hierarchy
         m_HierarchyPanel = CreateRef<HierarchyPanel>(m_EditorScene);
@@ -128,7 +130,7 @@ namespace NL
         m_MultisampledFramebuffer->Bind();
         if (IsEditorMode())
         {
-            m_EditorScene->OnUpdateEditor(ts, m_EditorCamera, m_HierarchyPanel->GetSelectedEntity());
+            m_EditorScene->OnUpdateEditor(ts, m_EditorCamera, m_HierarchyPanel->GetSelectedEntity(), m_Settings);
 
             m_EditorCamera.OnUpdate(ts, m_ViewportHovered);
 
@@ -424,9 +426,10 @@ namespace NL
             m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
             m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
 
-
+            // Temp
+            bool showGizmos = m_Settings.GetComponent<SettingsComponent>().ShowGizmos;
             // Grid
-            if (IsEditorMode() && m_EditorCamera.IsRenderGizmos() && m_EditorCamera.GetClearFlagType() == Camera::ClearFlagType::Color)
+            if (IsEditorMode() && showGizmos && m_EditorCamera.GetClearFlagType() == Camera::ClearFlagType::Color)
             {
                 ImGuizmo::SetOrthographic(false);
                 ImGuizmo::SetDrawlist();
@@ -458,16 +461,22 @@ namespace NL
                 // ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_RuntimeAspect.x, m_RuntimeAspect.y }, ImVec2{ 0 + dx, 1 - dy }, ImVec2{ 1 - dx, 0 + dy });
                 // 
                 // Bugs remain... Smaller viewport leading to lower graphic performances...
+                if (m_RuntimeCameraEntity.HasComponent<PostProcessingComponent>())
+                {
+                    auto& comp = m_RuntimeCameraEntity.GetComponent<PostProcessingComponent>();
+                    textureID = m_PostProcessing->ExecutePostProcessingQueue(comp.Queue, m_Framebuffer);
+                }
                 ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_RuntimeAspect.x, m_RuntimeAspect.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
             }
             else
             {
-                textureID = m_PostProcessing->ExecutePostProcessingQueue(m_EditorPostProcessingQueue, m_Framebuffer);
+                if (m_Settings.HasComponent<PostProcessingComponent>())
+                    textureID = m_PostProcessing->ExecutePostProcessingQueue(m_Settings.GetComponent<PostProcessingComponent>().Queue, m_Framebuffer);
                 ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
             }
 
             // Gizmos
-            if (IsEditorMode() && m_EditorCamera.IsRenderGizmos())
+            if (IsEditorMode() && showGizmos)
             {
                 Entity entitySelected = m_HierarchyPanel->GetSelectedEntity();
                 if (entitySelected && entitySelected.HasComponent<TransformComponent>())
@@ -577,34 +586,82 @@ namespace NL
         {
             ImGui::Begin("Scene Settings");
 
+            auto& settings = m_Settings.GetComponent<SettingsComponent>();
+
+            // Post-processing
+            if (ImGui::TreeNode("Editor Camera Post-processing"))
+            {
+                PostProcessingComponent& comp = m_Settings.GetComponent<PostProcessingComponent>();
+                auto& queue = comp.Queue;
+
+                if (ImGui::BeginTabBar("Shader Pass", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyResizeDown))
+                {
+                    if (ImGui::TabItemButton("+", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip))
+                    {
+                        // Check if shader is nullptr in Post Processing
+                        queue.push_back(CreateRef<Material>());
+                    }
+
+                    for (int i = 0; i < queue.size();)
+                    {
+                        auto& mat = queue[i];
+                        bool open = true;
+                        std::string name = std::to_string(i) + "." + mat->GetShaderNameNoSuffix();
+                        if (ImGui::BeginTabItem(name.c_str(), &open, ImGuiTabItemFlags_None))
+                        {
+                            //ImGui::Text("This is the %d tab!", i);
+                            /*HierarchyPanel::DrawShaderCombo<PostProcessingComponent>(mat, mat->GetName(), m_HierarchyPanel->m_ShaderSelectOpen, [](auto& comp, const std::string& shaderName)
+                                {
+                                    PostProcessingComponent& postcomp = comp;
+                                    postcomp.UpdateShaderProperties(shaderName);
+                                }, ShaderUse::PostProcess, m_EditorScene, false);*/
+                            m_HierarchyPanel->DrawEditorCameraPostProcessShaderCombo(mat);
+                            ImGui::EndTabItem();
+                        }
+
+                        if (!open)
+                        {
+                            mat->DeleteTexturesAndShadersReference();
+                            queue.erase(queue.begin() + i);
+                        }
+                        else
+                            i++;
+                    }
+
+                    ImGui::EndTabBar();
+                }
+
+                ImGui::TreePop();
+            }
+
             // Anti-Aliasing
             bool hasAntiAliasModified = false;
             if (ImGui::TreeNode("Anti-aliasing"))
             {
-                if (ImGui::RadioButton("None", (m_AntiAliasingType == AntiAliasingType::None)))
+                if (ImGui::RadioButton("None", (settings.AntiAliasingType == AntiAliasingType::None)))
                 {
-                    m_AntiAliasingType = AntiAliasingType::None;
+                    settings.AntiAliasingType = AntiAliasingType::None;
                     hasAntiAliasModified = true;
                 }
                 ImGui::SameLine();
-                if (ImGui::RadioButton("2x MSAA", (m_AntiAliasingType == AntiAliasingType::MSAA && m_MSAASamples == 2)))
+                if (ImGui::RadioButton("2x MSAA", (settings.AntiAliasingType == AntiAliasingType::MSAA && settings.MSAASamples == 2)))
                 {
-                    m_AntiAliasingType = AntiAliasingType::MSAA;
-                    m_MSAASamples = 2;
+                    settings.AntiAliasingType = AntiAliasingType::MSAA;
+                    settings.MSAASamples = 2;
                     hasAntiAliasModified = true;
                 }
                 ImGui::SameLine();
-                if (ImGui::RadioButton("4x MSAA", (m_AntiAliasingType == AntiAliasingType::MSAA && m_MSAASamples == 4)))
+                if (ImGui::RadioButton("4x MSAA", (settings.AntiAliasingType == AntiAliasingType::MSAA && settings.MSAASamples == 4)))
                 {
-                    m_AntiAliasingType = AntiAliasingType::MSAA;
-                    m_MSAASamples = 4;
+                    settings.AntiAliasingType = AntiAliasingType::MSAA;
+                    settings.MSAASamples = 4;
                     hasAntiAliasModified = true;
                 }
                 ImGui::SameLine();
-                if (ImGui::RadioButton("8x MSAA", (m_AntiAliasingType == AntiAliasingType::MSAA && m_MSAASamples == 8)))
+                if (ImGui::RadioButton("8x MSAA", (settings.AntiAliasingType == AntiAliasingType::MSAA && settings.MSAASamples == 8)))
                 {
-                    m_AntiAliasingType = AntiAliasingType::MSAA;
-                    m_MSAASamples = 8;
+                    settings.AntiAliasingType = AntiAliasingType::MSAA;
+                    settings.MSAASamples = 8;
                     hasAntiAliasModified = true;
                 }
                 ImGui::TreePop();
@@ -617,15 +674,17 @@ namespace NL
             // Editor Camera Clear Flag
             if (ImGui::TreeNode("Clear Flag"))
             {
-                Camera::ClearFlagType type = m_EditorCamera.GetClearFlagType();
+                Camera::ClearFlagType type = settings.EditorCameraClearFlag;
                 if (ImGui::RadioButton("Color", (type == Camera::ClearFlagType::Color)))
                 {
-                    m_EditorCamera.SetClearFlagType(Camera::ClearFlagType::Color);
+                    settings.EditorCameraClearFlag = Camera::ClearFlagType::Color;
+                    m_EditorCamera.SetClearFlagType(settings.EditorCameraClearFlag);
                 }
                 ImGui::SameLine();
                 if (ImGui::RadioButton("Skybox", (type == Camera::ClearFlagType::Skybox)))
                 {
-                    m_EditorCamera.SetClearFlagType(Camera::ClearFlagType::Skybox);
+                    settings.EditorCameraClearFlag = Camera::ClearFlagType::Skybox;
+                    m_EditorCamera.SetClearFlagType(settings.EditorCameraClearFlag);
                 }
                 ImGui::TreePop();
             }
@@ -633,11 +692,11 @@ namespace NL
             // Editor Viewport Gizmos
             if (ImGui::TreeNode("Gizmos"))
             {
-                if (ImGui::Checkbox("Show Gizmos", &m_EditorCamera.GetRenderGizmosRef()))
+                if (ImGui::Checkbox("Show Gizmos", &settings.ShowGizmos))
                 {
-                    if (m_EditorCamera.IsRenderGizmos())
-                        m_EditorPostProcessingQueue = { PostProcessingType::EditorOutline };
-                    else m_EditorPostProcessingQueue.clear();
+                    /*if (m_EditorCamera.IsRenderGizmos())
+                        m_EditorPostProcessingQueue = { CreateRef<Material>("EditorOutline.glsl") };
+                    else m_EditorPostProcessingQueue.clear();*/
                 }
                 ImGui::TreePop();
             }
@@ -819,13 +878,13 @@ namespace NL
     void EditorLayer::SerializeScene(Ref<Scene> scene, const std::string& path)
     {
         SceneSerializer serializer(scene);
-        std::unordered_map<std::string, int> sceneSettingsInt = {
+        /*std::unordered_map<std::string, int> sceneSettingsInt = {
             {"AntiAliasingType", (int)m_AntiAliasingType},
             {"MSAASamples", m_MSAASamples},
             {"EditorCameraClearFlag", (int)m_EditorCamera.GetClearFlagType()},
             {"ShowGizmos", m_EditorCamera.IsRenderGizmos() ? 1 : 0}
-        };
-        serializer.Serialize(path, sceneSettingsInt);
+        };*/
+        serializer.Serialize(path);
     }
 
     void EditorLayer::NewScene()
@@ -840,6 +899,7 @@ namespace NL
         m_EditorScene->DestroyScene();
         m_EditorScene.reset();
         m_EditorScene = CreateRef<Scene>();
+        InitSettingsEntity({});
 
         m_EditorScene->OnStartEditor();
 
@@ -878,13 +938,13 @@ namespace NL
 
         Ref<Scene> newScene = CreateRef<Scene>();
         SceneSerializer serializer(newScene);
-        std::unordered_map<std::string, int> sceneSettingsInt = {
+        /*std::unordered_map<std::string, int> sceneSettingsInt = {
             {"AntiAliasingType", (int)m_AntiAliasingType},
             {"MSAASamples", m_MSAASamples},
             {"EditorCameraClearFlag", (int)m_EditorCamera.GetClearFlagType()},
             {"ShowGizmos", m_EditorCamera.IsRenderGizmos() ? 1 : 0}
-        };
-        if (serializer.Deserialize(path, sceneSettingsInt))
+        };*/
+        if (serializer.Deserialize(path))
         {
             // if (m_EditorScene)
                // m_EditorScene->Registry.clear();
@@ -902,12 +962,7 @@ namespace NL
             Application::GetInstance().SetWindowTitle("Nameless Editor - " + path.substr(path.find_last_of("/\\") + 1));
             
             // Reset Scene Settings
-            m_AntiAliasingType = (AntiAliasingType)sceneSettingsInt.at("AntiAliasingType");
-            m_MSAASamples = sceneSettingsInt.at("MSAASamples");
-            m_EditorCamera.SetClearFlagType((Camera::ClearFlagType)sceneSettingsInt.at("EditorCameraClearFlag"));
-
-            m_EditorCamera.SetRenderGizmos(sceneSettingsInt.at("ShowGizmos"));
-            
+            InitSettingsEntity(newScene->FindEntityByName(m_SettingsEntityName));
         }
     }
 
@@ -996,14 +1051,31 @@ namespace NL
         msSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
         msSpec.Width = 1280;
         msSpec.Height = 720;
-        if (m_AntiAliasingType == AntiAliasingType::None)
+        auto& settings = m_Settings.GetComponent<SettingsComponent>();
+        if (settings.AntiAliasingType == AntiAliasingType::None)
         {
             msSpec.Samples = 1;
         }
-        else if (m_AntiAliasingType == AntiAliasingType::MSAA)
+        else if (settings.AntiAliasingType == AntiAliasingType::MSAA)
         {
-            msSpec.Samples = m_MSAASamples;
+            msSpec.Samples = settings.MSAASamples;
         }
         m_MultisampledFramebuffer = Framebuffer::Create(msSpec);
+    }
+
+    void EditorLayer::InitSettingsEntity(Entity entity)
+    {
+        if (entity == Entity())
+        {
+            m_Settings = m_EditorScene->CreateEntity(m_SettingsEntityName);
+            m_Settings.AddComponent<SettingsComponent>();            
+            m_Settings.AddComponent<PostProcessingComponent>().Queue.push_back(CreateRef<Material>("EditorOutline.glsl"));
+        }
+        else
+            m_Settings = entity;
+
+        // Temp
+        m_EditorCamera.SetClearFlagType(m_Settings.GetComponent<SettingsComponent>().EditorCameraClearFlag);
+        UpdateFramebuffer();
     }
 }

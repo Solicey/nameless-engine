@@ -38,7 +38,7 @@ namespace NL
 		void OnUpdateRuntime(TimeStep ts, Entity cameraEntity, bool isRuntimeViewportFocused);
 
 		void OnStartEditor();
-		void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity);
+		void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity, Entity settings);
 
 		Entity GetEntityWithID(ID id);
 		Entity FindEntityByName(std::string_view name);

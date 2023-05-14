@@ -140,14 +140,14 @@ namespace NL
 		m_TotalTime = m_DeltaTime = 0;
 	}
 
-	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity)
+	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity, Entity settings)
 	{
 		m_TotalTime += ts;
 		m_DeltaTime = ts;
 
 		Renderer::BeginScene(camera);
 
-		bool renderGizmos = camera.IsRenderGizmos();
+		bool renderGizmos = settings.GetComponent<SettingsComponent>().ShowGizmos;
 		nlm::mat4 cameraRotation = nlm::mat4(camera.GetOrientation());
 
 		// Light Preparation

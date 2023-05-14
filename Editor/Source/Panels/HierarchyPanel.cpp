@@ -261,7 +261,9 @@ namespace NL
 					[&](auto handle)
 					{
 						Entity entity{ handle, m_Scene.get() };
-						DrawEntityNode(entity);
+						// Temp
+						if (!entity.HasComponent<SettingsComponent>())
+							DrawEntityNode(entity);
 					}
 				);
 			}
@@ -285,6 +287,15 @@ namespace NL
 	void HierarchyPanel::SetSelectedEntity(Entity entity)
 	{
 		m_EntitySelected = entity;
+	}
+
+	void HierarchyPanel::DrawEditorCameraPostProcessShaderCombo(Ref<Material>& mat)
+	{
+		HierarchyPanel::DrawShaderCombo<PostProcessingComponent>(mat, mat->GetName(), m_ShaderSelectOpen, [](auto& comp, const std::string& shaderName)
+			{
+				PostProcessingComponent& postcomp = comp;
+				postcomp.UpdateShaderProperties(shaderName);
+			}, ShaderUse::PostProcess, m_Scene, false);
 	}
 
 	void HierarchyPanel::DrawEntityNode(Entity entity)
@@ -364,6 +375,7 @@ namespace NL
 			InspectorAddComponent<CameraComponent>("Camera");
 			InspectorAddComponent<ModelRendererComponent>("Model Renderer");
 			InspectorAddComponent<SpriteRendererComponent>("Sprite Renderer");
+			InspectorAddComponent<PostProcessingComponent>("Post Processing");
 			InspectorAddComponent<LightComponent>("Light");
 			InspectorAddComponent<ParticleSystemComponent>("Particle System");
 			InspectorAddComponent<ScriptComponent>("Scripting");
@@ -508,7 +520,7 @@ namespace NL
 		
 #pragma region Draw Model Renderer
 
-		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [scene = m_Scene, &shaderSelectClick = m_ModelRendererCompShaderSelectOpen](auto& entity, auto& component) {
+		DrawComponent<ModelRendererComponent>("Model Renderer", entity, [scene = m_Scene, &shaderSelectClick = m_ShaderSelectOpen](auto& entity, auto& component) {
 
 		//const auto& shaderNameMap = Library<Shader>::GetInstance().GetShaderNameMap();
 		// NL_ENGINE_TRACE("Default shader name: {0}", Library<Shader>::GetInstance().GetDefaultShaderName());
@@ -548,7 +560,7 @@ namespace NL
 			if (!filepath.empty())
 			{
 				if (component._Model)
-					component._Model->DeleteMeshesAndTexturesReference();
+					component._Model->DeleteMeshesAndMaterialsReference();
 				component = ModelRendererComponent(path.string());
 			}
 		}
@@ -566,6 +578,7 @@ namespace NL
 			{
 				std::string matName = item.first;
 				Ref<Material> mat = item.second;
+
 
 				DrawShaderCombo<ModelRendererComponent>(mat, matName, shaderSelectClick, [](auto& comp, const std::string& shaderName)
 					{
@@ -645,6 +658,62 @@ namespace NL
 
 #pragma endregion
 
+#pragma region Draw Post Processing
+
+		DrawComponent<PostProcessingComponent>("Post Processing", entity, [scene = m_Scene, &shaderSelectClick = m_ShaderSelectOpen](auto& entity, auto& component) {
+
+		if (!entity.HasComponent<CameraComponent>())
+		{
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.95f, 0.0f, 1.0f));
+			ImGui::Text("No Camera Component Found!");
+			ImGui::PopStyleColor();
+		}
+		
+		PostProcessingComponent& comp = component;
+		auto& queue = comp.Queue;
+
+		if (ImGui::BeginTabBar("Shader Pass", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyResizeDown))
+		{
+			if (ImGui::TabItemButton("+", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip))
+			{
+				// Check if shader is nullptr in Post Processing
+				queue.push_back(CreateRef<Material>());
+			}
+
+			for (int i = 0; i < queue.size();)
+			{
+				auto& mat = queue[i];
+				bool open = true;
+				std::string name = std::to_string(i) + "." + mat->GetShaderNameNoSuffix();
+				if (ImGui::BeginTabItem(name.c_str(), &open, ImGuiTabItemFlags_None))
+				{
+					//ImGui::Text("This is the %d tab!", i);
+					DrawShaderCombo<PostProcessingComponent>(mat, mat->GetName(), shaderSelectClick, [](auto& comp, const std::string& shaderName)
+						{
+							PostProcessingComponent& postcomp = comp;
+							postcomp.UpdateShaderProperties(shaderName);
+						}, ShaderUse::PostProcess, scene, false);
+					ImGui::EndTabItem();
+				}
+
+				if (!open)
+				{
+					mat->DeleteTexturesAndShadersReference();
+					queue.erase(queue.begin() + i);
+				}
+				else
+					i++;
+			}
+
+			ImGui::EndTabBar();
+		}
+		
+
+		
+		});
+
+#pragma endregion
+
 #pragma region Draw Lighting
 
 		DrawComponent<LightComponent>("Light", entity, [scene = m_Scene](auto& entity, auto& component) {
@@ -671,7 +740,7 @@ namespace NL
 
 #pragma region Particle System
 
-		DrawComponent<ParticleSystemComponent>("Particle System", entity, [scene = m_Scene, &shaderSelectClicked = m_ParticleSystemCompShaderSelectOpen](auto& entity, auto& component) {
+		DrawComponent<ParticleSystemComponent>("Particle System", entity, [scene = m_Scene, &shaderSelectClicked = m_ShaderSelectOpen](auto& entity, auto& component) {
 
 		ParticleSystemComponent& comp = component;
 		ImGui::PushID("ParticleSystem");
@@ -719,8 +788,8 @@ namespace NL
 			DrawShaderCombo<ParticleSystemComponent>(comp.Pass2, comp.Pass2->GetName(), shaderSelectClicked, [](auto& comp, const std::string& shaderName)
 				{
 					NL_INFO("Reload R Pass!");
-				ParticleSystemComponent& partComp = comp;
-				partComp.UpdateShaderProperties(shaderName);
+					ParticleSystemComponent& partComp = comp;
+					partComp.UpdateShaderProperties(shaderName);
 				}, ShaderUse::Particle2, scene);
 
 			ImGui::TreePop();
@@ -1142,14 +1211,16 @@ namespace NL
 		ImGui::PopID();
 	}
 
+	// uiFunction is called when dealing with shader reloading
 	template<Component C, typename UIFunction>
-	void HierarchyPanel::DrawShaderCombo(Ref<Material>& mat, const std::string& matName, bool& shaderSelectClick, UIFunction uiFunction, ShaderUse shaderUse, const Ref<Scene>& scene)
+	void HierarchyPanel::DrawShaderCombo(Ref<Material>& mat, const std::string& matName, bool& shaderSelectClick, UIFunction uiFunction, ShaderUse shaderUse, const Ref<Scene>& scene, bool hasTreeNode)
 	{
 		ImGui::PushID(&mat);
 
 		std::string shaderName = mat->GetShaderName();
 
-		if (ImGui::TreeNode(matName.c_str()))
+		// if (ImGui::TreeNode(matName.c_str()))
+		if (!hasTreeNode || ImGui::TreeNode(matName.c_str()))
 		{
 			bool hasCompiledSuccessfully = mat->GetShader()->HasCompiledSuccessfully();
 			if (!hasCompiledSuccessfully)
@@ -1221,7 +1292,8 @@ namespace NL
 			// Exposed Shader Properties
 			DrawShaderProperties(mat);
 
-			ImGui::TreePop();
+			if (hasTreeNode)
+				ImGui::TreePop();
 		}
 
 		ImGui::PopID();

@@ -103,7 +103,7 @@ namespace NL
         {
             auto& model = entity.GetComponent<ModelRendererComponent>()._Model;
             if (model)
-                model->DeleteMeshesAndTexturesReference();
+                model->DeleteMeshesAndMaterialsReference();
         }
 
         if (entity.HasComponent<SpriteRendererComponent>())
@@ -116,7 +116,13 @@ namespace NL
         if (entity.HasComponent<ParticleSystemComponent>())
         {
             auto& comp = entity.GetComponent<ParticleSystemComponent>();
-            comp.DeleteTexturesReference();
+            comp.DeleteMaterialsReference();
+        }
+
+        if (entity.HasComponent<PostProcessingComponent>())
+        {
+            auto& comp = entity.GetComponent<PostProcessingComponent>();
+            comp.DeleteMaterialsReference();
         }
 
         m_EntityMap.erase(entity.GetID());
@@ -175,11 +181,11 @@ namespace NL
         }
     }
 
-    void Scene::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity)
+    void Scene::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity, Entity settings)
     {
         for (auto& system : m_Systems)
         {
-            system->OnUpdateEditor(ts, camera, selectedEntity);
+            system->OnUpdateEditor(ts, camera, selectedEntity, settings);
         }
     }
 
@@ -257,12 +263,24 @@ namespace NL
     void Scene::OnComponentAdded<LightComponent>(Entity entity, LightComponent& component)
     {
 
+    } 
+    
+    template<>
+    void Scene::OnComponentAdded<SettingsComponent>(Entity entity, SettingsComponent& component)
+    {
+
     }
 
     template<>
     void Scene::OnComponentAdded<ParticleSystemComponent>(Entity entity, ParticleSystemComponent& component)
     {
         NL_ENGINE_INFO("Add Particle System!");
+    }
+
+    template<>
+    void Scene::OnComponentAdded<PostProcessingComponent>(Entity entity, PostProcessingComponent& component)
+    {
+        NL_ENGINE_INFO("Add Post Processing System!");
     }
 
     template<>
@@ -296,7 +314,7 @@ namespace NL
     {
         if (component._Model)
         {
-            component._Model->DeleteMeshesAndTexturesReference();
+            component._Model->DeleteMeshesAndMaterialsReference();
         }
     }
 
@@ -321,7 +339,13 @@ namespace NL
     template<>
     void Scene::OnComponentRemoved<ParticleSystemComponent>(Entity entity, ParticleSystemComponent& component)
     {
-        component.DeleteTexturesReference();
+        component.DeleteMaterialsReference();
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<PostProcessingComponent>(Entity entity, PostProcessingComponent& component)
+    {
+        component.DeleteMaterialsReference();
     }
 
     template<>
@@ -332,6 +356,12 @@ namespace NL
             component.SpriteTexture.reset();
             Library<Texture2D>::GetInstance().Delete(component.Path);
         }
+    }
+
+    template<>
+    void Scene::OnComponentRemoved<SettingsComponent>(Entity entity, SettingsComponent& component)
+    {
+
     }
 
 

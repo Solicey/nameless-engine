@@ -27,7 +27,7 @@ namespace NL
         Material(const std::string& shaderName, const std::string& matName = "Default Material");
         Material(const Material* src);
 
-        void DeleteTexturesReference();
+        void DeleteTexturesAndShadersReference();
 
         void AddTexture(TextureType type, Ref<Texture2D> texture)
         {
@@ -41,6 +41,7 @@ namespace NL
         const Ref<Texture2D>& GetTexture(TextureType type) { return m_TextureMap[type]; }
         const Ref<Texture2D>& GetTexture(const std::string& name);
         const std::string& GetShaderName() const { return m_ShaderName; }
+        std::string GetShaderNameNoSuffix() const { return m_ShaderName.substr(0, m_ShaderName.find_first_of(".")); }
         const Ref<Shader>& GetShader() const { return m_Shader; }
         const std::vector<ShaderProperty>& GetShaderProperties() const { return m_Properties; }
         std::vector<ShaderProperty>& GetShaderPropertiesNotConst() { return m_Properties; }
