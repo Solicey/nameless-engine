@@ -51,9 +51,8 @@ layout (location = 0) in vec3 v_Position;
 layout (location = 1) in vec2 v_TexCoord;
 layout (location = 2) in vec3 v_Normal;
 
-layout (location = 0) out vec4 color;
-layout (location = 1) out int color2;
-layout (location = 2) out vec4 color3;
+layout (location = 0) out vec4 f_Color;
+layout (location = 1) out int f_EntityId;
 
 layout(std140, binding = 0) uniform Camera
 {
@@ -131,11 +130,8 @@ void main()
 		}
 	}
 
-	color = vec4(result, 1.0);
+	f_Color = vec4(result, 1.0);
 
 	// Dont Modify
-	color2 = u_EntityId;
-	color3 = vec4(0.1, 0.1, 0.1, 1);
-	if (u_IsSelected)
-		color3 = vec4(1, 1, 1, 1);
+	f_EntityId = u_EntityId;
 }			

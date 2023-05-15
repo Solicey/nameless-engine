@@ -1,9 +1,19 @@
 Scene: Untitled
 Entities:
+  - ID: 13074890163083427898
+    Name: Entity
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SpriteRendererComponent:
+      Color: [1, 1, 1, 1]
+      Reaction: 2
+      Path: ../Assets\Models\Bonfire\o000100_01_a.png
   - ID: 931269729254786564
     Name: Entity
     TransformComponent:
-      Translation: [0, 0, 6.14208078]
+      Translation: [-0.00254520774, 0, 6.14208078]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     CameraComponent:
@@ -24,6 +34,9 @@ Entities:
         - ShaderName: EditorOutline.glsl
           ShaderProperties:
             []
+        - ShaderName: GrayScale.glsl
+          ShaderProperties:
+            []
   - ID: 15369635725871284106
     Name: SceneSettings
     TransformComponent:
@@ -33,28 +46,38 @@ Entities:
     SettingsComponent:
       AntiAliasingType: 1
       EditorCameraClearFlag: 1
-      MSAASamples: 2
+      MSAASamples: 4
       ShowGizmos: true
     PostProcessingComponent:
       Materials:
         - ShaderName: EditorOutline.glsl
           ShaderProperties:
             []
-        - ShaderName: GrayScale.glsl
-          ShaderProperties:
-            []
   - ID: 5531910129310034619
     Name: Entity
     TransformComponent:
-      Translation: [0, 0, 0]
+      Translation: [5.90144587, -3.92410779, -6.49440908]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    ModelRendererComponent:
-      ModelPath: ../Assets/Models/Box.obj
-      Materials:
-        - MaterialName: Material
-          ShaderName: Default.glsl
-          ShaderProperties:
-            []
-      Bones:
+    ParticleSystemComponent:
+      LauncherNum: 10
+      SpawnAreaShape: 1
+      SpawnPositionDistribution: 0
+      SpawnAreaRadius: 2
+      MaxVelocity: [0, 2, 0]
+      MinVelocity: [0, 0.200000003, 0]
+      MaxTotalLifetime: 5
+      MinTotalLifetime: 3
+      InitColor: [1, 1, 1, 1]
+      InitSize: 1
+      Pass1Name: Rising.glsl
+      Pass1Props:
         []
+      Pass2Name: ParticleSprite.glsl
+      Pass2Props:
+        - Type: 6
+          Name: u_Color
+          Value: [1, 1, 1]
+        - Type: 15
+          Name: u_Sprite
+          Value: ../Assets/Textures/DontModify/DefaultParticle.png

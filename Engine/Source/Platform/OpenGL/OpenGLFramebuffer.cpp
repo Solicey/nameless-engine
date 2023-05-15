@@ -26,7 +26,7 @@ namespace NL
 			glBindTexture(TextureTarget(isMultisample), id);
 		}
 
-		static void AttachColorTexture(uint32_t id, int samples, GLenum internalFormat, GLenum format, uint32_t width, uint32_t height, int index)
+		static void AttachColorTexture(uint32_t id, int samples, GLenum internalFormat, GLenum format, GLenum type, uint32_t width, uint32_t height, int index)
 		{
 			bool multisampled = samples > 1;
 			if (multisampled)
@@ -35,7 +35,7 @@ namespace NL
 			}
 			else
 			{
-				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
+				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, nullptr);
 
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -78,6 +78,7 @@ namespace NL
 			{
 			case FramebufferTextureFormat::RGBA8:
 			case FramebufferTextureFormat::RedInteger:
+			case FramebufferTextureFormat::RGB16:
 				m_ColorAttachmentSpecifications.emplace_back(tex);
 				break;
 			case FramebufferTextureFormat::Depth24Stencil8:
@@ -182,6 +183,8 @@ namespace NL
 		case FramebufferTextureFormat::RGBA8:
 			glClearTexImage(m_ColorAttachments[attachmentIndex], 0, GL_RGBA8, GL_INT, &value);
 			break;
+		case FramebufferTextureFormat::RGB16:
+			break;
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -260,10 +263,13 @@ namespace NL
 				switch (m_ColorAttachmentSpecifications[i].TextureFormat)
 				{
 				case FramebufferTextureFormat::RGBA8:
-					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_RGBA8, GL_RGBA, m_Specification.Width, m_Specification.Height, i);
+					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, m_Specification.Width, m_Specification.Height, i);
 					break;
 				case FramebufferTextureFormat::RedInteger:
-					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_R32I, GL_RED_INTEGER, m_Specification.Width, m_Specification.Height, i);
+					Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_R32I, GL_RED_INTEGER, GL_INT, m_Specification.Width, m_Specification.Height, i);
+					break;
+				case FramebufferTextureFormat::RGB16:
+					// Utils::AttachColorTexture(m_ColorAttachments[i], m_Specification.Samples, GL_RGBA8, GL_RGBA, m_Specification.Width, m_Specification.Height, i);
 					break;
 				}
 			}

@@ -14,6 +14,9 @@ namespace NL
 		// Color
 		RGBA8,
 		RedInteger,
+		
+		// 
+		RGB16,
 
 		// Depth/stencil
 		Depth24Stencil8,

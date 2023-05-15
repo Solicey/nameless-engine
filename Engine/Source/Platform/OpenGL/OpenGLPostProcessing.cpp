@@ -59,9 +59,9 @@ namespace NL
         return m_Tex1;
     }*/
 
-    uint32_t OpenGLPostProcessing::ExecutePostProcessingQueue(const std::vector<Ref<Material>>& queue, Ref<Framebuffer>& srcFramebuffer)
+    uint32_t OpenGLPostProcessing::ExecutePostProcessingQueue(const std::vector<Ref<Material>>& queue, Ref<Framebuffer>& srcFramebuffer, int entityId)
     {
-        uint32_t entityIDTex = srcFramebuffer->GetColorAttachmentRendererID(2);
+        uint32_t entityIDTex = srcFramebuffer->GetColorAttachmentRendererID(1);
 
         const auto& srcSpec = srcFramebuffer->GetSpecification();
         const auto& spec = m_FBO->GetSpecification();
@@ -96,6 +96,7 @@ namespace NL
 
             shader->SetUniformInt("u_ScreenWidth", m_FBO->GetSpecification().Width);
             shader->SetUniformInt("u_ScreenHeight", m_FBO->GetSpecification().Height);
+            shader->SetUniformInt("u_EntityId", entityId);
 
             // Bind entity tex
             shader->SetUniformInt("u_EntityTex", 0);

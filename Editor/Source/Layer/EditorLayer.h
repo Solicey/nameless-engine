@@ -71,6 +71,7 @@ namespace NL
 		// Viewport framebuffer
 		Ref<Framebuffer> m_MultisampledFramebuffer;
 		Ref<Framebuffer> m_Framebuffer;
+		Ref<Framebuffer> m_GBuffer;
 
 		// Post-processing
 		//std::vector<PostProcessingType> m_EditorPostProcessingQueue;

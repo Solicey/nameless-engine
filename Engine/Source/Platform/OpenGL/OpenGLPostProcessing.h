@@ -10,7 +10,7 @@ namespace NL
 	public:
 		OpenGLPostProcessing();
 		// virtual uint32_t ExecutePostProcessingQueue(const std::vector<PostProcessingType>& queue, Ref<Framebuffer>& srcFramebuffer) override;
-		virtual uint32_t ExecutePostProcessingQueue(const std::vector<Ref<Material>>& queue, Ref<Framebuffer>& srcFramebuffer) override;
+		virtual uint32_t ExecutePostProcessingQueue(const std::vector<Ref<Material>>& queue, Ref<Framebuffer>& srcFramebuffer, int entityId) override;
 
 	private:
 		void Init();

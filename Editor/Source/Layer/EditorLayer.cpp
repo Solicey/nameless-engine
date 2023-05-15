@@ -66,7 +66,7 @@ namespace NL
 
         // Framebuffer Setup
         FramebufferSpecification spec;
-        spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::RGBA8 };
+        spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger };
         spec.Width = 1280;
         spec.Height = 720;
         m_Framebuffer = Framebuffer::Create(spec);
@@ -156,7 +156,7 @@ namespace NL
 
         // Color Blit 
         m_MultisampledFramebuffer->ColorBlit(0, m_Framebuffer);
-        m_MultisampledFramebuffer->ColorBlit(2, m_Framebuffer);
+        m_MultisampledFramebuffer->ColorBlit(1, m_Framebuffer);
 
         // Check Hovered Entity
         auto [mx, my] = ImGui::GetMousePos();
@@ -172,7 +172,6 @@ namespace NL
             if (IsEditorMode())
             {
                 // Blit
-                m_MultisampledFramebuffer->ColorBlit(1, m_Framebuffer);
                 int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
 
                 // NL_ENGINE_INFO("pixelData {0}", pixelData);
@@ -464,14 +463,14 @@ namespace NL
                 if (m_RuntimeCameraEntity.HasComponent<PostProcessingComponent>())
                 {
                     auto& comp = m_RuntimeCameraEntity.GetComponent<PostProcessingComponent>();
-                    textureID = m_PostProcessing->ExecutePostProcessingQueue(comp.Queue, m_Framebuffer);
+                    textureID = m_PostProcessing->ExecutePostProcessingQueue(comp.Queue, m_Framebuffer, m_HierarchyPanel->GetSelectedEntityId());
                 }
                 ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_RuntimeAspect.x, m_RuntimeAspect.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
             }
             else
             {
                 if (m_Settings.HasComponent<PostProcessingComponent>())
-                    textureID = m_PostProcessing->ExecutePostProcessingQueue(m_Settings.GetComponent<PostProcessingComponent>().Queue, m_Framebuffer);
+                    textureID = m_PostProcessing->ExecutePostProcessingQueue(m_Settings.GetComponent<PostProcessingComponent>().Queue, m_Framebuffer, m_HierarchyPanel->GetSelectedEntityId());
                 ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
             }
 
@@ -835,7 +834,7 @@ namespace NL
                 // Click a viewport entity
                 if (m_EntityHovered)
                 {
-                    NL_TRACE("Viewport select entity: {0}", m_EntityHovered.GetName());
+                    NL_TRACE("Viewport select entity: {0}, {1}", m_EntityHovered.GetName(), (uint32_t)m_EntityHovered);
                 }
             }
             else if (!IsEditorMode() && m_ViewportHovered && !m_IsRuntimeViewportFocused)
@@ -1048,7 +1047,7 @@ namespace NL
     void EditorLayer::UpdateFramebuffer()
     {
         FramebufferSpecification msSpec;
-        msSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
+        msSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::Depth };
         msSpec.Width = 1280;
         msSpec.Height = 720;
         auto& settings = m_Settings.GetComponent<SettingsComponent>();
