@@ -3,13 +3,35 @@
 
 #include "Renderer/Renderer.h"
 #include "Resources/Libraries/ShaderLibrary.h"
+#include "Resources/Libraries/TextureLibrary.h"
 
 #include <glad/glad.h>
+#include <random>
 
 namespace NL
 {
     OpenGLPostProcessing::OpenGLPostProcessing()
     {
+        m_SSAONoiseTex = Library<Texture2D>::GetInstance().Fetch(Library<Texture2D>::GetInstance().GetSSAONoiseTextureName());
+
+        // SSAO Kernel Generate
+        std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // Ëæ»ú¸¡µãÊý£¬·¶Î§0.0 - 1.0
+        std::default_random_engine generator;
+        for (GLuint i = 0; i < 64; ++i)
+        {
+            glm::vec3 sample(
+                randomFloats(generator) * 2.0 - 1.0,
+                randomFloats(generator) * 2.0 - 1.0,
+                randomFloats(generator)
+            );
+            sample = glm::normalize(sample);
+            sample *= randomFloats(generator);
+            float scale = float(i) / 64.0;
+            scale = std::lerp(0.1f, 1.0f, scale * scale);
+            sample *= scale;
+            m_SSAOKernel.push_back(sample);
+        }
+
         Init();
     }
 
@@ -59,10 +81,8 @@ namespace NL
         return m_Tex1;
     }*/
 
-    uint32_t OpenGLPostProcessing::ExecutePostProcessingQueue(const std::vector<Ref<Material>>& queue, Ref<Framebuffer>& srcFramebuffer, int entityId)
+    uint32_t OpenGLPostProcessing::ExecutePostProcessingQueue(const std::vector<Ref<Material>>& queue, Ref<Framebuffer>& srcFramebuffer, int entityId, const std::vector<PointLightShadingData>& points, const std::vector<DirLightShadingData>& dirs)
     {
-        uint32_t entityIDTex = srcFramebuffer->GetColorAttachmentRendererID(1);
-
         const auto& srcSpec = srcFramebuffer->GetSpecification();
         const auto& spec = m_FBO->GetSpecification();
         if (srcSpec.Width != spec.Width || srcSpec.Height != spec.Height)
@@ -98,15 +118,105 @@ namespace NL
             shader->SetUniformInt("u_ScreenHeight", m_FBO->GetSpecification().Height);
             shader->SetUniformInt("u_EntityId", entityId);
 
-            // Bind entity tex
-            shader->SetUniformInt("u_EntityTex", 0);
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, entityIDTex);
+            // Renderer...
+            if (shader->IsLightingRequired())
+            {
+                int cnt = 0;
+                const int maxCnt = shader->GetMaxLightsCount();
+                for (auto& l : points)
+                {
+                    shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Color", l.Color);
+                    shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Position", l.Position);
+                    shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Attenuation", l.Attenuation);
+                    cnt++;
+                    if (cnt >= maxCnt)
+                        break;
+                }
+                if (cnt < maxCnt)
+                {
+                    for (int i = cnt; i < maxCnt; i++)
+                    {
+                        shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Color", nlm::vec3(-1.0));
+                    }
+                }
 
-            // Bind color tex
-            shader->SetUniformInt("u_ColorTex", 1);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, srcTex);
+                cnt = 0;
+                for (auto& l : dirs)
+                {
+                    shader->SetUniformFloat3("u_DirLights[" + std::to_string(cnt) + "].Color", l.Color);
+                    shader->SetUniformFloat3("u_DirLights[" + std::to_string(cnt) + "].Direction", l.Direction);
+                    cnt++;
+                    if (cnt >= maxCnt)
+                        break;
+                }
+                if (cnt < maxCnt)
+                {
+                    for (int i = cnt; i < maxCnt; i++)
+                    {
+                        shader->SetUniformFloat3("u_DirLights[" + std::to_string(i) + "].Color", nlm::vec3(-1.0));
+                    }
+                }
+            }
+
+            if (shader->CheckTag(ShaderTag::SrcColor))
+            {
+                shader->SetUniformInt("u_SrcColorTex", 5);
+                uint32_t srcTex = srcFramebuffer->GetColorAttachmentRendererID(0);
+                glActiveTexture(GL_TEXTURE5);
+                glBindTexture(GL_TEXTURE_2D, srcTex);
+            }
+
+            // SSAO Noise Tex
+            // TODO: Check Shader Tag
+            if (shader->CheckTag(ShaderTag::SSAO))
+            {
+                shader->SetUniformInt("u_NoiseTex", 4);
+                m_SSAONoiseTex->Bind(4);
+                for (int i = 0; i < 64; i++)
+                {
+                    shader->SetUniformFloat3("u_Samples[" + std::to_string(i) + "]", m_SSAOKernel[i]);
+                }
+            }
+
+            int count = srcFramebuffer->GetColorAttachmentsCount();
+
+            switch (count)
+            {
+            case 4:
+            {
+                // Bind normal tex
+                uint32_t normalTex = srcFramebuffer->GetColorAttachmentRendererID(3);
+                shader->SetUniformInt("u_NormalTex", 3);
+                glActiveTexture(GL_TEXTURE3);
+                glBindTexture(GL_TEXTURE_2D, normalTex);
+                //NL_ENGINE_INFO("Normal Tex");
+            }
+            case 3:
+            {
+                // Bind position tex
+                uint32_t positionTex = srcFramebuffer->GetColorAttachmentRendererID(2);
+                shader->SetUniformInt("u_PositionDepthTex", 2);
+                glActiveTexture(GL_TEXTURE2);
+                glBindTexture(GL_TEXTURE_2D, positionTex);
+            }
+            case 2:
+            {
+                // Bind entity tex
+                uint32_t entityIDTex = srcFramebuffer->GetColorAttachmentRendererID(1);
+                shader->SetUniformInt("u_EntityTex", 1);
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D, entityIDTex);
+            }
+            case 1:
+            {
+                // Bind color tex
+                shader->SetUniformInt("u_ColorTex", 0);
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, srcTex);
+            }
+            default:
+                break;
+            }
 
             m_QuadVAO->Bind();
             Renderer::DrawIndices(m_QuadVAO);

@@ -9,7 +9,13 @@ namespace NL
 	{
 		None, MSAA
 	};
+	
+	enum class RenderMode
+	{
+		Forward, Deferred
+	};
 
+	// When add new settings: modify serializer and editor layer UI
 	class SettingsComponent : public ComponentBase
 	{
 	public:
@@ -19,5 +25,6 @@ namespace NL
 		AntiAliasingType AntiAliasingType = AntiAliasingType::MSAA;
 		Camera::ClearFlagType EditorCameraClearFlag = Camera::ClearFlagType::Color;
 		bool ShowGizmos = true;
+		RenderMode RenderMode = RenderMode::Forward;
 	};
 }

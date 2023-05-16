@@ -1,14 +1,16 @@
 // nlsl template shader file
 
 #use model
+#lit 4
 
 #prop
 
-color3 u_Color;
 float u_AmbientStrength;
 float u_SpecularStrength;
 sampler2D u_Diffuse;
+sampler2D u_Specular;
 sampler2D u_Normals;
+float u_IsNormalsCompressed;
 
 #end
 
@@ -29,6 +31,8 @@ layout(std140, binding = 0) uniform Camera
 	mat4 u_View;
 	mat4 u_Projection;
 	vec3 u_CameraPosition;
+	float u_Near;
+	float u_Far;
 };
 
 uniform mat4 u_Transform;
@@ -71,16 +75,18 @@ layout(std140, binding = 0) uniform Camera
 	mat4 u_View;
 	mat4 u_Projection;
 	vec3 u_CameraPosition;
+	float u_Near;
+	float u_Far;
 };
 
 // Object Color
-uniform vec3 u_Color;
-uniform bool u_IsSelected;
 uniform int u_EntityId;
 uniform float u_AmbientStrength;
 uniform float u_SpecularStrength;
 uniform sampler2D u_Diffuse;
+uniform sampler2D u_Specular;
 uniform sampler2D u_Normals;
+uniform float u_IsNormalsCompressed;
 
 #define MAX_LIGHT_COUNT 4
 
@@ -99,32 +105,32 @@ struct DirLight
 };
 uniform DirLight u_DirLights[MAX_LIGHT_COUNT];
 
-vec3 CalculateDirLight(DirLight light, vec3 normal, vec3 viewPos, vec3 diffuseColor)
+vec3 CalculateDirLight(DirLight light, vec3 normal, vec3 viewPos, vec3 diffuseColor, vec3 specularColor, float shininess)
 {
 	vec3 viewDir = normalize(viewPos - v_Position);
 	vec3 lightDir = normalize(-light.Direction);
 	float diff = max(dot(normal, lightDir), 0.0);
 	vec3 reflectDir = reflect(-lightDir, normal);
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-	vec3 ambient = light.Color * u_AmbientStrength * diffuseColor;
-	vec3 diffuse = light.Color * diff * diffuseColor;
-	vec3 specular = light.Color * u_SpecularStrength * spec * u_Color;
-	return (ambient + diffuse + specular);
+	float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+	vec3 ambient = u_AmbientStrength * diffuseColor;
+	vec3 diffuse = diff * diffuseColor;
+	vec3 specular = u_SpecularStrength * spec * specularColor;
+	return (ambient + diffuse + specular) * light.Color;
 }
 
-vec3 CalculatePointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewPos, vec3 diffuseColor)
+vec3 CalculatePointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewPos, vec3 diffuseColor, vec3 specularColor, float shininess)
 {
 	vec3 viewDir = normalize(viewPos - v_Position);
 	vec3 lightDir = normalize(light.Position - fragPos);
 	float diff = max(dot(normal, lightDir), 0.0);
 	vec3 reflectDir = reflect(-lightDir, normal);
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+	float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
 	float dist = length(light.Position - fragPos);
 	float atten = 1.0 / (light.Attenuation.x + light.Attenuation.y * dist + light.Attenuation.z * dist * dist);
-	vec3 ambient = light.Color * u_AmbientStrength * diffuseColor;
-	vec3 diffuse = light.Color * diff * diffuseColor;
-	vec3 specular = light.Color * u_SpecularStrength * spec * u_Color;
-	return atten * (ambient + diffuse + specular);
+	vec3 ambient = u_AmbientStrength * diffuseColor;
+	vec3 diffuse = diff * diffuseColor;
+	vec3 specular = u_SpecularStrength * spec * specularColor;
+	return atten * (ambient + diffuse + specular) * light.Color;
 }
 			
 void main()
@@ -133,9 +139,14 @@ void main()
 	if (diffuseFactor.a <= 0.05) discard;
 	vec3 diffuseColor = diffuseFactor.rgb;
 
+	vec4 specularFactor = texture(u_Specular, v_TexCoord).rgba;
+	vec3 specularColor  = specularFactor.rgb;
+	float shininess     = specularFactor.a * 64;
+
 	vec3 normal = texture(u_Normals, v_TexCoord).rgb;
 	// For compressed normal map
-	normal.z = sqrt(1 - normal.x * normal.x - normal.y * normal.y);
+	if (u_IsNormalsCompressed != 0)
+		normal.z = sqrt(1 - normal.x * normal.x - normal.y * normal.y);
 	normal = normalize(normal * 2.0 - vec3(1.0));
 	normal = normalize(v_TBN * normal);
 
@@ -145,16 +156,18 @@ void main()
 	{
 		if (u_DirLights[i].Color.r >= 0)
 		{
-			result += CalculateDirLight(u_DirLights[i], normal, u_CameraPosition, diffuseColor);
+			result += CalculateDirLight(u_DirLights[i], normal, u_CameraPosition, diffuseColor, specularColor, shininess);
 		}
 
 		if (u_PointLights[i].Color.r >= 0)
 		{
-			result += CalculatePointLight(u_PointLights[i], normal, v_Position, u_CameraPosition, diffuseColor);
+			result += CalculatePointLight(u_PointLights[i], normal, v_Position, u_CameraPosition, diffuseColor, specularColor, shininess);
 		}
 	}
 
 	f_Color = vec4(result, 1.0);
+
+	// f_Color = vec4(normal, 1.0);
 
 	// Dont Modify
 	f_EntityId = u_EntityId;

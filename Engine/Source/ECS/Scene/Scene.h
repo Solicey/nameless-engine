@@ -5,6 +5,7 @@
 #include "Core/Misc/TimeStep.h"
 #include "Core/Log/Log.h"
 #include "Camera/EditorCamera.h"
+#include "Renderer/Renderer.h"
 
 #include <entt/entt.hpp>
 
@@ -38,7 +39,7 @@ namespace NL
 		void OnUpdateRuntime(TimeStep ts, Entity cameraEntity, bool isRuntimeViewportFocused);
 
 		void OnStartEditor();
-		void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity, Entity settings);
+		void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity settings);
 
 		Entity GetEntityWithID(ID id);
 		Entity FindEntityByName(std::string_view name);
@@ -50,11 +51,16 @@ namespace NL
 		static void SetRuntimeCamera(const std::string& str) { s_RuntimeCameraName = str; }
 		static const std::string& GetRuntimeCamera() { return s_RuntimeCameraName; }
 
+		std::vector<PointLightShadingData>& GetPointLightShadingDataNotConst() { return m_PointLightShadingDatas; }
+		std::vector<DirLightShadingData>& GetDirLightShadingDataNotConst() { return m_DirLightShadingDatas; }
+
 	private:
 		template<Component C>
 		void OnComponentAdded(Entity entity, C& component);
 		template<Component C>
 		void OnComponentRemoved(Entity entity, C& component);
+		// Called at the beginning of updates
+		void UpdateLightDatas();
 
 	public:
 		entt::registry Registry;
@@ -74,5 +80,7 @@ namespace NL
 		// Environment Settings
 		// Default
 		std::vector<std::string> m_SkyboxTextures;
+		std::vector<PointLightShadingData> m_PointLightShadingDatas;
+		std::vector<DirLightShadingData> m_DirLightShadingDatas;
 	};
 }

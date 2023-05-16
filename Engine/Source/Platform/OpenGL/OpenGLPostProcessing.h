@@ -10,7 +10,7 @@ namespace NL
 	public:
 		OpenGLPostProcessing();
 		// virtual uint32_t ExecutePostProcessingQueue(const std::vector<PostProcessingType>& queue, Ref<Framebuffer>& srcFramebuffer) override;
-		virtual uint32_t ExecutePostProcessingQueue(const std::vector<Ref<Material>>& queue, Ref<Framebuffer>& srcFramebuffer, int entityId) override;
+		virtual uint32_t ExecutePostProcessingQueue(const std::vector<Ref<Material>>& queue, Ref<Framebuffer>& srcFramebuffer, int entityId, const std::vector<PointLightShadingData>& points, const std::vector<DirLightShadingData>& dirs) override;
 
 	private:
 		void Init();
@@ -30,5 +30,8 @@ namespace NL
 			int intID;
 			float floatID;
 		};
+
+		Ref<Texture2D> m_SSAONoiseTex;
+		std::vector<nlm::vec3> m_SSAOKernel;
 	};
 }

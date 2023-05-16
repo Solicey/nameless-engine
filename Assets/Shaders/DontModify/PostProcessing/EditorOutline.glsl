@@ -31,8 +31,8 @@ layout (location = 0) out vec4 color;
 uniform int u_ScreenWidth;
 uniform int u_ScreenHeight;
 uniform int u_EntityId;
-uniform isampler2D u_EntityTex;
 uniform sampler2D u_ColorTex;
+uniform isampler2D u_EntityTex;
 
 float sobel_y[] =
 {

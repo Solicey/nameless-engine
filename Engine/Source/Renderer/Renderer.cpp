@@ -4,13 +4,12 @@
 #include "Resources/Loaders/ModelLoader.h"
 #include "Resources/Libraries/TextureLibrary.h"
 #include "Resources/Libraries/UniformBufferLibrary.h"
+#include "ECS/Entity/Entity.h"
 
 namespace NL
 {
 	// Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
 	Scope<RendererAPI> Renderer::s_RendererAPI = RendererAPI::Create();
-	PointLightShadingData Renderer::s_PointLightDatas[MAX_LIGHT_COUNT] = {};
-	DirLightShadingData Renderer::s_DirLightDatas[MAX_LIGHT_COUNT] = {};
 
 	void Renderer::BeginScene(OrthographicCamera& camera)
 	{
@@ -31,9 +30,26 @@ namespace NL
 		nlm::mat4 ViewMatrix = camera.GetViewMatrix();
 		nlm::mat4 ProjMatrix = camera.GetProjectionMatrix();
 		nlm::vec3 CamPosition = camera.GetPosition();
+		auto type = camera.GetProjectionType();
+		float nearClip, farClip;
+		if (type == Camera::ProjectionType::Orthographic)
+		{
+			nearClip = camera.GetOrthographicNear();
+			farClip = camera.GetOrthographicFar();
+		}
+		else
+		{
+			nearClip = camera.GetPerspectiveNear();
+			farClip = camera.GetPerspectiveFar();
+		}
+		//nearClip = 0.3;
+		//farClip = 0.6;
+		//NL_ENGINE_INFO("Near: {0}, Far: {1}", nearClip, farClip);
 		cameraUniform->SetData(&ViewMatrix, 64, 0);
 		cameraUniform->SetData(&ProjMatrix, 64, 64);
-		cameraUniform->SetData(&CamPosition, 16, 128);
+		cameraUniform->SetData(&CamPosition, 12, 128);
+		cameraUniform->SetData(&nearClip, 4, 140);
+		cameraUniform->SetData(&farClip, 4, 144);
 	}
 
 	void Renderer::BeginScene(Camera& camera, const nlm::mat4& transform, const nlm::vec3& position)
@@ -42,16 +58,31 @@ namespace NL
 		Ref<UniformBuffer> cameraUniform = Library<UniformBuffer>::GetInstance().GetCameraUniformBuffer();
 		nlm::mat4 ViewMatrix = nlm::inverse(transform);
 		nlm::mat4 ProjMatrix = camera.GetProjectionMatrix();
+		auto type = camera.GetProjectionType();
+		float nearClip, farClip;
+		if (type == Camera::ProjectionType::Orthographic)
+		{
+			nearClip = camera.GetOrthographicNear();
+			farClip = camera.GetOrthographicFar();
+		}
+		else
+		{
+			nearClip = camera.GetPerspectiveNear();
+			farClip = camera.GetPerspectiveFar();
+		}
 		cameraUniform->SetData(&ViewMatrix, 64, 0);
 		cameraUniform->SetData(&ProjMatrix, 64, 64);
-		cameraUniform->SetData(&position, 16, 128);
+		cameraUniform->SetData(&position, 12, 128);
+		cameraUniform->SetData(&nearClip, 4, 140);
+		cameraUniform->SetData(&farClip, 4, 144);
 	}
 
 	void Renderer::EndScene()
 	{
 	}
 
-	void Renderer::Submit(const Ref<VertexArray>& vertexArray, const Ref<Material>& material, const nlm::mat4& transform, const std::vector<nlm::mat4>& finalMatrices, int entityId, bool isSelected)
+	void Renderer::Submit(const Ref<VertexArray>& vertexArray, const Ref<Material>& material,
+		const std::vector<PointLightShadingData>& points, const std::vector<DirLightShadingData>& dirs, const nlm::mat4& transform, const std::vector<nlm::mat4>& finalMatrices, int entityId)
 	{
 		NL_ENGINE_ASSERT(material, "Material is nullptr!");
 
@@ -68,35 +99,50 @@ namespace NL
 		// shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
 		shader->SetUniformMat4("u_Transform", transform);
 		shader->SetUniformMat4("u_NormalMatrix", nlm::transpose(nlm::inverse(transform)));
-		shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
+		//shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
 		shader->SetUniformInt("u_EntityId", entityId);
 
 		// Lights
-		for (int i = 0; i < MAX_LIGHT_COUNT; i++)
+		// Post-processing...
+		if (shader->IsLightingRequired())
 		{
-			const auto& point = s_PointLightDatas[i];
-			if (point.IsValid)
+			int cnt = 0;
+			const int maxCnt = shader->GetMaxLightsCount();
+			for (auto& l : points)
 			{
-				shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Color", point.Color);
-				shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Position", point.Position);
-				shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Attenuation", point.Attenuation);
+				shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Color", l.Color);
+				shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Position", l.Position);
+				shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Attenuation", l.Attenuation);
+				cnt++;
+				if (cnt >= maxCnt)
+					break;
 			}
-			else
+			if (cnt < maxCnt)
 			{
-				shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Color", nlm::vec3{ -1.0f });
+				for (int i = cnt; i < maxCnt; i++)
+				{
+					shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Color", nlm::vec3(-1.0));
+				}
 			}
 
-			const auto& dir = s_DirLightDatas[i];
-			if (dir.IsValid)
+			cnt = 0;
+			for (auto& l : dirs)
 			{
-				shader->SetUniformFloat3("u_DirLights[" + std::to_string(i) + "].Color", dir.Color);
-				shader->SetUniformFloat3("u_DirLights[" + std::to_string(i) + "].Direction", dir.Direction);
+				shader->SetUniformFloat3("u_DirLights[" + std::to_string(cnt) + "].Color", l.Color);
+				shader->SetUniformFloat3("u_DirLights[" + std::to_string(cnt) + "].Direction", l.Direction);
+				cnt++;
+				if (cnt >= maxCnt)
+					break;
 			}
-			else
+			if (cnt < maxCnt)
 			{
-				shader->SetUniformFloat3("u_DirLights[" + std::to_string(i) + "].Color", nlm::vec3{ -1.0f });
+				for (int i = cnt; i < maxCnt; i++)
+				{
+					shader->SetUniformFloat3("u_DirLights[" + std::to_string(i) + "].Color", nlm::vec3(-1.0));
+				}
 			}
 		}
+		
 
 		if (!finalMatrices.empty())
 		{
@@ -151,8 +197,7 @@ namespace NL
 		const nlm::mat4& transform,
 		const nlm::vec4& color,
 		SpriteCameraReaction camReact,
-		int entityId,
-		bool isSelected)
+		int entityId)
 	{
 		static Ref<VertexArray> vao = nullptr;
 		if (vao == nullptr)
@@ -179,7 +224,7 @@ namespace NL
 		// shader->SetUniformMat4("u_View", s_SceneData->ViewMatrix);
 		// shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
 		shader->SetUniformMat4("u_Transform", transform);
-		shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
+		//shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
 		shader->SetUniformInt("u_EntityId", entityId);
 		shader->SetUniformFloat4("u_Color", color);
 		shader->SetUniformInt("u_Sprite", 0);
@@ -195,7 +240,7 @@ namespace NL
 
 	}
 
-	void Renderer::DrawModel(const Ref<Model>& model, const nlm::mat4& transform, int entityId, bool isSelected)
+	void Renderer::DrawModel(const Ref<Model>& model, const nlm::mat4& transform, int entityId, const std::vector<PointLightShadingData>& points, const std::vector<DirLightShadingData>& dirs)
 	{
 		const auto& meshes = model->GetMeshes();
 		bool hasBones = model->HasBones();
@@ -204,7 +249,7 @@ namespace NL
 		for (const auto& mesh : meshes)
 		{
 			const auto& material = model->GetMaterial(mesh);
-			Submit(mesh->GetVertexArray(), material, transform, hasBones ? model->GetFinalBoneMatrices() : emptyMatrices, entityId, isSelected);
+			Submit(mesh->GetVertexArray(), material, points, dirs, transform, hasBones ? model->GetFinalBoneMatrices() : emptyMatrices, entityId);
 		}
 	}
 
@@ -244,4 +289,6 @@ namespace NL
 	{
 		SetViewPort(0, 0, width, height);
 	}
+
+	
 }

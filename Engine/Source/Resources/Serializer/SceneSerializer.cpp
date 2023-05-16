@@ -222,6 +222,7 @@ namespace NL
 				comp.EditorCameraClearFlag = (Camera::ClearFlagType)settingsComponent["EditorCameraClearFlag"].as<int>();
 				comp.MSAASamples = settingsComponent["MSAASamples"].as<int>();
 				comp.ShowGizmos = settingsComponent["ShowGizmos"].as<bool>();
+				comp.RenderMode = (RenderMode)settingsComponent["RenderMode"].as<int>();
 			}
 
 			// Model
@@ -442,6 +443,7 @@ namespace NL
 			out << YAML::Key << "EditorCameraClearFlag" << YAML::Value << (int)comp.EditorCameraClearFlag;
 			out << YAML::Key << "MSAASamples" << YAML::Value << comp.MSAASamples;
 			out << YAML::Key << "ShowGizmos" << YAML::Value << comp.ShowGizmos;
+			out << YAML::Key << "RenderMode" << YAML::Value << (int)comp.RenderMode;
 
 			out << YAML::EndMap; // SettingsComponent
 		}

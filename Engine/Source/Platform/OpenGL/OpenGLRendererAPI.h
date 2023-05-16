@@ -36,5 +36,7 @@ namespace NL
 		virtual void DepthMask(bool enable) override;
 
 		virtual void BlendFunc(BlendFactor srcFactor, BlendFactor dstFactor) override;
+
+		virtual void EnableBlend(bool enable) override;
 	};
 }

@@ -57,7 +57,7 @@ namespace NL
 
 	void OpenGLRendererAPI::Init()
 	{
-		glEnable(GL_BLEND);
+		glDisable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 		glEnable(GL_TEXTURE_2D);
@@ -151,5 +151,13 @@ namespace NL
 	void OpenGLRendererAPI::BlendFunc(BlendFactor srcFactor, BlendFactor dstFactor)
 	{
 		glBlendFunc(Utils::BlendFactor2OpenGLFactor(srcFactor), Utils::BlendFactor2OpenGLFactor(dstFactor));
+	}
+
+	void OpenGLRendererAPI::EnableBlend(bool enable)
+	{
+		if (enable)
+			glEnable(GL_BLEND);
+		else 
+			glDisable(GL_BLEND);
 	}
 }

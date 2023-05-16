@@ -57,27 +57,28 @@ namespace NL
 		auto& camTransform = cameraEntity.GetComponent<TransformComponent>();
 
 		// Light Preparation
-		PointLightShadingData pointLightDatas[MAX_LIGHT_COUNT];
-		DirLightShadingData dirLightDatas[MAX_LIGHT_COUNT];
-		Entity pointEntities[MAX_LIGHT_COUNT], dirEntities[MAX_LIGHT_COUNT];
+		//PointLightShadingData pointLightDatas[MAX_LIGHT_COUNT];
+		//DirLightShadingData dirLightDatas[MAX_LIGHT_COUNT];
+		//Entity pointEntities[MAX_LIGHT_COUNT], dirEntities[MAX_LIGHT_COUNT];
 
-		LightPreparation(pointLightDatas, dirLightDatas, pointEntities, dirEntities);
+		//LightPreparation(pointLightDatas, dirLightDatas, pointEntities, dirEntities);
 
 		// Update Light Data
-		Renderer::SetPointLightData(pointLightDatas);
-		Renderer::SetDirLightData(dirLightDatas);
+		//Renderer::SetPointLightData(pointLightDatas);
+		//Renderer::SetDirLightData(dirLightDatas);
 
-		// Camera Clear Color
 		auto clearFlag = camera.mCamera.GetClearFlagType();
+		// Camera Clear Color
+		/*
 		if (clearFlag == Camera::ClearFlagType::Color)
 		{
 			Renderer::SetClearColor(camera.ClearColor);
 			Renderer::Clear();
-		}
+		}*/
 
 		Renderer::BeginScene(camera.mCamera, camTransform.GetTransform(), camTransform.GetTranslation());
 
-		// Render Models
+		// Render Models (Opaque)
 		{
 			auto view = m_Scene->Registry.view<TransformComponent, ModelRendererComponent>();
 			for (auto& e : view)
@@ -89,7 +90,7 @@ namespace NL
 
 				if (model._Model != nullptr)
 				{
-					Renderer::DrawModel(model._Model, transform.GetTransform(), (int)(uint32_t)entity, false);
+					Renderer::DrawModel(model._Model, transform.GetTransform(), (int)(uint32_t)entity, m_Scene->GetPointLightShadingDataNotConst(), m_Scene->GetDirLightShadingDataNotConst());
 				}
 			}
 		}
@@ -140,7 +141,7 @@ namespace NL
 		m_TotalTime = m_DeltaTime = 0;
 	}
 
-	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity, Entity settings)
+	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity settings)
 	{
 		m_TotalTime += ts;
 		m_DeltaTime = ts;
@@ -151,17 +152,17 @@ namespace NL
 		nlm::mat4 cameraRotation = nlm::mat4(camera.GetOrientation());
 
 		// Light Preparation
-		PointLightShadingData pointLightDatas[MAX_LIGHT_COUNT];
-		DirLightShadingData dirLightDatas[MAX_LIGHT_COUNT];
-		Entity pointEntities[MAX_LIGHT_COUNT], dirEntities[MAX_LIGHT_COUNT];
+		//PointLightShadingData pointLightDatas[MAX_LIGHT_COUNT];
+		//DirLightShadingData dirLightDatas[MAX_LIGHT_COUNT];
+		//Entity pointEntities[MAX_LIGHT_COUNT], dirEntities[MAX_LIGHT_COUNT];
 
-		LightPreparation(pointLightDatas, dirLightDatas, pointEntities, dirEntities);
+		//LightPreparation(pointLightDatas, dirLightDatas, pointEntities, dirEntities);
 
 		// Update Light Data
-		Renderer::SetPointLightData(pointLightDatas);
-		Renderer::SetDirLightData(dirLightDatas);
+		//Renderer::SetPointLightData(pointLightDatas);
+		//Renderer::SetDirLightData(dirLightDatas);
 
-		// Render Entities
+		// Render Entities (Opaque)
 		{
 			auto view = m_Scene->Registry.view<TransformComponent, ModelRendererComponent>();
 			for (auto& e : view)
@@ -173,7 +174,7 @@ namespace NL
 
 				if (model._Model != nullptr)
 				{
-					Renderer::DrawModel(model._Model, transform.GetTransform(), (int)(uint32_t)entity, selectedEntity == entity);
+					Renderer::DrawModel(model._Model, transform.GetTransform(), (int)(uint32_t)entity, m_Scene->GetPointLightShadingDataNotConst(), m_Scene->GetDirLightShadingDataNotConst());
 				}
 			}
 		}
@@ -191,7 +192,7 @@ namespace NL
 
 				if (sprite.SpriteTexture != nullptr)
 				{
-					Renderer::DrawSprite(m_SpriteShader, sprite.SpriteTexture, transform.GetTransform(), sprite.Color, sprite.Reaction, (int)(uint32_t)entity, selectedEntity == entity);
+					Renderer::DrawSprite(m_SpriteShader, sprite.SpriteTexture, transform.GetTransform(), sprite.Color, sprite.Reaction, (int)(uint32_t)entity);
 				}
 			}
 			// Renderer::SetCullFace(CullFace::Back);
@@ -211,7 +212,7 @@ namespace NL
 
 				if (camera.Gizmos != nullptr)
 				{
-					Renderer::DrawModel(camera.Gizmos, transform.GetTransform() * nlm::scale(nlm::mat4(1.0f), nlm::vec3(1.0f, 1.0f, -1.0f)), (int)(uint32_t)entity, selectedEntity == entity);
+					Renderer::DrawModel(camera.Gizmos, transform.GetTransform() * nlm::scale(nlm::mat4(1.0f), nlm::vec3(1.0f, 1.0f, -1.0f)), (int)(uint32_t)entity, m_Scene->GetPointLightShadingDataNotConst(), m_Scene->GetDirLightShadingDataNotConst());
 				}
 			}
 			Renderer::SetCullFace(CullFace::Back);
@@ -240,35 +241,35 @@ namespace NL
 		if (renderGizmos)
 		{
 			Renderer::DepthMask(false);
+			Renderer::EnableBlend(true);
 			Renderer::BlendFunc(BlendFactor::SrcAlpha, BlendFactor::One);
-			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
+
+			auto& pointLightDatas = m_Scene->GetPointLightShadingDataNotConst();
+			auto& dirLightDatas = m_Scene->GetDirLightShadingDataNotConst();
+
+			for (auto& l : pointLightDatas)
 			{
-				if (pointLightDatas[i].IsValid)
-				{
-					auto& entity = pointEntities[i];
-					const auto& transform = entity.GetComponent<TransformComponent>();
-					Renderer::DrawSprite(m_GizmosShader, m_PointGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(pointLightDatas[i].Color, 0.7), SpriteCameraReaction::LookAt, (int)(uint32_t)entity, selectedEntity == entity);
-				}
-				if (dirLightDatas[i].IsValid)
-				{
-					auto& entity = dirEntities[i];
-					const auto& transform = entity.GetComponent<TransformComponent>();
-					Renderer::DrawSprite(m_GizmosShader, m_DirGizmosTexture, nlm::translate(nlm::mat4(1.0), transform.GetTranslation())* cameraRotation* nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(dirLightDatas[i].Color, 0.7), SpriteCameraReaction::LookAt, (int)(uint32_t)entity, selectedEntity == entity);
-				}
+				Renderer::DrawSprite(m_GizmosShader, m_PointGizmosTexture, nlm::translate(nlm::mat4(1.0), l.Position) * cameraRotation * nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(l.Color, 0.7), SpriteCameraReaction::LookAt, (int)l.EntityId);
+			}
+			for (auto& l : dirLightDatas)
+			{
+				Renderer::DrawSprite(m_GizmosShader, m_DirGizmosTexture, nlm::translate(nlm::mat4(1.0), l.Position) * cameraRotation * nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(l.Color, 0.7), SpriteCameraReaction::LookAt, (int)l.EntityId);
 			}
 			Renderer::DepthMask(true);
+			Renderer::EnableBlend(false);
 			Renderer::BlendFunc(BlendFactor::SrcAlpha, BlendFactor::OneMinusSrcAlpha);
 		}
 		
 
-		UpdateParticleSystem(selectedEntity);
+		UpdateParticleSystem();
 
 		Renderer::EndScene();
 	}
 
-	void RenderSystem::UpdateParticleSystem(Entity selectedEntity)
+	void RenderSystem::UpdateParticleSystem()
 	{
 		Renderer::DepthMask(false);
+		Renderer::EnableBlend(true);
 		Renderer::BlendFunc(BlendFactor::SrcAlpha, BlendFactor::One);
 
 		auto view = m_Scene->Registry.view<TransformComponent, ParticleSystemComponent>();
@@ -337,7 +338,6 @@ namespace NL
 			shader2->Bind();
 
 			shader2->SetUniformMat4("u_Transform", transform.GetTransform());
-			shader2->SetUniformInt("u_IsSelected", entity == selectedEntity);
 			shader2->SetUniformInt("u_EntityId", (uint32_t)entity);
 			//shader2->SetUniformInt("u_Sprite", 0);
 			//particleSystem.Tex->Bind(0);
@@ -359,48 +359,9 @@ namespace NL
 		}
 
 		Renderer::DepthMask(true);
+		Renderer::EnableBlend(false);
 		Renderer::BlendFunc(BlendFactor::SrcAlpha, BlendFactor::OneMinusSrcAlpha);
 	}
 
-	void RenderSystem::LightPreparation(PointLightShadingData* pointLightDatas, DirLightShadingData* dirLightDatas, Entity* pointEntities, Entity* dirEntities)
-	{
-		for (int i = 0; i < MAX_LIGHT_COUNT; i++)
-			pointLightDatas[i].IsValid = dirLightDatas[i].IsValid = false;
-
-		{
-			auto view = m_Scene->Registry.view<TransformComponent, LightComponent>();
-			int pointId = 0, dirId = 0;
-			for (auto& e : view)
-			{
-				Entity entity = Entity(e, m_Scene);
-				auto [transform, light] = view.get<TransformComponent, LightComponent>(e);
-
-				if (light.Type == LightType::Point && pointId < MAX_LIGHT_COUNT)
-				{
-					nlm::vec3 color = light.Color * light.Intensity;
-
-					PointLightShadingData info = {
-						transform.GetTranslation(),
-						color,
-						light.Attenuation,
-						true
-					};
-					pointEntities[pointId] = entity;
-					pointLightDatas[pointId++] = info;
-				}
-				else if (light.Type == LightType::Directional && dirId < MAX_LIGHT_COUNT)
-				{
-					nlm::vec3 color = light.Color * light.Intensity;
-
-					DirLightShadingData info = {
-						transform.GetForward(),
-						color,
-						true
-					};
-					dirEntities[dirId] = entity;
-					dirLightDatas[dirId++] = info;
-				}
-			}
-		}
-	}
+	
 }

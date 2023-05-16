@@ -3,7 +3,6 @@
 // Tmp
 #include "Camera/OrthographicCamera.h"
 #include "Camera/EditorCamera.h"
-
 #include "Core/Misc/PtrWrapper.h"
 #include "Resources/Shader.h"
 #include "Resources/Model.h"
@@ -12,8 +11,6 @@
 
 namespace NL
 {
-#define MAX_LIGHT_COUNT 4
-
 	enum class SpriteCameraReaction
 	{
 		Normal,
@@ -26,14 +23,15 @@ namespace NL
 		nlm::vec3 Position;
 		nlm::vec3 Color;
 		nlm::vec3 Attenuation;
-		bool IsValid = false;
+		uint32_t EntityId;
 	};
 
 	struct DirLightShadingData
 	{
+		nlm::vec3 Position;
 		nlm::vec3 Direction;
 		nlm::vec3 Color;
-		bool IsValid = false;
+		uint32_t EntityId;
 	};
 
 	class Renderer
@@ -46,11 +44,12 @@ namespace NL
 
 		static void Submit(
 			const Ref<VertexArray>& vertexArray,
-			const Ref<Material>& mat,
+			const Ref<Material>& mat, 
+			const std::vector<PointLightShadingData>& points, 
+			const std::vector<DirLightShadingData>& dirs,
 			const nlm::mat4& transform = nlm::mat4(1.0f),
 			const std::vector<nlm::mat4>& finalMatrices = {}, 
-			int entityId = -1,
-			bool isSelected = false);
+			int entityId = -1);
 
 		static void Submit(
 			const Ref<VertexArray>& vertexArray,
@@ -66,30 +65,17 @@ namespace NL
 			const nlm::mat4& transform,
 			const nlm::vec4& color,
 			SpriteCameraReaction camReact = SpriteCameraReaction::Normal,
-			int entityId = -1,
-			bool isSelected = false);
+			int entityId = -1);
 
 		static void DrawModel(const Ref<Model>& model,
 			const nlm::mat4& transform,
-			int entityId,
-			bool isSelected);
+			int entityId, const std::vector<PointLightShadingData>& points, const std::vector<DirLightShadingData>& dirs);
 
 		// Bind shader first!
 		static void BindCustomShaderProperties(const Ref<Material>& mat);
 
 		static void OnWindowResize(unsigned int width, unsigned int height);
 
-		static void SetPointLightData(const PointLightShadingData data[MAX_LIGHT_COUNT])
-		{
-			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
-				s_PointLightDatas[i] = data[i];
-		}
-
-		static void SetDirLightData(const DirLightShadingData data[MAX_LIGHT_COUNT])
-		{
-			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
-				s_DirLightDatas[i] = data[i];
-		}
 
 #pragma region Commands
 
@@ -159,6 +145,11 @@ namespace NL
 			s_RendererAPI->RasterizerDiscard(enable);
 		}
 
+		inline static void EnableBlend(bool enable)
+		{
+			s_RendererAPI->EnableBlend(enable);
+		}
+
 		/// <summary>
 		/// enable write into depth buffer
 		/// </summary>
@@ -183,9 +174,6 @@ namespace NL
 	private:
 		// static Scope<SceneData> s_SceneData;
 		static Scope<RendererAPI> s_RendererAPI;
-
-		static PointLightShadingData s_PointLightDatas[MAX_LIGHT_COUNT];
-		static DirLightShadingData s_DirLightDatas[MAX_LIGHT_COUNT];
 
 	};
 }

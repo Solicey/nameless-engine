@@ -17,17 +17,24 @@ layout(std140, binding = 0) uniform Camera
 	mat4 u_View;
 	mat4 u_Projection;
 	vec3 u_CameraPosition;
+	float u_Near;
+	float u_Far;
 };
 
 uniform mat4 u_Transform;
+uniform mat4 u_NormalMatrix;
 			
 layout (location = 0) out vec3 v_Position;
 layout (location = 1) out vec3 v_Normal;
 			
 void main()
 {
-	v_Position = a_Position;
-	v_Normal = a_Normal;
+	// G buffer under view space
+	v_Position = vec3(u_View * u_Transform * vec4(a_Position, 1.0));
+	//v_Position = vec3(u_Transform * vec4(a_Position, 1.0));
+	mat3 normalMatrix = transpose(inverse(mat3(u_View * u_Transform)));
+	v_Normal = normalize(normalMatrix * a_Normal);
+	//v_Normal = normalize(a_Normal);
 	gl_Position = u_Projection * u_View * u_Transform * vec4(a_Position, 1.0);
 }
 
@@ -39,13 +46,32 @@ layout (location = 1) in vec3 v_Normal;
 
 layout (location = 0) out vec4 f_Color;
 layout (location = 1) out int f_EntityId;
+layout (location = 2) out vec4 f_PositionDepth;
+layout (location = 3) out vec4 f_Normal;
 
 // uniform vec3 u_Color;
-uniform bool u_IsSelected;
 uniform int u_EntityId;
+
+layout(std140, binding = 0) uniform Camera
+{
+	mat4 u_View;
+	mat4 u_Projection;
+	vec3 u_CameraPosition;
+	float u_Near;
+	float u_Far;
+};
+
+float LinearizeDepth(float depth, float near, float far)
+{
+    float z = depth * 2.0 - 1.0; 
+    return (2.0 * near * far) / (far + near - z * (far - near));    
+}
 			
 void main()
 {
 	f_Color = vec4(v_Normal.x * 0.5 + 0.5, v_Normal.y * 0.5 + 0.5, v_Normal.z * 0.5 + 0.5, 1.0); // * vec4(u_Color, 1.0);
 	f_EntityId = u_EntityId;
+
+	f_PositionDepth = vec4(v_Position, LinearizeDepth(gl_FragCoord.z, u_Near, u_Far));//LinearizeDepth(depth, u_Near, u_Far));
+	f_Normal = vec4(v_Normal, 1.0);
 }			

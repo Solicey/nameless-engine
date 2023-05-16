@@ -2,6 +2,7 @@
 
 #include "OpenGLTexture.h"
 #include "Core/Log/Log.h"
+#include "Core/Math/Math.h"
 
 #include <stb_image.h>
 
@@ -82,6 +83,23 @@ namespace NL
 		{
 			NL_ENGINE_ASSERT(false, "Failed to load textures!");
 		}
+	}
+
+	OpenGLTexture2D::OpenGLTexture2D(uint32_t width, uint32_t height, const std::vector<nlm::vec4>& data)
+	{
+		m_InternalFormat = GL_RGBA16F;
+		m_DataFormat = GL_RGBA;
+
+		glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+		//glTextureStorage2D(m_RendererID, 1, m_InternalFormat, m_Width, m_Height);
+		glBindTexture(GL_TEXTURE_2D, m_RendererID);
+		glTexImage2D(GL_TEXTURE_2D, 0, m_InternalFormat, width, height, 0, m_DataFormat, GL_FLOAT, &data[0]);
+
+		// For Noise Textures
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	}
 
 	OpenGLTexture2D::~OpenGLTexture2D()

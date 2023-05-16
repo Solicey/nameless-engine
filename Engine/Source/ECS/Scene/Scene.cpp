@@ -167,6 +167,8 @@ namespace NL
             m_SceneState = SceneState::Pause;
         else m_SceneState = SceneState::Play;
 
+        this->UpdateLightDatas();
+
         for (auto& system : m_Systems)
         {
             system->OnUpdateRuntime(ts, cameraEntity);
@@ -181,11 +183,12 @@ namespace NL
         }
     }
 
-    void Scene::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity, Entity settings)
+    void Scene::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity settings)
     {
+        this->UpdateLightDatas();
         for (auto& system : m_Systems)
         {
-            system->OnUpdateEditor(ts, camera, selectedEntity, settings);
+            system->OnUpdateEditor(ts, camera, settings);
         }
     }
 
@@ -207,6 +210,45 @@ namespace NL
                 return Entity{ entity, this };
         }
         return {};
+    }
+
+    void Scene::UpdateLightDatas()
+    {
+        m_PointLightShadingDatas.clear();
+        m_DirLightShadingDatas.clear();
+
+        auto view = Registry.view<TransformComponent, LightComponent>();
+        int pointId = 0, dirId = 0;
+        for (auto& e : view)
+        {
+            Entity entity = Entity(e, this);
+            auto [transform, light] = view.get<TransformComponent, LightComponent>(e);
+
+            if (light.Type == LightType::Point)
+            {
+                nlm::vec3 color = light.Color * light.Intensity;
+
+                PointLightShadingData info = {
+                    transform.GetTranslation(),
+                    color,
+                    light.Attenuation,
+                    (uint32_t)entity
+                };
+                m_PointLightShadingDatas.push_back(info);
+            }
+            else if (light.Type == LightType::Directional)
+            {
+                nlm::vec3 color = light.Color * light.Intensity;
+
+                DirLightShadingData info = {
+                    transform.GetTranslation(),
+                    transform.GetForward(),
+                    color,
+                    (uint32_t)entity
+                };
+                m_DirLightShadingDatas.push_back(info);
+            }
+        }
     }
 
     /*nlm::vec2 Scene::OnViewportResize(uint32_t width, uint32_t height)

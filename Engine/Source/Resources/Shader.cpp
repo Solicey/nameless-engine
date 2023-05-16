@@ -16,6 +16,12 @@ namespace NL
 		{"particle2", ShaderUse::Particle2}
 	};
 
+	std::unordered_map<std::string, ShaderTag> Shader::s_ShaderTagMap =
+	{
+		{"ssao", ShaderTag::SSAO},
+		{"src", ShaderTag::SrcColor}
+	};
+
 	ShaderUse Shader::ParseAndGetShaderUse(const std::string& path)
 	{
 		std::string rawSrc = ReadShaderFile(path);
@@ -77,6 +83,48 @@ namespace NL
 				{
 					m_Use = s_ShaderUseMap[use];
 				}
+			}
+		}
+
+		// Parsing Tag
+		{
+			const char* tagToken = "#tag";
+			size_t tagTokenLength = strlen(tagToken);
+			size_t tagPos = rawSrc.find(tagToken, 0);
+			if (tagPos != std::string::npos)
+			{
+				size_t eol = rawSrc.find_first_of("\r\n", tagPos);
+				size_t begin = rawSrc.find_first_not_of(" ", tagPos + tagTokenLength);
+				std::string tags = rawSrc.substr(begin, eol - begin);
+				while (begin < eol)
+				{
+					size_t frac = rawSrc.find_first_of(";", begin);
+					if (frac == std::string::npos || frac > eol)
+						frac = eol;
+					std::string tag = rawSrc.substr(begin, frac - begin);
+					if (s_ShaderTagMap.contains(tag))
+					{
+						NL_ENGINE_INFO("Tag Found!: {0}", tag);
+						m_Tag = m_Tag | s_ShaderTagMap[tag];
+					}
+					begin = frac + 1;
+				}
+			}
+		}
+
+		// Check Lighting
+		{
+			const char* litToken = "#lit";
+			size_t litPos = rawSrc.find(litToken, 0);
+			size_t litTokenLength = strlen(litToken);
+			if (litPos != std::string::npos)
+			{
+				m_IsLightingRequired = true;
+				size_t eol = rawSrc.find_first_of("\r\n", litPos);
+				size_t begin = rawSrc.find_first_not_of(" ", litPos + litTokenLength);
+				std::string litCount = rawSrc.substr(begin, eol - begin);
+				// Temp
+				m_MaxLightsCount = std::min(std::max(std::stoi(litCount), 0), 128);
 			}
 		}
 

@@ -16,11 +16,10 @@ namespace NL
 		virtual void OnUpdateRuntime(TimeStep ts, Entity cameraEntity) override;
 
 		virtual void OnStartEditor() override;
-		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity, Entity settings) override;
+		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity settings) override;
 
 	private:
-		void UpdateParticleSystem(Entity selectedEntity = {});
-		void LightPreparation(PointLightShadingData *pointLightDatas, DirLightShadingData *dirLightDatas, Entity *pointEntities, Entity *dirEntities);
+		void UpdateParticleSystem();
 
 	private:
 		// Ref<Shader> m_GrayScaleShader;

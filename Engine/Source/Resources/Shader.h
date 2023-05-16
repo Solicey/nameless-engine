@@ -14,6 +14,21 @@ namespace NL
 		Unknown, Model, PostProcess, Particle1, Particle2
 	};
 
+	enum class ShaderTag
+	{
+		None = 0x0,
+		SSAO = 0x1,
+		SrcColor = 0x2,		// Post processing pass requires original color texture
+	};
+
+	inline ShaderTag operator~ (ShaderTag a) { return (ShaderTag)~(int)a; }
+	inline ShaderTag operator| (ShaderTag a, ShaderTag b) { return (ShaderTag)((int)a | (int)b); }
+	inline ShaderTag operator& (ShaderTag a, ShaderTag b) { return (ShaderTag)((int)a & (int)b); }
+	inline ShaderTag operator^ (ShaderTag a, ShaderTag b) { return (ShaderTag)((int)a ^ (int)b); }
+	inline ShaderTag& operator|= (ShaderTag& a, ShaderTag b) { return (ShaderTag&)((int&)a |= (int)b); }
+	inline ShaderTag& operator&= (ShaderTag& a, ShaderTag b) { return (ShaderTag&)((int&)a &= (int)b); }
+	inline ShaderTag& operator^= (ShaderTag& a, ShaderTag b) { return (ShaderTag&)((int&)a ^= (int)b); }
+
 	class Shader
 	{
 
@@ -39,6 +54,9 @@ namespace NL
 		bool HasCompiledSuccessfully() const { return m_HasCompiledSuccessfully; }
 		ShaderUse GetShaderUse() const { return m_Use; }
 		static ShaderUse ParseAndGetShaderUse(const std::string& path);
+		bool IsLightingRequired() const { return m_IsLightingRequired; }
+		int GetMaxLightsCount() const { return m_MaxLightsCount; }
+		bool CheckTag(ShaderTag tag) const { return (bool)(m_Tag & tag); }
 
 	protected:
 		static std::string ReadShaderFile(const std::string& path);
@@ -59,6 +77,10 @@ namespace NL
 		bool									m_HasCompiledSuccessfully = false;
 
 		static std::unordered_map<std::string, ShaderUse> s_ShaderUseMap;
+		static std::unordered_map<std::string, ShaderTag> s_ShaderTagMap;
 		ShaderUse								m_Use = ShaderUse::Unknown;
+		ShaderTag								m_Tag = ShaderTag::None;
+		bool									m_IsLightingRequired = false;
+		int										m_MaxLightsCount = 0;
 	};
 }

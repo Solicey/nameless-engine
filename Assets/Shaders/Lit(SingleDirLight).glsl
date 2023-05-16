@@ -1,6 +1,7 @@
 // nlsl template shader file
 
 #use model
+#lit 4
 
 #prop
 
@@ -25,6 +26,8 @@ layout(std140, binding = 0) uniform Camera
 	mat4 u_View;
 	mat4 u_Projection;
 	vec3 u_CameraPosition;
+	float u_Near;
+	float u_Far;
 };
 
 uniform mat4 u_Transform;
@@ -59,11 +62,12 @@ layout(std140, binding = 0) uniform Camera
 	mat4 u_View;
 	mat4 u_Projection;
 	vec3 u_CameraPosition;
+	float u_Near;
+	float u_Far;
 };
 
 // Object Color
 uniform vec3 u_Color;
-uniform bool u_IsSelected;
 uniform int u_EntityId;
 uniform float u_AmbientStrength;
 uniform float u_SpecularStrength;

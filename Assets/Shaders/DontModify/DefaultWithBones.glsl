@@ -21,6 +21,8 @@ layout(std140, binding = 0) uniform Camera
 	mat4 u_View;
 	mat4 u_Projection;
 	vec3 u_CameraPosition;
+	float u_Near;
+	float u_Far;
 };
 
 uniform mat4 u_Transform;
@@ -56,7 +58,6 @@ layout (location = 0) out vec4 f_Color;
 layout (location = 1) out int f_EntityId;
 
 // uniform vec3 u_Color;
-uniform bool u_IsSelected;
 uniform int u_EntityId;
 
 void main()
