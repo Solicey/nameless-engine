@@ -39,44 +39,34 @@ namespace NL
 		m_TotalTime = m_DeltaTime = 0;
 	}
 
-	void RenderSystem::OnUpdateRuntime(TimeStep ts, Entity cameraEntity)
+	void RenderSystem::OnUpdateRuntime(TimeStep ts)
 	{
 		m_TotalTime += ts;
 		m_DeltaTime = ts;
+
+		auto settings = m_Scene->GetSettingsEntity();
+		auto cameraEntity = m_Scene->GetEntityWithID(settings.GetComponent<SettingsComponent>().RuntimeCameraID);
+
+		//NL_ENGINE_INFO("Runtime Camera ID: {0}", settings.GetComponent<SettingsComponent>().RuntimeCameraID);
+
+		if (cameraEntity == Entity())
+			return;
 
 		if (!cameraEntity.HasComponent<CameraComponent>())
 			return;
 
 		if (!cameraEntity.HasComponent<TransformComponent>())
 		{
-			NL_ENGINE_ASSERT(false, "Entity with CameraComponent should also has TransformComponent!");
+			NL_ENGINE_ASSERT(false, "Entity with CameraComponent should also have TransformComponent!");
 			return;
 		}
 
 		auto& camera = cameraEntity.GetComponent<CameraComponent>();
 		auto& camTransform = cameraEntity.GetComponent<TransformComponent>();
+		auto clearFlag = camera._Camera->GetClearFlagType();
 
-		// Light Preparation
-		//PointLightShadingData pointLightDatas[MAX_LIGHT_COUNT];
-		//DirLightShadingData dirLightDatas[MAX_LIGHT_COUNT];
-		//Entity pointEntities[MAX_LIGHT_COUNT], dirEntities[MAX_LIGHT_COUNT];
-
-		//LightPreparation(pointLightDatas, dirLightDatas, pointEntities, dirEntities);
-
-		// Update Light Data
-		//Renderer::SetPointLightData(pointLightDatas);
-		//Renderer::SetDirLightData(dirLightDatas);
-
-		auto clearFlag = camera.mCamera.GetClearFlagType();
-		// Camera Clear Color
-		/*
-		if (clearFlag == Camera::ClearFlagType::Color)
-		{
-			Renderer::SetClearColor(camera.ClearColor);
-			Renderer::Clear();
-		}*/
-
-		Renderer::BeginScene(camera.mCamera, camTransform.GetTransform(), camTransform.GetTranslation());
+		m_Scene->PackUpLightDatas();
+		Renderer::SetUniformBuffer(camera._Camera, camTransform.GetTransform(), camTransform.GetTranslation());
 
 		// Render Models (Opaque)
 		{
@@ -116,6 +106,7 @@ namespace NL
 
 		if (clearFlag == Camera::ClearFlagType::Skybox)
 		{
+			//NL_ENGINE_INFO("Skybox!");
 			m_SkyboxShader->Bind();
 
 			Renderer::DepthFunc(DepthComp::Lequal);
@@ -141,26 +132,19 @@ namespace NL
 		m_TotalTime = m_DeltaTime = 0;
 	}
 
-	void RenderSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity settings)
+	void RenderSystem::OnUpdateEditor(TimeStep ts)
 	{
 		m_TotalTime += ts;
 		m_DeltaTime = ts;
 
-		Renderer::BeginScene(camera);
-
+		auto settings = m_Scene->GetSettingsEntity();
+		auto camera = settings.GetComponent<SettingsComponent>().EditorCamera;
 		bool renderGizmos = settings.GetComponent<SettingsComponent>().ShowGizmos;
-		nlm::mat4 cameraRotation = nlm::mat4(camera.GetOrientation());
+		nlm::mat4 cameraRotation = nlm::mat4(camera->GetOrientation());
+		bool isDeferred = settings.GetComponent<SettingsComponent>().RenderMode == RenderMode::Deferred;
 
-		// Light Preparation
-		//PointLightShadingData pointLightDatas[MAX_LIGHT_COUNT];
-		//DirLightShadingData dirLightDatas[MAX_LIGHT_COUNT];
-		//Entity pointEntities[MAX_LIGHT_COUNT], dirEntities[MAX_LIGHT_COUNT];
-
-		//LightPreparation(pointLightDatas, dirLightDatas, pointEntities, dirEntities);
-
-		// Update Light Data
-		//Renderer::SetPointLightData(pointLightDatas);
-		//Renderer::SetDirLightData(dirLightDatas);
+		m_Scene->PackUpLightDatas();
+		Renderer::SetUniformBuffer(camera);
 
 		// Render Entities (Opaque)
 		{
@@ -201,7 +185,7 @@ namespace NL
 		if (renderGizmos)
 		{
 			Renderer::SetCullFace(CullFace::Front);
-			// Render Camera Gizmos
+			// Render _Camera Gizmos
 			auto view = m_Scene->Registry.view<TransformComponent, CameraComponent>();
 			for (auto& e : view)
 			{
@@ -220,8 +204,8 @@ namespace NL
 
 		// Render Skybox?
 		//auto clearFlag = camera.GetClearFlagType();
-		//if (clearFlag == Camera::ClearFlagType::Skybox)
-		if (camera.GetClearFlagType() == Camera::ClearFlagType::Skybox)
+		//if (clearFlag == _Camera::ClearFlagType::Skybox)
+		if (camera->GetClearFlagType() == Camera::ClearFlagType::Skybox)
 		{
 			m_SkyboxShader->Bind();
 
@@ -231,7 +215,7 @@ namespace NL
 			// tmp
 			m_SkyboxTextureCubemap->Bind(0);
 			m_SkyboxShader->SetUniformInt("u_Skybox", 0);
-			Renderer::DrawModel(m_Skybox, m_SkyboxShader, nlm::translate(nlm::mat4(1.0f), camera.GetPosition()));
+			Renderer::DrawModel(m_Skybox, m_SkyboxShader, nlm::translate(nlm::mat4(1.0f), camera->GetPosition()));
 
 			Renderer::DepthFunc(DepthComp::Less);
 			Renderer::SetCullFace(CullFace::Back);
@@ -241,7 +225,8 @@ namespace NL
 		if (renderGizmos)
 		{
 			Renderer::DepthMask(false);
-			Renderer::EnableBlend(true);
+			if (!isDeferred)
+				Renderer::EnableBlend(true);
 			Renderer::BlendFunc(BlendFactor::SrcAlpha, BlendFactor::One);
 
 			auto& pointLightDatas = m_Scene->GetPointLightShadingDataNotConst();
@@ -268,8 +253,11 @@ namespace NL
 
 	void RenderSystem::UpdateParticleSystem()
 	{
+		bool isDeferred = m_Scene->GetSettingsEntity().GetComponent<SettingsComponent>().RenderMode == RenderMode::Deferred;
+
 		Renderer::DepthMask(false);
-		Renderer::EnableBlend(true);
+		if (!isDeferred)
+			Renderer::EnableBlend(true);
 		Renderer::BlendFunc(BlendFactor::SrcAlpha, BlendFactor::One);
 
 		auto view = m_Scene->Registry.view<TransformComponent, ParticleSystemComponent>();

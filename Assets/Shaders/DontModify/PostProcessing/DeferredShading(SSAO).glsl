@@ -70,14 +70,14 @@ void main()
 	vec3 normal = texture(u_NormalTex, v_TexCoords).rgb;
 	float ambientOcclusion = texture(u_ColorTex, v_TexCoords).r;
 	
+	if (depth <= 0)
+	{
+		color = vec4(albedo, spec);
+		return;
+	}	
+
 	if (u_PointLights[0].Color.r >= 0)
 	{
-		if (depth <= 0)
-		{
-			color = vec4(0, 0, 0, 1.0);
-			return;
-		}
-
 		PointLight light = u_PointLights[0];
 		vec3 ambient = vec3(0.2 * ambientOcclusion);
 		vec3 lighting = ambient;
@@ -100,7 +100,7 @@ void main()
 	}
 	else
 	{
-		color = vec4(albedo, 1.0);
+		color = vec4(vec3(ambientOcclusion) * albedo, 1.0);
 	}
 	//color = vec4(normal, 1.0);
 }			

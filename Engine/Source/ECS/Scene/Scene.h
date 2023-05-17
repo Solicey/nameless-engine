@@ -22,6 +22,9 @@ namespace NL
 	class Scene
 	{
 	public:
+		friend class Entity;
+		friend class System;
+
 		Scene();
 		~Scene();
 
@@ -36,10 +39,10 @@ namespace NL
 
 		void OnStartRuntime();
 		void OnStopRuntime(Scene* editorScene);
-		void OnUpdateRuntime(TimeStep ts, Entity cameraEntity, bool isRuntimeViewportFocused);
+		void OnUpdateRuntime(TimeStep ts, bool isRuntimeViewportFocused);
 
 		void OnStartEditor();
-		void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity settings);
+		void OnUpdateEditor(TimeStep ts);
 
 		Entity GetEntityWithID(ID id);
 		Entity FindEntityByName(std::string_view name);
@@ -53,21 +56,19 @@ namespace NL
 
 		std::vector<PointLightShadingData>& GetPointLightShadingDataNotConst() { return m_PointLightShadingDatas; }
 		std::vector<DirLightShadingData>& GetDirLightShadingDataNotConst() { return m_DirLightShadingDatas; }
+		// Should only have one
+		Entity GetSettingsEntity();
+		// Called by RenderSystem
+		void PackUpLightDatas();
 
 	private:
 		template<Component C>
 		void OnComponentAdded(Entity entity, C& component);
 		template<Component C>
 		void OnComponentRemoved(Entity entity, C& component);
-		// Called at the beginning of updates
-		void UpdateLightDatas();
-
+		
 	public:
-		entt::registry Registry;
-
-	private:
-		friend class Entity;
-		friend class System;
+		entt::registry Registry;		
 
 	private:
 		std::unordered_map<ID, entt::entity> m_EntityMap;

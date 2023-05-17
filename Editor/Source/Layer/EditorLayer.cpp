@@ -55,11 +55,11 @@ namespace NL
         // Post-processing
         m_PostProcessing = PostProcessing::Create();
 
-        // m_EditorCamera = EditorCamera(Camera::ProjectionType::Orthographic, 10.0f, 1280, 720, 0.1f, 1000.0f);
-        m_EditorCamera = EditorCamera(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
+        // m_EditorCamera = EditorCamera(_Camera::ProjectionType::Orthographic, 10.0f, 1280, 720, 0.1f, 1000.0f);
+        m_EditorCamera = CreateRef<EditorCamera>(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
 
         // Settings (include framebuffer setup)
-        InitSettingsEntity({});
+        ResetSettingsEntityAfterSceneContextChanged(m_EditorScene);
 
         // framebuffer Setup
         // UpdateFramebuffer();  
@@ -93,11 +93,11 @@ namespace NL
         {
             m_MidFramebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-            // Camera Controller
-            m_EditorCamera.SetAspectRatio(m_ViewportSize.x, m_ViewportSize.y);
+            // _Camera Controller
+            m_EditorCamera->SetAspectRatio(m_ViewportSize.x, m_ViewportSize.y);
         }
 
-        // Update Runtime Camera. SHOULD BE OPTIMIZED BUT I DONT KNOW HOW TO DO THIS WITH CALLBACKS
+        // Update Runtime _Camera. SHOULD BE OPTIMIZED BUT I DONT KNOW HOW TO DO THIS WITH CALLBACKS
         if (!IsEditorMode())
         {
             // m_RuntimeScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
@@ -106,9 +106,9 @@ namespace NL
 
         // Framebuffer preparation
         m_MidFramebuffer->Bind();
-        /*if (m_EditorCamera.GetClearFlagType() == Camera::ClearFlagType::Color)
+        /*if (m_EditorCamera.GetClearFlagType() == _Camera::ClearFlagType::Color)
             Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.75f });
-        else if (m_EditorCamera.GetClearFlagType() == Camera::ClearFlagType::Skybox)
+        else if (m_EditorCamera.GetClearFlagType() == _Camera::ClearFlagType::Skybox)
             Renderer::SetClearColor({ 0.0f, 0.0f, 0.0f, 0.0f });*/
         Renderer::SetClearColor({ 0, 0, 0, 1 });
         Renderer::Clear();
@@ -130,25 +130,27 @@ namespace NL
         m_MidFramebuffer->Bind();
         if (IsEditorMode())
         {
-            m_EditorScene->OnUpdateEditor(ts, m_EditorCamera, m_Settings);
+            m_EditorScene->OnUpdateEditor(ts);
 
-            m_EditorCamera.OnUpdate(ts, m_ViewportHovered);
+            m_EditorCamera->OnUpdate(ts, m_ViewportHovered);
 
             // TODO: Get editor camera post-processing options.
         }
         else
         {
-            if (!m_RuntimeCameraEntity.HasComponent<CameraComponent>())
+            if (!m_RuntimeCameraEntity.HasComponent<CameraComponent>() || m_RuntimeCameraEntity == Entity())
             {
                 auto camView = m_RuntimeScene->Registry.view<CameraComponent>();
                 for (auto entity : camView)
                 {
                     m_RuntimeCameraEntity = Entity(entity, m_RuntimeScene.get());
+                    NL_ENGINE_INFO("Runtime Camera ID: {0}", m_RuntimeCameraEntity.GetID());
+                    m_Settings.GetComponent<SettingsComponent>().RuntimeCameraID = m_RuntimeCameraEntity.GetID();
                     break;
                 }
             }
 
-            m_RuntimeScene->OnUpdateRuntime(ts, m_RuntimeCameraEntity, m_IsRuntimeViewportFocused);
+            m_RuntimeScene->OnUpdateRuntime(ts, m_IsRuntimeViewportFocused);
 
             // TODO: Get runtime camera post-processing options.
         }
@@ -349,7 +351,7 @@ namespace NL
                     ImGui::PopStyleVar();
                 }
                 // Runtime but not focused
-                // Show Runtime Camera
+                // Show Runtime _Camera
                 else if (!m_IsRuntimeViewportFocused)
                 {
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
@@ -370,6 +372,8 @@ namespace NL
                                 if (!isSelected)
                                 {
                                     m_RuntimeCameraEntity = Entity(entity, m_RuntimeScene.get());
+                                    m_Settings.GetComponent<SettingsComponent>().RuntimeCameraID = m_RuntimeCameraEntity.GetID();
+                                    NL_ENGINE_INFO("Runtime Camera ID: {0}", m_RuntimeCameraEntity.GetID());
                                     // UpdateRuntimeAspect();
                                 }
                             }
@@ -430,13 +434,13 @@ namespace NL
             // Temp
             bool showGizmos = m_Settings.GetComponent<SettingsComponent>().ShowGizmos;
             // Grid
-            if (IsEditorMode() && showGizmos && m_EditorCamera.GetClearFlagType() == Camera::ClearFlagType::Color)
+            if (IsEditorMode() && showGizmos && m_EditorCamera->GetClearFlagType() == Camera::ClearFlagType::Color)
             {
                 ImGuizmo::SetOrthographic(false);
                 ImGuizmo::SetDrawlist();
                 ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
-                const nlm::mat4& cameraProjection = m_EditorCamera.GetProjectionMatrix();
-                const nlm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
+                const nlm::mat4& cameraProjection = m_EditorCamera->GetProjectionMatrix();
+                const nlm::mat4 cameraView = m_EditorCamera->GetViewMatrix();
                 ImGuizmo::DrawGrid(nlm::value_ptr(cameraView), nlm::value_ptr(cameraProjection), nlm::value_ptr(nlm::mat4(1.0f)), 20.0f);
             }
             
@@ -487,8 +491,8 @@ namespace NL
                     ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
 
                     // Editor camera
-                    const nlm::mat4& cameraProjection = m_EditorCamera.GetProjectionMatrix();
-                    const nlm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
+                    const nlm::mat4& cameraProjection = m_EditorCamera->GetProjectionMatrix();
+                    const nlm::mat4 cameraView = m_EditorCamera->GetViewMatrix();
 
                     auto& component = entitySelected.GetComponent<TransformComponent>();
                     nlm::mat4 transform = component.GetTransform();
@@ -697,20 +701,20 @@ namespace NL
                 UpdateFramebuffer();
             }
 
-            // Editor Camera Clear Flag
+            // Editor _Camera Clear Flag
             if (ImGui::TreeNode("Clear Flag"))
             {
                 Camera::ClearFlagType type = settings.EditorCameraClearFlag;
                 if (ImGui::RadioButton("Color", (type == Camera::ClearFlagType::Color)))
                 {
                     settings.EditorCameraClearFlag = Camera::ClearFlagType::Color;
-                    m_EditorCamera.SetClearFlagType(settings.EditorCameraClearFlag);
+                    m_EditorCamera->SetClearFlagType(settings.EditorCameraClearFlag);
                 }
                 ImGui::SameLine();
                 if (ImGui::RadioButton("Skybox", (type == Camera::ClearFlagType::Skybox)))
                 {
                     settings.EditorCameraClearFlag = Camera::ClearFlagType::Skybox;
-                    m_EditorCamera.SetClearFlagType(settings.EditorCameraClearFlag);
+                    m_EditorCamera->SetClearFlagType(settings.EditorCameraClearFlag);
                 }
                 ImGui::TreePop();
             }
@@ -744,8 +748,8 @@ namespace NL
 	{
         if (m_ViewportHovered)
         {
-            // NL_ENGINE_INFO("Editor Camera Event");
-            m_EditorCamera.OnEvent(event);
+            // NL_ENGINE_INFO("Editor _Camera Event");
+            m_EditorCamera->OnEvent(event);
         }
 
 		EventDispatcher dispatcher(event);
@@ -828,7 +832,7 @@ namespace NL
                 if (selectedEntity)
                 {
                     // Ought to have transform...
-                    m_EditorCamera.SetCenter(selectedEntity.GetComponent<TransformComponent>().Translation);
+                    m_EditorCamera->SetCenter(selectedEntity.GetComponent<TransformComponent>().Translation);
                 }
             }
             break;
@@ -894,9 +898,10 @@ namespace NL
 
     bool EditorLayer::OnRuntimeCameraSwitched(RuntimeCameraSwitchedEvent& event)
     {
-        // NL_INFO("Runtime Camera Switch!");
+        // NL_INFO("Runtime _Camera Switch!");
 
         m_RuntimeCameraEntity = event.GetEntity();
+        m_Settings.GetComponent<SettingsComponent>().RuntimeCameraID = m_RuntimeCameraEntity.GetID();
 
         return false;
     }
@@ -925,12 +930,12 @@ namespace NL
         m_EditorScene->DestroyScene();
         m_EditorScene.reset();
         m_EditorScene = CreateRef<Scene>();
-        InitSettingsEntity({});
 
         m_EditorScene->OnStartEditor();
 
         // Switch Scene Context
         m_HierarchyPanel->SetSceneContext(m_EditorScene);
+        ResetSettingsEntityAfterSceneContextChanged(m_EditorScene);
 
         m_EditorScenePath = "";
 
@@ -984,11 +989,10 @@ namespace NL
 
             // Switch Scene Context
             m_HierarchyPanel->SetSceneContext(m_EditorScene);
+            ResetSettingsEntityAfterSceneContextChanged(m_EditorScene);
 
             Application::GetInstance().SetWindowTitle("Nameless Editor - " + path.substr(path.find_last_of("/\\") + 1));
             
-            // Reset Scene Settings
-            InitSettingsEntity(newScene->FindEntityByName(m_SettingsEntityName));
         }
     }
 
@@ -1039,6 +1043,7 @@ namespace NL
         m_RuntimeScene->OnStartRuntime();
 
         m_HierarchyPanel->SetSceneContext(m_RuntimeScene);
+        ResetSettingsEntityAfterSceneContextChanged(m_RuntimeScene);
     }
     
     void EditorLayer::OnSceneStop()
@@ -1052,21 +1057,22 @@ namespace NL
         m_RuntimeCameraEntity = {};
 
         m_HierarchyPanel->SetSceneContext(m_EditorScene);
+        ResetSettingsEntityAfterSceneContextChanged(m_EditorScene);
     }
 
     void EditorLayer::UpdateRuntimeAspect()
     {
-        if (this->m_RuntimeCameraEntity.HasComponent<CameraComponent>())
+        if (m_RuntimeCameraEntity.HasComponent<CameraComponent>())
         {
-            auto& cam = this->m_RuntimeCameraEntity.GetComponent<CameraComponent>();
+            auto& cam = m_RuntimeCameraEntity.GetComponent<CameraComponent>();
             if (cam.FixedAspectRatio)
             {
-                this->m_RuntimeAspect = nlm::vec2(cam.mCamera.GetViewportWidth(), cam.mCamera.GetViewportHeight());
+                this->m_RuntimeAspect = nlm::vec2(cam._Camera->GetViewportWidth(), cam._Camera->GetViewportHeight());
             }
             else
             {
                 this->m_RuntimeAspect = nlm::vec2((uint32_t)this->m_ViewportSize.x, (uint32_t)this->m_ViewportSize.y);
-                cam.mCamera.SetAspectRatio((uint32_t)this->m_ViewportSize.x, (uint32_t)this->m_ViewportSize.y);
+                cam._Camera->SetAspectRatio((uint32_t)this->m_ViewportSize.x, (uint32_t)this->m_ViewportSize.y);
             }
         }
     }
@@ -1114,19 +1120,22 @@ namespace NL
 
     }
 
-    void EditorLayer::InitSettingsEntity(Entity entity)
+    void EditorLayer::ResetSettingsEntityAfterSceneContextChanged(Ref<Scene>& scene)
     {
-        if (entity == Entity())
+        m_Settings = scene->GetSettingsEntity();
+        if (m_Settings == Entity())
         {
-            m_Settings = m_EditorScene->CreateEntity(m_SettingsEntityName);
-            m_Settings.AddComponent<SettingsComponent>();            
+            m_Settings = scene->CreateEntity(m_SettingsEntityName);
+            m_Settings.AddComponent<SettingsComponent>();
             m_Settings.AddComponent<PostProcessingComponent>().Queue.push_back(CreateRef<Material>("EditorOutline.glsl"));
         }
-        else
-            m_Settings = entity;
 
+        m_Settings.GetComponent<SettingsComponent>().EditorCamera = m_EditorCamera;
+        m_Settings.GetComponent<SettingsComponent>().RuntimeCameraID = m_RuntimeCameraEntity.GetID();
+        NL_ENGINE_INFO("Runtime Camera ID: {0}", m_RuntimeCameraEntity.GetID());
         // Temp
-        m_EditorCamera.SetClearFlagType(m_Settings.GetComponent<SettingsComponent>().EditorCameraClearFlag);
+        m_EditorCamera->SetClearFlagType(m_Settings.GetComponent<SettingsComponent>().EditorCameraClearFlag);
         UpdateFramebuffer();
     }
+
 }

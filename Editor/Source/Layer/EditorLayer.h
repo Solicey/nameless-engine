@@ -49,13 +49,13 @@ namespace NL
 
 		void UpdateFramebuffer();
 
-		void InitSettingsEntity(Entity entity = {});
+		void ResetSettingsEntityAfterSceneContextChanged(Ref<Scene>& scene);
 
 	private:
 
 		friend class HierarchyPanel;
 
-		EditorCamera m_EditorCamera;
+		Ref<EditorCamera> m_EditorCamera;
 		Ref<Scene> m_EditorScene;
 
 		const std::string m_SettingsEntityName = "SceneSettings";
@@ -72,11 +72,7 @@ namespace NL
 		Ref<Framebuffer> m_MidFramebuffer;
 		Ref<Framebuffer> m_Framebuffer;
 
-		// Post-processing
-		//std::vector<PostProcessingType> m_EditorPostProcessingQueue;
-		//std::vector<PostProcessingType> m_RuntimePostProcessingQueue;
 		Ref<PostProcessing> m_PostProcessing;
-		//std::vector<Ref<Material>> m_EditorPostProcessingQueue;
 
 		// Viewport variables
 		bool m_ShowViewport;
@@ -102,15 +98,7 @@ namespace NL
 		bool m_IsMaximizeOnPlay = true;
 
 		// Scene Settings
-		/*
-		* Skybox
-		* Anti-Aliasing
-		* Runtime PostProcessing
-		*/
 		bool m_ShowSceneSettings;
-		// int m_MSAASamples = 4;
-		// AntiAliasingType m_AntiAliasingType = AntiAliasingType::MSAA;
-		// bool m_ShowGizmos;
 
 		// Resource List
 		bool m_ShowResourceList;

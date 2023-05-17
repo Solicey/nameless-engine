@@ -1,7 +1,9 @@
 #pragma once
 
 #include "ECS/Component/Component.h"
+#include "ECS/Entity/ID.h"
 #include "Camera/Camera.h"
+#include "Camera/EditorCamera.h"
 
 namespace NL
 {
@@ -26,5 +28,8 @@ namespace NL
 		Camera::ClearFlagType EditorCameraClearFlag = Camera::ClearFlagType::Color;
 		bool ShowGizmos = true;
 		RenderMode RenderMode = RenderMode::Forward;
+
+		ID RuntimeCameraID;
+		Ref<EditorCamera> EditorCamera = nullptr;
 	};
 }

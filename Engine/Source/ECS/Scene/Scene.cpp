@@ -154,6 +154,7 @@ namespace NL
 
     void Scene::OnStopRuntime(Scene* editorScene)
     {
+        //GetSettingsEntity().GetComponent<SettingsComponent>().EditorCamera = nullptr;
         m_SceneState = SceneState::Editor;
         for (auto& system : m_Systems)
         {
@@ -161,17 +162,15 @@ namespace NL
         }
     }
 
-    void Scene::OnUpdateRuntime(TimeStep ts, Entity cameraEntity, bool isRuntimeViewportFocused)
+    void Scene::OnUpdateRuntime(TimeStep ts, bool isRuntimeViewportFocused)
     {
         if (!isRuntimeViewportFocused)
             m_SceneState = SceneState::Pause;
         else m_SceneState = SceneState::Play;
 
-        this->UpdateLightDatas();
-
         for (auto& system : m_Systems)
         {
-            system->OnUpdateRuntime(ts, cameraEntity);
+            system->OnUpdateRuntime(ts);
         }
     }
 
@@ -183,12 +182,11 @@ namespace NL
         }
     }
 
-    void Scene::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity settings)
+    void Scene::OnUpdateEditor(TimeStep ts)
     {
-        this->UpdateLightDatas();
         for (auto& system : m_Systems)
         {
-            system->OnUpdateEditor(ts, camera, settings);
+            system->OnUpdateEditor(ts);
         }
     }
 
@@ -212,7 +210,17 @@ namespace NL
         return {};
     }
 
-    void Scene::UpdateLightDatas()
+    Entity Scene::GetSettingsEntity()
+    {
+        auto view = Registry.view<SettingsComponent>();
+        for (auto entity : view)
+        {
+            return Entity{ entity, this };
+        }
+        return {};
+    }
+
+    void Scene::PackUpLightDatas()
     {
         m_PointLightShadingDatas.clear();
         m_DirLightShadingDatas.clear();

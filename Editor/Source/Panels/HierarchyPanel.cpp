@@ -369,7 +369,7 @@ namespace NL
 		// Inspector Add Components
 		if (ImGui::BeginPopup("AddComponent"))
 		{
-			// DisplayAddComponentEntry<>("Camera");
+			// DisplayAddComponentEntry<>("_Camera");
 
 			InspectorAddComponent<TransformComponent>("Transform");
 			InspectorAddComponent<CameraComponent>("Camera");
@@ -402,10 +402,10 @@ namespace NL
 
 		DrawComponent<CameraComponent>("Camera", entity, [](auto& entity, auto& component) {
 
-		auto& camera = component.mCamera;
+		Ref<Camera>& camera = component._Camera;
 
 		const char* projectionTypeStrings[] = { "Ortho", "Persp" };
-		const char* currentProjectionTypeString = projectionTypeStrings[(int)camera.GetProjectionType()];
+		const char* currentProjectionTypeString = projectionTypeStrings[(int)camera->GetProjectionType()];
 		// if (Utils::ComboStyle1("Projection", RIGHT_COLUMN_WIDTH, currentLightTypeString))
 		ImGui::Columns(2);
 		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - RIGHT_COLUMN_WIDTH);
@@ -420,7 +420,7 @@ namespace NL
 				if (ImGui::Selectable(projectionTypeStrings[i], isSelected))
 				{
 					currentProjectionTypeString = projectionTypeStrings[i];
-					camera.SetProjectionType((Camera::ProjectionType)i);
+					camera->SetProjectionType((Camera::ProjectionType)i);
 				}
 			}
 			ImGui::EndCombo();
@@ -428,33 +428,33 @@ namespace NL
 		ImGui::PopItemWidth();
 		ImGui::Columns(1);
 
-		if (camera.GetProjectionType() == Camera::ProjectionType::Perspective)
+		if (camera->GetProjectionType() == Camera::ProjectionType::Perspective)
 		{
-			float perspectiveVerticalFOV = nlm::degrees(camera.GetPerspectiveFOV());
+			float perspectiveVerticalFOV = nlm::degrees(camera->GetPerspectiveFOV());
 			if (Utils::DragFloatStyle1("Vertical FOV", RIGHT_COLUMN_WIDTH, perspectiveVerticalFOV, 0.1f, 10.0f, 170.0f))
-				camera.SetPerspectiveFOV(nlm::radians(perspectiveVerticalFOV));
+				camera->SetPerspectiveFOV(nlm::radians(perspectiveVerticalFOV));
 
-			float perspectiveNear = camera.GetPerspectiveNear();
+			float perspectiveNear = camera->GetPerspectiveNear();
 			if (Utils::DragFloatStyle1("Near Clip", RIGHT_COLUMN_WIDTH, perspectiveNear, 0.001f, 0.001f, 10.0f, "%.3f"))
-				camera.SetPerspectiveNear(perspectiveNear);
+				camera->SetPerspectiveNear(perspectiveNear);
 
-			float perspectiveFar = camera.GetPerspectiveFar();
+			float perspectiveFar = camera->GetPerspectiveFar();
 			if (Utils::DragFloatStyle1("Far Clip", RIGHT_COLUMN_WIDTH, perspectiveFar, 10.0f, 100.0f, 3000.0f, "%.0f"))
-				camera.SetPerspectiveFar(perspectiveFar);
+				camera->SetPerspectiveFar(perspectiveFar);
 		}
 		else
 		{
-			float orthoSize = camera.GetOrthographicSize();
+			float orthoSize = camera->GetOrthographicSize();
 			if (Utils::DragFloatStyle1("Size", RIGHT_COLUMN_WIDTH, orthoSize, 1.0f, 1.0f, 500.0f, "%.0f"))
-				camera.SetOrthographicSize(orthoSize);
+				camera->SetOrthographicSize(orthoSize);
 
-			float orthoNear = camera.GetOrthographicNear();
+			float orthoNear = camera->GetOrthographicNear();
 			if (Utils::DragFloatStyle1("Near Clip", RIGHT_COLUMN_WIDTH, orthoNear, 0.001f, 0.001f, 10.0f, "%.3f"))
-				camera.SetOrthographicNear(orthoNear);
+				camera->SetOrthographicNear(orthoNear);
 
-			float orthoFar = camera.GetOrthographicFar();
+			float orthoFar = camera->GetOrthographicFar();
 			if (Utils::DragFloatStyle1("Far Clip", RIGHT_COLUMN_WIDTH, orthoFar, 10.0f, 100.0f, 3000.0f, "%.0f"))
-				camera.SetOrthographicFar(orthoFar);
+				camera->SetOrthographicFar(orthoFar);
 		}
 
 		if (Utils::CheckBoxStyle1("Fixed Aspect Ratio", RIGHT_COLUMN_WIDTH, component.FixedAspectRatio))
@@ -464,25 +464,25 @@ namespace NL
 
 		if (component.FixedAspectRatio)
 		{
-			float width = camera.GetViewportWidth();
-			float height = camera.GetViewportHeight();
+			float width = camera->GetViewportWidth();
+			float height = camera->GetViewportHeight();
 
 			if (Utils::DragFloatStyle1("Width", RIGHT_COLUMN_WIDTH, width, 10.0f, 50.0f, 1920.0f, "%.0f"))
 			{
-				camera.SetViewportWidth(width);
+				camera->SetViewportWidth(width);
 				// m_RuntimeCameraUpdateCallback();
 			}
 
 			if (Utils::DragFloatStyle1("Height", RIGHT_COLUMN_WIDTH, height, 10.0f, 50.0f, 1080.0f, "%.0f"))
 			{
-				camera.SetViewportHeight(height);
+				camera->SetViewportHeight(height);
 				// m_RuntimeCameraUpdateCallback();
 			}
 		}
 
 		// Clear Flags
 		const char* clearFlagStrings[] = { "Color", "Skybox" };
-		const char* currentClearFlagStrings = clearFlagStrings[(int)camera.GetClearFlagType()];
+		const char* currentClearFlagStrings = clearFlagStrings[(int)camera->GetClearFlagType()];
 		ImGui::Columns(2);
 		ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - RIGHT_COLUMN_WIDTH);
 		ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
@@ -496,7 +496,7 @@ namespace NL
 				if (ImGui::Selectable(clearFlagStrings[i], isSelected))
 				{
 					currentClearFlagStrings = clearFlagStrings[i];
-					camera.SetClearFlagType((Camera::ClearFlagType)i);
+					camera->SetClearFlagType((Camera::ClearFlagType)i);
 				}
 			}
 			ImGui::EndCombo();
@@ -504,7 +504,7 @@ namespace NL
 		ImGui::PopItemWidth();
 		ImGui::Columns(1);
 
-		if (camera.GetClearFlagType() == Camera::ClearFlagType::Color)
+		if (camera->GetClearFlagType() == Camera::ClearFlagType::Color)
 		{
 			/*if (ImGui::TreeNode("Clear Color"))
 			{

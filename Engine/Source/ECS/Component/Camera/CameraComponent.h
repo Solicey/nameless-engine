@@ -13,8 +13,8 @@ namespace NL
 	class CameraComponent : public ComponentBase
 	{
 	public:
-		CameraComponent() = default;
-		CameraComponent(const CameraComponent&) = default;
+		CameraComponent() { _Camera = CreateRef<Camera>(); }
+		CameraComponent(const CameraComponent& comp)  : _Camera(CreateRef<Camera>(*comp._Camera.get())), FixedAspectRatio(comp.FixedAspectRatio), ClearColor(comp.ClearColor) {}
 
 		void LoadGizmosModel(int entityId)
 		{
@@ -24,7 +24,7 @@ namespace NL
 		bool FixedAspectRatio = false;
 		nlm::vec4 ClearColor = nlm::vec4(0.192f, 0.302f, 0.475f, 1.0f);
 
-		Camera mCamera;
+		Ref<Camera> _Camera;
 		Ref<Model> Gizmos = nullptr;
 	};
 }

@@ -11,10 +11,10 @@ namespace NL
 
 		virtual void OnStartRuntime() override;
 		virtual void OnStopRuntime(Scene* editorScene) override;
-		virtual void OnUpdateRuntime(TimeStep ts, Entity cameraEntity) override;
+		virtual void OnUpdateRuntime(TimeStep ts) override;
 
 		virtual void OnStartEditor() override;
-		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity settings) override;
+		virtual void OnUpdateEditor(TimeStep ts) override;
 
 	private:
 

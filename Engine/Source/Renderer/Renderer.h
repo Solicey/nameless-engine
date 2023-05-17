@@ -37,9 +37,8 @@ namespace NL
 	class Renderer
 	{
 	public:
-		static void BeginScene(OrthographicCamera& camera);
-		static void BeginScene(EditorCamera& camera);
-		static void BeginScene(Camera& camera, const nlm::mat4& transform, const nlm::vec3& position);
+		static void SetUniformBuffer(Ref<EditorCamera> camera);
+		static void SetUniformBuffer(Ref<Camera> camera, const nlm::mat4& transform, const nlm::vec3& position);
 		static void EndScene();
 
 		static void Submit(

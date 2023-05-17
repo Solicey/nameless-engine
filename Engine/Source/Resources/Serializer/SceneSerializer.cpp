@@ -280,7 +280,7 @@ namespace NL
 				auto& comp = deserializedEntity.AddComponent<CameraComponent>();
 				comp.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
 				comp.ClearColor = cameraComponent["ClearColor"].as<nlm::vec4>();
-				comp.mCamera = Camera(
+				comp._Camera = CreateRef<Camera>(
 					cameraComponent["ProjectionType"].as<int>(),
 					cameraComponent["PerspFOV"].as<float>(),
 					cameraComponent["PerspNear"].as<float>(),
@@ -522,17 +522,17 @@ namespace NL
 			out << YAML::Key << "FixedAspectRatio" << YAML::Value << comp.FixedAspectRatio;
 			out << YAML::Key << "ClearColor" << YAML::Value << comp.ClearColor;
 
-			auto& cam = comp.mCamera;
-			out << YAML::Key << "ProjectionType" << YAML::Value << (int)cam.GetProjectionType();
-			out << YAML::Key << "OrthoSize" << YAML::Value << cam.GetOrthographicSize();
-			out << YAML::Key << "OrthoFar" << YAML::Value << cam.GetOrthographicFar();
-			out << YAML::Key << "OrthoNear" << YAML::Value << cam.GetOrthographicNear();
-			out << YAML::Key << "PerspFOV" << YAML::Value << cam.GetPerspectiveFOV();
-			out << YAML::Key << "PerspFar" << YAML::Value << cam.GetPerspectiveFar();
-			out << YAML::Key << "PerspNear" << YAML::Value << cam.GetPerspectiveNear();
-			out << YAML::Key << "ViewportWidth" << YAML::Value << cam.GetViewportWidth();
-			out << YAML::Key << "ViewportHeight" << YAML::Value << cam.GetViewportHeight();
-			out << YAML::Key << "ClearFlagType" << YAML::Value << (int)cam.GetClearFlagType();
+			auto& cam = comp._Camera;
+			out << YAML::Key << "ProjectionType" << YAML::Value << (int)cam->GetProjectionType();
+			out << YAML::Key << "OrthoSize" << YAML::Value << cam->GetOrthographicSize();
+			out << YAML::Key << "OrthoFar" << YAML::Value << cam->GetOrthographicFar();
+			out << YAML::Key << "OrthoNear" << YAML::Value << cam->GetOrthographicNear();
+			out << YAML::Key << "PerspFOV" << YAML::Value << cam->GetPerspectiveFOV();
+			out << YAML::Key << "PerspFar" << YAML::Value << cam->GetPerspectiveFar();
+			out << YAML::Key << "PerspNear" << YAML::Value << cam->GetPerspectiveNear();
+			out << YAML::Key << "ViewportWidth" << YAML::Value << cam->GetViewportWidth();
+			out << YAML::Key << "ViewportHeight" << YAML::Value << cam->GetViewportHeight();
+			out << YAML::Key << "ClearFlagType" << YAML::Value << (int)cam->GetClearFlagType();
 
 			out << YAML::EndMap; // CameraComponent
 		}
