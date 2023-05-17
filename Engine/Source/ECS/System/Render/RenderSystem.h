@@ -13,14 +13,20 @@ namespace NL
 
 		virtual void OnStartRuntime() override;
 		virtual void OnStopRuntime(Scene* editorScene) override;
-		virtual void OnUpdateRuntime(TimeStep ts, Entity cameraEntity) override;
+		virtual void OnUpdateRuntime(TimeStep ts) override;
 
 		virtual void OnStartEditor() override;
-		virtual void OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity) override;
+		virtual void OnUpdateEditor(TimeStep ts) override;
 
 	private:
-		void UpdateParticleSystem(Entity selectedEntity = {});
-		void LightPreparation(PointLightShadingData *pointLightDatas, DirLightShadingData *dirLightDatas, Entity *pointEntities, Entity *dirEntities);
+		void UpdateParticleSystem();
+		void DrawModel(const Ref<Model>& model, const nlm::mat4& transform, int entityId = -1, const Ref<Shader>& shader = nullptr);
+		void DrawSprite(const Ref<Shader>& shader,
+			const Ref<Texture2D>& texture,
+			const nlm::mat4& transform,
+			const nlm::vec4& color,
+			SpriteCameraReaction camReact,
+			int entityId);
 
 	private:
 		// Ref<Shader> m_GrayScaleShader;

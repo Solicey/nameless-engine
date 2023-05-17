@@ -1,6 +1,7 @@
 // nlsl template shader file
 
 #use model
+#lit 4
 
 #prop
 
@@ -25,10 +26,12 @@ layout(std140, binding = 0) uniform Camera
 	mat4 u_View;
 	mat4 u_Projection;
 	vec3 u_CameraPosition;
+	float u_Near;
+	float u_Far;
 };
 
 uniform mat4 u_Transform;
-uniform mat4 u_Normal;
+uniform mat4 u_NormalMatrix;
 
 layout (location = 0) out vec3 v_Position;
 layout (location = 1) out vec2 v_TexCoord;
@@ -38,7 +41,7 @@ void main()
 {
 	v_Position = vec3(u_Transform * vec4(a_Position, 1.0));
 	v_TexCoord = a_TexCoord;
-	v_Normal = vec3(u_Normal * vec4(a_Normal, 0.0));
+	v_Normal = vec3(u_NormalMatrix * vec4(a_Normal, 0.0));
 	gl_Position = u_Projection * u_View * u_Transform * vec4(a_Position, 1.0);
 }
 
@@ -51,20 +54,20 @@ layout (location = 0) in vec3 v_Position;
 layout (location = 1) in vec2 v_TexCoord;
 layout (location = 2) in vec3 v_Normal;
 
-layout (location = 0) out vec4 color;
-layout (location = 1) out int color2;
-layout (location = 2) out vec4 color3;
+layout (location = 0) out vec4 f_Color;
+layout (location = 1) out int f_EntityId;
 
 layout(std140, binding = 0) uniform Camera
 {
 	mat4 u_View;
 	mat4 u_Projection;
 	vec3 u_CameraPosition;
+	float u_Near;
+	float u_Far;
 };
 
 // Object Color
 uniform vec3 u_Color;
-uniform bool u_IsSelected;
 uniform int u_EntityId;
 uniform float u_AmbientStrength;
 uniform float u_SpecularStrength;
@@ -96,18 +99,15 @@ void main()
 		vec3 specular = u_SpecularStrength * spec * u_DirLights[0].Color;
 
 		vec3 result = (ambient + diffuse + specular) * u_Color;
-		color = vec4(result, 1.0);
+		f_Color = vec4(result, 1.0);
 	}
 	else
 	{
-		color = vec4(u_Color, 1.0);
+		f_Color = vec4(u_Color, 1.0);
 	}
 
 	// color = vec4(1, 1, 1, 1.0);
 
 	// Dont Modify
-	color2 = u_EntityId;
-	color3 = vec4(0.1, 0.1, 0.1, 1);
-	if (u_IsSelected)
-		color3 = vec4(1, 1, 1, 1);
+	f_EntityId = u_EntityId;
 }			

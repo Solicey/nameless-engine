@@ -14,6 +14,8 @@ layout(std140, binding = 0) uniform Camera
 	mat4 u_View;
 	mat4 u_Projection;
 	vec3 u_CameraPosition;
+	float u_Near;
+	float u_Far;
 };
 
 uniform mat4 u_Transform;
@@ -32,15 +34,13 @@ void main()
 
 layout (location = 0) in vec3 v_TexCoords;
 
-layout (location = 0) out vec4 color;
-layout (location = 1) out int color2;
-layout (location = 2) out vec4 color3;
+layout (location = 0) out vec4 f_Color;
+layout (location = 1) out int f_EntityId;
 
 uniform samplerCube u_Skybox;
 			
 void main()
 {
-	color = texture(u_Skybox, v_TexCoords).rgba;
-	color2 = -1;
-	color3 = vec4(0.1, 0.1, 0.1, 1);
+	f_Color = texture(u_Skybox, v_TexCoords).rgba;
+	f_EntityId = -1;
 }			

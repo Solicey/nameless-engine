@@ -22,6 +22,8 @@ namespace NL
 
 		virtual void ClearAttachment(uint32_t attachmentIndex, int value) override;
 
+		virtual void ClearAttachment(uint32_t attachmentIndex, const nlm::vec4& color) override;
+
 		virtual const FramebufferSpecification& GetSpecification() const override;
 
 		virtual uint32_t GetRendererID() const override;
@@ -33,6 +35,8 @@ namespace NL
 		virtual void ColorBlit(uint32_t attachmentIndex, Ref<Framebuffer>& dst) override;
 
 		virtual void ColorBlit(uint32_t srcAttachmentIndex, Ref<Framebuffer>& dst, uint32_t dstAttachmentIndex) override;
+
+		virtual int GetColorAttachmentsCount() const override { return m_ColorAttachments.size(); }
 
 	private:
 		/*

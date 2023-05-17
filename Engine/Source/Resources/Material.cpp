@@ -39,7 +39,7 @@ namespace NL
 	{
 	}
 
-	void Material::DeleteTexturesReference()
+	void Material::DeleteTexturesAndShadersReference()
 	{
 		NL_ENGINE_INFO("Material {0} Deleted!", m_Name);
 		for (auto& item : m_TextureMap)
@@ -55,6 +55,9 @@ namespace NL
 			item.second.reset();
 			Library<Texture2D>::GetInstance().Delete(path);
 		}
+
+		m_Shader.reset();
+		Library<Shader>::GetInstance().Delete(m_ShaderName);
 	}
 
 	void Material::ReplaceTexture(const std::string& name, Ref<Texture2D> texture)
@@ -97,6 +100,12 @@ namespace NL
 
 	void Material::LoadShaderAndUpdateProps(const std::string name)
 	{
+		if (m_Shader != nullptr)
+		{
+			m_Shader.reset();
+			Library<Shader>::GetInstance().Delete(m_ShaderName);
+		}
+
 		// Load default shader
 		// NL_ENGINE_TRACE("Material init: {0}", Library<Shader>::GetInstance().GetDefaultShaderName());
 		m_ShaderName = name;
@@ -134,6 +143,10 @@ namespace NL
 
 			case ShaderUniformType::Float:
 				prop.Value = 0.0f;
+				break;
+
+			case ShaderUniformType::Int:
+				prop.Value = 0;
 				break;
 
 			default:

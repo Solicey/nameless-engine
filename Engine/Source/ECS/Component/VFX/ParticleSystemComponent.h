@@ -37,7 +37,7 @@ namespace NL
 		ParticleSystemComponent(const ParticleSystemComponent& comp);
 		void Init();
 		void UpdateShaderProperties(const std::string& shaderName);
-		void DeleteTexturesReference();
+		void DeleteMaterialsReference();
 
 	public:
 		Ref<TransformFeedback>	TFB[2];

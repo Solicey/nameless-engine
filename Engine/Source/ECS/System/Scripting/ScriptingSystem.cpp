@@ -25,7 +25,7 @@ namespace NL
 		// OnUpdateEditor will handle the instantiate
 	}
 
-	void ScriptingSystem::OnUpdateRuntime(TimeStep ts, Entity cameraEntity)
+	void ScriptingSystem::OnUpdateRuntime(TimeStep ts)
 	{
 		if (m_Scene->IsPaused())
 			return;
@@ -69,7 +69,7 @@ namespace NL
 		}
 	}
 
-	void ScriptingSystem::OnUpdateEditor(TimeStep ts, EditorCamera& camera, Entity selectedEntity)
+	void ScriptingSystem::OnUpdateEditor(TimeStep ts)
 	{
 		auto view = m_Scene->Registry.view<ScriptComponent>();
 		for (auto e : view)

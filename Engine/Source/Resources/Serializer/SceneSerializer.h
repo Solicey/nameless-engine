@@ -13,8 +13,8 @@ namespace NL
 	public:
 		SceneSerializer(const Ref<Scene>& scene) : m_Scene(scene) {}
 
-		void Serialize(const std::string& path, const std::unordered_map<std::string, int>& customInt);
-		bool Deserialize(const std::string& path, std::unordered_map<std::string, int>& customInt);
+		void Serialize(const std::string& path);
+		bool Deserialize(const std::string& path);
 
 	private:
 		void SerializeEntity(YAML::Emitter& out, Entity entity);

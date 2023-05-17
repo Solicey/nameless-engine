@@ -25,6 +25,7 @@ namespace NL
 				return "Default.glsl";
 			return "";
 		}
+		void Delete(const std::string& shaderName);
 
 	private:
 		std::filesystem::path m_ShadersFolder;

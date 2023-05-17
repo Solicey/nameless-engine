@@ -30,14 +30,14 @@ namespace NL
 		//Pass2 = Library<Shader>::GetInstance().Fetch("ParticleSprite.glsl");
 		//Tex = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Textures/DontModify/DefaultParticle.png");
 
-		Prop.LauncherNum = 10000;
+		Prop.LauncherNum = 10;
 		Prop.SpawnAreaShape = ParticleSpawnAreaShape::Circle;
 		Prop.SpawnPositionDistribution = ParticleSpawnDistribution::Uniform;
 		Prop.MinVelocity = nlm::vec3(0.0f, 0.2f, 0.0f);
 		Prop.MaxVelocity = nlm::vec3(0.0f, 2.0f, 0.0f);
 		Prop.MaxTotalLifetime = 5;
 		Prop.MinTotalLifetime = 3;
-		Prop.SpawnAreaRadius = 200;
+		Prop.SpawnAreaRadius = 2;
 		Prop.InitSize = 1;
 		Prop.InitColor = nlm::vec4(1.0f);
 
@@ -180,12 +180,12 @@ namespace NL
 			Pass2->LoadShaderAndUpdateProps(shaderName);
 	}
 
-	void ParticleSystemComponent::DeleteTexturesReference()
+	void ParticleSystemComponent::DeleteMaterialsReference()
 	{
 		if (Pass1 != nullptr)
-			Pass1->DeleteTexturesReference();
+			Pass1->DeleteTexturesAndShadersReference();
 		if (Pass2 != nullptr)
-			Pass2->DeleteTexturesReference();
+			Pass2->DeleteTexturesAndShadersReference();
 	}
 
 }

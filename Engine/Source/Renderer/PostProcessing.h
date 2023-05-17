@@ -1,9 +1,11 @@
 #pragma once
 
 #include "Core/Misc/PtrWrapper.h"
+#include "Renderer/Renderer.h"
 #include "Renderer/Framebuffer.h"
 #include "Renderer/VertexArray.h"
 #include "Resources/Texture.h"
+#include "Resources/Material.h"
 
 #include <vector>
 
@@ -19,7 +21,8 @@ namespace NL
 	class PostProcessing
 	{
 	public:
-		virtual uint32_t ExecutePostProcessingQueue(const std::vector<PostProcessingType>& queue, Ref<Framebuffer>& srcFramebuffer) = 0;
+		// virtual uint32_t ExecutePostProcessingQueue(const std::vector<PostProcessingType>& queue, Ref<Framebuffer>& srcFramebuffer) = 0;
+		virtual uint32_t ExecutePostProcessingQueue(const std::vector<Ref<Material>>& queue, Ref<Framebuffer>& srcFramebuffer, int entityId, const std::vector<PointLightShadingData>& points, const std::vector<DirLightShadingData>& dirs) = 0;
 
 		static Ref<PostProcessing> Create();
 

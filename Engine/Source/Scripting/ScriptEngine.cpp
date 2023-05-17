@@ -229,7 +229,7 @@ namespace NL
 			Ref<ScriptInstance> instance = CreateRef<ScriptInstance>(m_EntityClasses[comp.ClassName], entity);
 			m_EntityInstances[entityID] = instance;
 
-			// Copy 
+			// DuplicateScene 
 			if (m_EntityScriptFieldInstances.find(entityID) != m_EntityScriptFieldInstances.end())
 			{
 				const ScriptFieldInstances& fieldInstances = m_EntityScriptFieldInstances.at(entityID);

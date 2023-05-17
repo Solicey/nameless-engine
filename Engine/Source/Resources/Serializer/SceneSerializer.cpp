@@ -137,17 +137,29 @@ namespace NL
 		fieldInstance.SetValue(data);                  \
 		break;                                         \
 	}
+
+#define WRITE_SHADER_PROP(id) \
+	case id:		\
+		out << YAML::Key << "Value" << YAML::Value << std::get<id>(prop.Value); \
+		break;
+
+#define READ_SHADER_PROP(PropType, Type)			\
+	case ShaderUniformType::PropType:				\
+	{												\
+		newProp.Value = prop["Value"].as<Type>();	\
+		break;										\
+	}												
 {
-	void SceneSerializer::Serialize(const std::string& path, const std::unordered_map<std::string, int>& customInt)
+	void SceneSerializer::Serialize(const std::string& path)
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene" << YAML::Value << "Untitled";
 
-		for (auto& pair : customInt)
+		/*for (auto& pair : customInt)
 		{
 			out << YAML::Key << pair.first << YAML::Value << pair.second;
-		}
+		}*/
 
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 		m_Scene->Registry.each([&](auto entityID)
@@ -168,7 +180,7 @@ namespace NL
 		fout << out.c_str();
 	}
 
-	bool SceneSerializer::Deserialize(const std::string& path, std::unordered_map<std::string, int>& customInt)
+	bool SceneSerializer::Deserialize(const std::string& path)
 	{
 		YAML::Node data;
 		try
@@ -186,10 +198,10 @@ namespace NL
 		std::string sceneName = data["Scene"].as<std::string>();
 		NL_ENGINE_TRACE("Deserializing scene '{0}'", sceneName);
 
-		for (auto& pair : customInt)
+		/*for (auto& pair : customInt)
 		{
 			pair.second = data[pair.first].as<int>();
-		}
+		}*/
 
 		auto entities = data["Entities"];
 		if (!entities)
@@ -212,6 +224,17 @@ namespace NL
 				comp.Translation = transformComponent["Translation"].as<nlm::vec3>();
 				comp.Rotation = transformComponent["Rotation"].as<nlm::vec3>();
 				comp.Scale = transformComponent["Scale"].as<nlm::vec3>();
+			}
+
+			auto settingsComponent = entity["SettingsComponent"];
+			if (settingsComponent)
+			{
+				auto& comp = deserializedEntity.AddComponent<SettingsComponent>();
+				comp.AntiAliasingType = (AntiAliasingType)settingsComponent["AntiAliasingType"].as<int>();
+				comp.EditorCameraClearFlag = (Camera::ClearFlagType)settingsComponent["EditorCameraClearFlag"].as<int>();
+				comp.MSAASamples = settingsComponent["MSAASamples"].as<int>();
+				comp.ShowGizmos = settingsComponent["ShowGizmos"].as<bool>();
+				comp.RenderMode = (RenderMode)settingsComponent["RenderMode"].as<int>();
 			}
 
 			// Model
@@ -269,7 +292,7 @@ namespace NL
 				auto& comp = deserializedEntity.AddComponent<CameraComponent>();
 				comp.FixedAspectRatio = cameraComponent["FixedAspectRatio"].as<bool>();
 				comp.ClearColor = cameraComponent["ClearColor"].as<nlm::vec4>();
-				comp.mCamera = Camera(
+				comp._Camera = CreateRef<Camera>(
 					cameraComponent["ProjectionType"].as<int>(),
 					cameraComponent["PerspFOV"].as<float>(),
 					cameraComponent["PerspNear"].as<float>(),
@@ -281,6 +304,26 @@ namespace NL
 					cameraComponent["ViewportHeight"].as<uint32_t>(),
 					cameraComponent["ClearFlagType"].as<int>()
 				);
+			}
+
+			auto postProcessingComponent = entity["PostProcessingComponent"];
+			if (postProcessingComponent)
+			{
+				auto& comp = deserializedEntity.AddComponent<PostProcessingComponent>();
+				auto mats = postProcessingComponent["Materials"];
+				for (auto mat : mats)
+				{
+					Ref<Material> material = CreateRef<Material>(mat["ShaderName"].as<std::string>());
+
+					auto props = mat["ShaderProperties"];
+					if (props)
+					{
+						auto& properties = material->GetShaderPropertiesNotConst();
+						DeserializeShaderProperties(props, properties, material);
+					}
+
+					comp.Queue.push_back(material);
+				}
 			}
 
 			auto lightComponent = entity["LightComponent"];
@@ -402,6 +445,21 @@ namespace NL
 			out << YAML::EndMap; // TransformComponent
 		}
 
+		if (entity.HasComponent<SettingsComponent>())
+		{
+			out << YAML::Key << "SettingsComponent";
+			out << YAML::BeginMap; // SettingsComponent
+
+			auto& comp = entity.GetComponent<SettingsComponent>();
+			out << YAML::Key << "AntiAliasingType" << YAML::Value << (int)comp.AntiAliasingType;
+			out << YAML::Key << "EditorCameraClearFlag" << YAML::Value << (int)comp.EditorCameraClearFlag;
+			out << YAML::Key << "MSAASamples" << YAML::Value << comp.MSAASamples;
+			out << YAML::Key << "ShowGizmos" << YAML::Value << comp.ShowGizmos;
+			out << YAML::Key << "RenderMode" << YAML::Value << (int)comp.RenderMode;
+
+			out << YAML::EndMap; // SettingsComponent
+		}
+
 		if (entity.HasComponent<ModelRendererComponent>())
 		{
 			out << YAML::Key << "ModelRendererComponent";
@@ -476,19 +534,44 @@ namespace NL
 			out << YAML::Key << "FixedAspectRatio" << YAML::Value << comp.FixedAspectRatio;
 			out << YAML::Key << "ClearColor" << YAML::Value << comp.ClearColor;
 
-			auto& cam = comp.mCamera;
-			out << YAML::Key << "ProjectionType" << YAML::Value << (int)cam.GetProjectionType();
-			out << YAML::Key << "OrthoSize" << YAML::Value << cam.GetOrthographicSize();
-			out << YAML::Key << "OrthoFar" << YAML::Value << cam.GetOrthographicFar();
-			out << YAML::Key << "OrthoNear" << YAML::Value << cam.GetOrthographicNear();
-			out << YAML::Key << "PerspFOV" << YAML::Value << cam.GetPerspectiveFOV();
-			out << YAML::Key << "PerspFar" << YAML::Value << cam.GetPerspectiveFar();
-			out << YAML::Key << "PerspNear" << YAML::Value << cam.GetPerspectiveNear();
-			out << YAML::Key << "ViewportWidth" << YAML::Value << cam.GetViewportWidth();
-			out << YAML::Key << "ViewportHeight" << YAML::Value << cam.GetViewportHeight();
-			out << YAML::Key << "ClearFlagType" << YAML::Value << (int)cam.GetClearFlagType();
+			auto& cam = comp._Camera;
+			out << YAML::Key << "ProjectionType" << YAML::Value << (int)cam->GetProjectionType();
+			out << YAML::Key << "OrthoSize" << YAML::Value << cam->GetOrthographicSize();
+			out << YAML::Key << "OrthoFar" << YAML::Value << cam->GetOrthographicFar();
+			out << YAML::Key << "OrthoNear" << YAML::Value << cam->GetOrthographicNear();
+			out << YAML::Key << "PerspFOV" << YAML::Value << cam->GetPerspectiveFOV();
+			out << YAML::Key << "PerspFar" << YAML::Value << cam->GetPerspectiveFar();
+			out << YAML::Key << "PerspNear" << YAML::Value << cam->GetPerspectiveNear();
+			out << YAML::Key << "ViewportWidth" << YAML::Value << cam->GetViewportWidth();
+			out << YAML::Key << "ViewportHeight" << YAML::Value << cam->GetViewportHeight();
+			out << YAML::Key << "ClearFlagType" << YAML::Value << (int)cam->GetClearFlagType();
 
 			out << YAML::EndMap; // CameraComponent
+		}
+
+		if (entity.HasComponent<PostProcessingComponent>())
+		{
+			out << YAML::Key << "PostProcessingComponent";
+			out << YAML::BeginMap; // PostProcessingComponent
+
+			auto& comp = entity.GetComponent<PostProcessingComponent>();
+
+			out << YAML::Key << "Materials" << YAML::Value << YAML::BeginSeq; // Materials
+			for (auto& mat : comp.Queue)
+			{
+				out << YAML::BeginMap; // Material
+
+				out << YAML::Key << "ShaderName" << YAML::Value << mat->GetShaderName();
+
+				out << YAML::Key << "ShaderProperties" << YAML::Value << YAML::BeginSeq; // ShaderProperties
+				SerializeShaderProperties(out, mat);
+				out << YAML::EndSeq; // ShaderProperties
+
+				out << YAML::EndMap; // Material
+			}
+			out << YAML::EndSeq; // Materials
+
+			out << YAML::EndMap; // PostProcessingComponent
 		}
 
 		// Light Component
@@ -611,15 +694,10 @@ namespace NL
 			// variant TODO
 			switch (index)
 			{
-			case 0:		// std::string
-				out << YAML::Key << "Value" << YAML::Value << std::get<0>(prop.Value);
-				break;
-			case 1:		// nlm::vec3
-				out << YAML::Key << "Value" << YAML::Value << std::get<1>(prop.Value);
-				break;
-			case 2:		// float
-				out << YAML::Key << "Value" << YAML::Value << std::get<2>(prop.Value);
-				break;
+			WRITE_SHADER_PROP(0)	// std::string
+			WRITE_SHADER_PROP(1)	// nlm::vec3
+			WRITE_SHADER_PROP(2)	// float
+			WRITE_SHADER_PROP(3)	// int
 			default:
 				break;
 			}
@@ -637,9 +715,6 @@ namespace NL
 			newProp.Name = prop["Name"].as<std::string>();
 			switch (newProp.Type)
 			{
-			case ShaderUniformType::Color3:
-				newProp.Value = prop["Value"].as<nlm::vec3>();
-				break;
 			case ShaderUniformType::Sampler2D:
 			{
 				newProp.Value = prop["Value"].as<std::string>();
@@ -655,11 +730,10 @@ namespace NL
 
 				break;
 			}
-			case ShaderUniformType::Float:
-			{
-				newProp.Value = prop["Value"].as<float>();
-				break;
-			}
+			READ_SHADER_PROP(Color3, nlm::vec3)
+			READ_SHADER_PROP(Float, float)
+			READ_SHADER_PROP(Int, int)
+			
 			default:
 				break;
 			}
@@ -685,6 +759,10 @@ namespace NL
 
 			case ShaderUniformType::Float:
 				prop.Value = 0.0f;
+				break;
+
+			case ShaderUniformType::Int:
+				prop.Value = 0;
 				break;
 
 			default:

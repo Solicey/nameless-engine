@@ -3,6 +3,7 @@
 #include "Resources/Libraries/Library.h"
 #include "Core/Misc/PathConfig.h"
 #include "Resources/Texture.h"
+#include <random>
 
 namespace NL
 {
@@ -13,6 +14,23 @@ namespace NL
 		Library(Singleton::token)
 		{
 			Add(m_DefaultTextureName, Texture2D::Create(1, 1));
+
+			// ssao noise texture generate
+			std::uniform_real_distribution<float> randomFloats(0.0, 1.0); 
+			std::default_random_engine generator;
+
+			std::vector<nlm::vec4> ssaoNoise;
+			for (int i = 0; i < 16; i++)
+			{
+				nlm::vec4 noise(
+					randomFloats(generator) * 2.0 - 1.0,
+					randomFloats(generator) * 2.0 - 1.0,
+					0.0, 0.0
+				);
+				ssaoNoise.push_back(noise);
+			}
+			
+			Add(m_SSAONoiseTextureName, Texture2D::Create(4, 4, ssaoNoise));
 		}
 
 		// Use this function instead of Add or Get 
@@ -32,6 +50,8 @@ namespace NL
 		}
 
 		const std::string& GetDefaultTextureName() const { return m_DefaultTextureName; }
+
+		const std::string& GetSSAONoiseTextureName() const { return m_SSAONoiseTextureName; }
 
 		void Delete(const std::string& texPath)
 		{
@@ -79,6 +99,7 @@ namespace NL
 
 	private:
 		const std::string& m_DefaultTextureName = "Default";
+		const std::string& m_SSAONoiseTextureName = "SSAO";
 	};
 
 	template <>

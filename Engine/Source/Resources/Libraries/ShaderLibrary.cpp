@@ -95,4 +95,23 @@ namespace NL
 		NL_ENGINE_WARN("Shader library failed to load shader {0}", name);
 		return nullptr;
 	}
+
+	void Library<Shader>::Delete(const std::string& shaderName)
+	{
+		if (Contains(shaderName))
+		{
+			int useCount = GetUseCount(shaderName);
+			if (useCount <= 1)
+			{
+				NL_ENGINE_TRACE("Shader {0} reference no more than 1, will be deleted!", shaderName);
+				Remove(shaderName);
+				//m_Library.erase(texPath);
+			}
+			else
+			{
+				NL_ENGINE_TRACE("Shader {0} reference count is {1}, will not be deleted!", shaderName, useCount);
+			}
+		}
+		NL_ENGINE_TRACE("Shader {0} not found in library!", shaderName);
+	}
 }

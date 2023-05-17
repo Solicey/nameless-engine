@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Misc/PtrWrapper.h"
+#include "Core/Math/Math.h"
 
 #include <initializer_list>
 #include <vector>
@@ -14,6 +15,9 @@ namespace NL
 		// Color
 		RGBA8,
 		RedInteger,
+		
+		// 
+		RGBA16F,
 
 		// Depth/stencil
 		Depth24Stencil8,
@@ -61,6 +65,7 @@ namespace NL
 		virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) = 0;
 
 		virtual void ClearAttachment(uint32_t attachmentIndex, int value) = 0;
+		virtual void ClearAttachment(uint32_t attachmentIndex, const nlm::vec4& color) = 0;
 		virtual const FramebufferSpecification& GetSpecification() const = 0;
 
 		virtual uint32_t GetRendererID() const = 0;
@@ -69,6 +74,7 @@ namespace NL
 
 		virtual void ColorBlit(uint32_t attachmentIndex, Ref<Framebuffer>& dst) = 0;
 		virtual void ColorBlit(uint32_t srcAttachmentIndex, Ref<Framebuffer>& dst, uint32_t dstAttachmentIndex) = 0;
+		virtual int GetColorAttachmentsCount() const = 0;
 
 		static Ref<Framebuffer> Create(const FramebufferSpecification& spec);
 	};

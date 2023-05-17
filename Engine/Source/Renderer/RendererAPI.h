@@ -73,6 +73,8 @@ namespace NL
 
 		virtual void BlendFunc(BlendFactor srcFactor, BlendFactor dstFactor) = 0;
 
+		virtual void EnableBlend(bool enable) = 0;
+
 		inline static API GetCurrent() { return s_API; }
 
 		static Scope<RendererAPI> Create();

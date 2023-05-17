@@ -30,8 +30,9 @@ layout (location = 0) out vec4 color;
 
 uniform int u_ScreenWidth;
 uniform int u_ScreenHeight;
-uniform sampler2D u_EntityTex;
+uniform int u_EntityId;
 uniform sampler2D u_ColorTex;
+uniform isampler2D u_EntityTex;
 
 float sobel_y[] =
 {
@@ -49,13 +50,22 @@ float sobel_x[] =
 			
 void main()
 {
+	/*int id = texture(u_EntityTex, v_TexCoords).r;
+	if (id == 0)
+		color = vec4(1, 1, 1, 1);
+	else color = vec4(0, 0, 0, 1);
+	return;*/
+
 	float conX = 0, conY = 0;
 	int k = 0;
 	for (int i = -1; i <= 1; i++)
 	{
 		for (int j = -1; j <= 1; j++)
 		{
-			float tmp = texture(u_EntityTex, v_TexCoords + vec2(1.0 * i / u_ScreenWidth, 1.0 * j / u_ScreenHeight)).r;
+			int id = texture(u_EntityTex, v_TexCoords + vec2(1.0 * i / u_ScreenWidth, 1.0 * j / u_ScreenHeight)).r;
+			float tmp = 0.1;
+			if (id == u_EntityId || u_EntityId == -1) 
+				tmp = 1.0;
 			conX += sobel_x[k] * tmp;
 			conY += sobel_y[k++] * tmp; 
 		}

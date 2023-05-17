@@ -49,29 +49,27 @@ namespace NL
         using EventCallbackFn = std::function<void(Event&)>;
         ScriptGlue::GetInstance().SetEventCallback(NL_BIND_EVENT_FN(EditorLayer::OnEvent));
 
-        // Multisample framebuffer Setup
-        UpdateFramebuffer();
-
-        // Framebuffer Setup
-        FramebufferSpecification spec;
-        spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::RGBA8 };
-        spec.Width = 1280;
-        spec.Height = 720;
-        m_Framebuffer = Framebuffer::Create(spec);
+        // Scene
+        m_EditorScene = CreateRef<Scene>();
 
         // Post-processing
         m_PostProcessing = PostProcessing::Create();
-        if (m_EditorCamera.IsRenderGizmos())
-            m_EditorPostProcessingQueue = { PostProcessingType::EditorOutline };
-        else m_EditorPostProcessingQueue.clear();
 
-		// m_EditorCamera = EditorCamera(Camera::ProjectionType::Orthographic, 10.0f, 1280, 720, 0.1f, 1000.0f);
-		m_EditorCamera = EditorCamera(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
-		m_EditorScene = CreateRef<Scene>();
+        // m_EditorCamera = EditorCamera(_Camera::ProjectionType::Orthographic, 10.0f, 1280, 720, 0.1f, 1000.0f);
+        m_EditorCamera = CreateRef<EditorCamera>(Camera::ProjectionType::Perspective, 45.0f, 1280, 720, 0.1f, 1000.0f);
+
+        // Settings (include framebuffer setup)
+        ResetSettingsEntityAfterSceneContextChanged(m_EditorScene);
+
+        // framebuffer Setup
+        // UpdateFramebuffer();  
+
+        // G-buffer Setup
+        // Albedo+Spec / EntityId / Position / Normal
 
         // Hierarchy
         m_HierarchyPanel = CreateRef<HierarchyPanel>(m_EditorScene);
-        m_HierarchyPanel->SetUpdateRuntimeCameraCallback([this]() { EditorLayer::UpdateRuntimeAspect(); });
+        m_HierarchyPanel->SetUpdateRuntimeCameraCallback([this]() { EditorLayer::UpdateRuntimeCameraInfo(); });
 
         // Icons
         m_PlayButton = Library<Texture2D>::GetInstance().Fetch(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/PlayButton.png");
@@ -89,54 +87,58 @@ namespace NL
 	void EditorLayer::OnUpdate(TimeStep ts)
 	{
         // Resize
-        if (FramebufferSpecification spec = m_MultisampledFramebuffer->GetSpecification();
+        if (FramebufferSpecification spec = m_MidFramebuffer->GetSpecification();
             m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
             (spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
         {
-            m_MultisampledFramebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+            m_MidFramebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
             m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-            // Camera Controller
-            m_EditorCamera.SetAspectRatio(m_ViewportSize.x, m_ViewportSize.y);
+            // _Camera Controller
+            m_EditorCamera->SetAspectRatio(m_ViewportSize.x, m_ViewportSize.y);
         }
 
-        // Update Runtime Camera. SHOULD BE OPTIMIZED BUT I DONT KNOW HOW TO DO THIS WITH CALLBACKS
+        // Update Runtime _Camera. SHOULD BE OPTIMIZED BUT I DONT KNOW HOW TO DO THIS WITH CALLBACKS
         if (!IsEditorMode())
         {
             // m_RuntimeScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-            UpdateRuntimeAspect();
+            UpdateRuntimeCameraInfo();
         }
 
         // Framebuffer preparation
-        m_MultisampledFramebuffer->Bind();
-
-        /*if (m_EditorCamera.GetClearFlagType() == Camera::ClearFlagType::Color)
+        m_MidFramebuffer->Bind();
+        /*if (m_EditorCamera.GetClearFlagType() == _Camera::ClearFlagType::Color)
             Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.75f });
-        else if (m_EditorCamera.GetClearFlagType() == Camera::ClearFlagType::Skybox)
+        else if (m_EditorCamera.GetClearFlagType() == _Camera::ClearFlagType::Skybox)
             Renderer::SetClearColor({ 0.0f, 0.0f, 0.0f, 0.0f });*/
-        Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 0.75f });
-
+        Renderer::SetClearColor({ 0, 0, 0, 1 });
         Renderer::Clear();
+        m_MidFramebuffer->Unbind();
 
-        m_MultisampledFramebuffer->Unbind();
-
-        // Clear entity ID attachment to -1
-        // m_MultisampledFramebuffer->ClearAttachment(0, 1);
-        m_MultisampledFramebuffer->ClearAttachment(1, -1);
+        // Temp
+        if (!IsEditorMode() && m_RuntimeCameraEntity != Entity())
+        {
+            auto& comp = m_RuntimeCameraEntity.GetComponent<CameraComponent>();
+            m_MidFramebuffer->ClearAttachment(0, comp.ClearColor);
+        }
+        else
+            m_MidFramebuffer->ClearAttachment(0, nlm::vec4(0.1f, 0.1f, 0.1f, 0.75));
+        m_MidFramebuffer->ClearAttachment(1, -1);
+        m_MidFramebuffer->ClearAttachment(2, nlm::vec4(0, 0, 0, 0));
 
 		//NL_TRACE("Delta Time: {0}s ({1}ms)", ts.GetSeconds(), ts.GetMilliseconds());
 
-        m_MultisampledFramebuffer->Bind();
+        m_MidFramebuffer->Bind();
         if (IsEditorMode())
         {
-            m_EditorScene->OnUpdateEditor(ts, m_EditorCamera, m_HierarchyPanel->GetSelectedEntity());
+            m_EditorScene->OnUpdateEditor(ts);
 
-            m_EditorCamera.OnUpdate(ts, m_ViewportHovered);
+            m_EditorCamera->OnUpdate(ts, m_ViewportHovered);
 
             // TODO: Get editor camera post-processing options.
         }
         else
         {
-            if (!m_RuntimeCameraEntity.HasComponent<CameraComponent>())
+            if (!m_RuntimeCameraEntity.HasComponent<CameraComponent>() || m_RuntimeCameraEntity == Entity())
             {
                 auto camView = m_RuntimeScene->Registry.view<CameraComponent>();
                 for (auto entity : camView)
@@ -146,15 +148,17 @@ namespace NL
                 }
             }
 
-            m_RuntimeScene->OnUpdateRuntime(ts, m_RuntimeCameraEntity, m_IsRuntimeViewportFocused);
+            m_RuntimeScene->OnUpdateRuntime(ts, m_IsRuntimeViewportFocused);
 
             // TODO: Get runtime camera post-processing options.
         }
-        m_MultisampledFramebuffer->Unbind();
+        m_MidFramebuffer->Unbind();
 
         // Color Blit 
-        m_MultisampledFramebuffer->ColorBlit(0, m_Framebuffer);
-        m_MultisampledFramebuffer->ColorBlit(2, m_Framebuffer);
+        m_MidFramebuffer->ColorBlit(0, m_Framebuffer);
+        m_MidFramebuffer->ColorBlit(1, m_Framebuffer);
+        m_MidFramebuffer->ColorBlit(2, m_Framebuffer);
+        m_MidFramebuffer->ColorBlit(3, m_Framebuffer);
 
         // Check Hovered Entity
         auto [mx, my] = ImGui::GetMousePos();
@@ -170,7 +174,6 @@ namespace NL
             if (IsEditorMode())
             {
                 // Blit
-                m_MultisampledFramebuffer->ColorBlit(1, m_Framebuffer);
                 int pixelData = m_Framebuffer->ReadPixel(1, mouseX, mouseY);
 
                 // NL_ENGINE_INFO("pixelData {0}", pixelData);
@@ -346,7 +349,7 @@ namespace NL
                     ImGui::PopStyleVar();
                 }
                 // Runtime but not focused
-                // Show Runtime Camera
+                // Show Runtime _Camera
                 else if (!m_IsRuntimeViewportFocused)
                 {
                     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
@@ -367,7 +370,7 @@ namespace NL
                                 if (!isSelected)
                                 {
                                     m_RuntimeCameraEntity = Entity(entity, m_RuntimeScene.get());
-                                    // UpdateRuntimeAspect();
+                                    // UpdateRuntimeCameraInfo();
                                 }
                             }
                         }
@@ -424,15 +427,16 @@ namespace NL
             m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
             m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
 
-
+            // Temp
+            bool showGizmos = m_Settings.GetComponent<SettingsComponent>().ShowGizmos;
             // Grid
-            if (IsEditorMode() && m_EditorCamera.IsRenderGizmos() && m_EditorCamera.GetClearFlagType() == Camera::ClearFlagType::Color)
+            if (IsEditorMode() && showGizmos && m_EditorCamera->GetClearFlagType() == Camera::ClearFlagType::Color)
             {
                 ImGuizmo::SetOrthographic(false);
                 ImGuizmo::SetDrawlist();
                 ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
-                const nlm::mat4& cameraProjection = m_EditorCamera.GetProjectionMatrix();
-                const nlm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
+                const nlm::mat4& cameraProjection = m_EditorCamera->GetProjectionMatrix();
+                const nlm::mat4 cameraView = m_EditorCamera->GetViewMatrix();
                 ImGuizmo::DrawGrid(nlm::value_ptr(cameraView), nlm::value_ptr(cameraProjection), nlm::value_ptr(nlm::mat4(1.0f)), 20.0f);
             }
             
@@ -458,16 +462,22 @@ namespace NL
                 // ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_RuntimeAspect.x, m_RuntimeAspect.y }, ImVec2{ 0 + dx, 1 - dy }, ImVec2{ 1 - dx, 0 + dy });
                 // 
                 // Bugs remain... Smaller viewport leading to lower graphic performances...
+                if (m_RuntimeCameraEntity.HasComponent<PostProcessingComponent>())
+                {
+                    auto& comp = m_RuntimeCameraEntity.GetComponent<PostProcessingComponent>();
+                    textureID = m_PostProcessing->ExecutePostProcessingQueue(comp.Queue, m_Framebuffer, m_HierarchyPanel->GetSelectedEntityId(), m_RuntimeScene->GetPointLightShadingDataNotConst(), m_RuntimeScene->GetDirLightShadingDataNotConst());
+                }
                 ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_RuntimeAspect.x, m_RuntimeAspect.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
             }
             else
             {
-                textureID = m_PostProcessing->ExecutePostProcessingQueue(m_EditorPostProcessingQueue, m_Framebuffer);
+                if (m_Settings.HasComponent<PostProcessingComponent>())
+                    textureID = m_PostProcessing->ExecutePostProcessingQueue(m_Settings.GetComponent<PostProcessingComponent>().Queue, m_Framebuffer, m_HierarchyPanel->GetSelectedEntityId(), m_EditorScene->GetPointLightShadingDataNotConst(), m_EditorScene->GetDirLightShadingDataNotConst());
                 ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
             }
 
             // Gizmos
-            if (IsEditorMode() && m_EditorCamera.IsRenderGizmos())
+            if (IsEditorMode() && showGizmos)
             {
                 Entity entitySelected = m_HierarchyPanel->GetSelectedEntity();
                 if (entitySelected && entitySelected.HasComponent<TransformComponent>())
@@ -477,8 +487,8 @@ namespace NL
                     ImGuizmo::SetRect(m_ViewportBounds[0].x, m_ViewportBounds[0].y, m_ViewportBounds[1].x - m_ViewportBounds[0].x, m_ViewportBounds[1].y - m_ViewportBounds[0].y);
 
                     // Editor camera
-                    const nlm::mat4& cameraProjection = m_EditorCamera.GetProjectionMatrix();
-                    const nlm::mat4 cameraView = m_EditorCamera.GetViewMatrix();
+                    const nlm::mat4& cameraProjection = m_EditorCamera->GetProjectionMatrix();
+                    const nlm::mat4 cameraView = m_EditorCamera->GetViewMatrix();
 
                     auto& component = entitySelected.GetComponent<TransformComponent>();
                     nlm::mat4 transform = component.GetTransform();
@@ -577,35 +587,108 @@ namespace NL
         {
             ImGui::Begin("Scene Settings");
 
+            auto& settings = m_Settings.GetComponent<SettingsComponent>();
+
+            bool hasRenderModeModified = false;
+            if (ImGui::TreeNode("Render Mode"))
+            {
+                if (ImGui::RadioButton("Forward", (settings.RenderMode == RenderMode::Forward)))
+                {
+                    settings.RenderMode = RenderMode::Forward;
+                    hasRenderModeModified = true;
+                }
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Deferred", (settings.RenderMode == RenderMode::Deferred)))
+                {
+                    settings.RenderMode = RenderMode::Deferred;
+                    settings.AntiAliasingType = AntiAliasingType::None;
+                    hasRenderModeModified = true;
+                }
+                ImGui::TreePop();
+            }
+            if (hasRenderModeModified)
+            {
+                UpdateFramebuffer();
+            }
+
+            // Post-processing
+            if (ImGui::TreeNode("Editor Camera Post-processing"))
+            {
+                PostProcessingComponent& comp = m_Settings.GetComponent<PostProcessingComponent>();
+                auto& queue = comp.Queue;
+
+                if (ImGui::BeginTabBar("Shader Pass", ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_FittingPolicyResizeDown))
+                {
+                    if (ImGui::TabItemButton("+", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip))
+                    {
+                        // Check if shader is nullptr in Post Processing
+                        queue.push_back(CreateRef<Material>());
+                    }
+
+                    for (int i = 0; i < queue.size();)
+                    {
+                        auto& mat = queue[i];
+                        bool open = true;
+                        std::string name = std::to_string(i) + "." + mat->GetShaderNameNoSuffix();
+                        if (ImGui::BeginTabItem(name.c_str(), &open, ImGuiTabItemFlags_None))
+                        {
+                            //ImGui::Text("This is the %d tab!", i);
+                            /*HierarchyPanel::DrawShaderCombo<PostProcessingComponent>(mat, mat->GetName(), m_HierarchyPanel->m_ShaderSelectOpen, [](auto& comp, const std::string& shaderName)
+                                {
+                                    PostProcessingComponent& postcomp = comp;
+                                    postcomp.UpdateShaderProperties(shaderName);
+                                }, ShaderUse::PostProcess, m_EditorScene, false);*/
+                            m_HierarchyPanel->DrawEditorCameraPostProcessShaderCombo(mat);
+                            ImGui::EndTabItem();
+                        }
+
+                        if (!open)
+                        {
+                            mat->DeleteTexturesAndShadersReference();
+                            queue.erase(queue.begin() + i);
+                        }
+                        else
+                            i++;
+                    }
+
+                    ImGui::EndTabBar();
+                }
+
+                ImGui::TreePop();
+            }
+
             // Anti-Aliasing
             bool hasAntiAliasModified = false;
             if (ImGui::TreeNode("Anti-aliasing"))
             {
-                if (ImGui::RadioButton("None", (m_AntiAliasingType == AntiAliasingType::None)))
+                if (ImGui::RadioButton("None", (settings.AntiAliasingType == AntiAliasingType::None)))
                 {
-                    m_AntiAliasingType = AntiAliasingType::None;
+                    settings.AntiAliasingType = AntiAliasingType::None;
                     hasAntiAliasModified = true;
                 }
-                ImGui::SameLine();
-                if (ImGui::RadioButton("2x MSAA", (m_AntiAliasingType == AntiAliasingType::MSAA && m_MSAASamples == 2)))
+                if (settings.RenderMode != RenderMode::Deferred)
                 {
-                    m_AntiAliasingType = AntiAliasingType::MSAA;
-                    m_MSAASamples = 2;
-                    hasAntiAliasModified = true;
-                }
-                ImGui::SameLine();
-                if (ImGui::RadioButton("4x MSAA", (m_AntiAliasingType == AntiAliasingType::MSAA && m_MSAASamples == 4)))
-                {
-                    m_AntiAliasingType = AntiAliasingType::MSAA;
-                    m_MSAASamples = 4;
-                    hasAntiAliasModified = true;
-                }
-                ImGui::SameLine();
-                if (ImGui::RadioButton("8x MSAA", (m_AntiAliasingType == AntiAliasingType::MSAA && m_MSAASamples == 8)))
-                {
-                    m_AntiAliasingType = AntiAliasingType::MSAA;
-                    m_MSAASamples = 8;
-                    hasAntiAliasModified = true;
+                    ImGui::SameLine();
+                    if (ImGui::RadioButton("2x MSAA", (settings.AntiAliasingType == AntiAliasingType::MSAA && settings.MSAASamples == 2)))
+                    {
+                        settings.AntiAliasingType = AntiAliasingType::MSAA;
+                        settings.MSAASamples = 2;
+                        hasAntiAliasModified = true;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::RadioButton("4x MSAA", (settings.AntiAliasingType == AntiAliasingType::MSAA && settings.MSAASamples == 4)))
+                    {
+                        settings.AntiAliasingType = AntiAliasingType::MSAA;
+                        settings.MSAASamples = 4;
+                        hasAntiAliasModified = true;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::RadioButton("8x MSAA", (settings.AntiAliasingType == AntiAliasingType::MSAA && settings.MSAASamples == 8)))
+                    {
+                        settings.AntiAliasingType = AntiAliasingType::MSAA;
+                        settings.MSAASamples = 8;
+                        hasAntiAliasModified = true;
+                    }
                 }
                 ImGui::TreePop();
             }
@@ -614,18 +697,20 @@ namespace NL
                 UpdateFramebuffer();
             }
 
-            // Editor Camera Clear Flag
+            // Editor _Camera Clear Flag
             if (ImGui::TreeNode("Clear Flag"))
             {
-                Camera::ClearFlagType type = m_EditorCamera.GetClearFlagType();
+                Camera::ClearFlagType type = settings.EditorCameraClearFlag;
                 if (ImGui::RadioButton("Color", (type == Camera::ClearFlagType::Color)))
                 {
-                    m_EditorCamera.SetClearFlagType(Camera::ClearFlagType::Color);
+                    settings.EditorCameraClearFlag = Camera::ClearFlagType::Color;
+                    m_EditorCamera->SetClearFlagType(settings.EditorCameraClearFlag);
                 }
                 ImGui::SameLine();
                 if (ImGui::RadioButton("Skybox", (type == Camera::ClearFlagType::Skybox)))
                 {
-                    m_EditorCamera.SetClearFlagType(Camera::ClearFlagType::Skybox);
+                    settings.EditorCameraClearFlag = Camera::ClearFlagType::Skybox;
+                    m_EditorCamera->SetClearFlagType(settings.EditorCameraClearFlag);
                 }
                 ImGui::TreePop();
             }
@@ -633,11 +718,11 @@ namespace NL
             // Editor Viewport Gizmos
             if (ImGui::TreeNode("Gizmos"))
             {
-                if (ImGui::Checkbox("Show Gizmos", &m_EditorCamera.GetRenderGizmosRef()))
+                if (ImGui::Checkbox("Show Gizmos", &settings.ShowGizmos))
                 {
-                    if (m_EditorCamera.IsRenderGizmos())
-                        m_EditorPostProcessingQueue = { PostProcessingType::EditorOutline };
-                    else m_EditorPostProcessingQueue.clear();
+                    /*if (m_EditorCamera.IsRenderGizmos())
+                        m_EditorPostProcessingQueue = { CreateRef<Material>("EditorOutline.glsl") };
+                    else m_EditorPostProcessingQueue.clear();*/
                 }
                 ImGui::TreePop();
             }
@@ -659,8 +744,8 @@ namespace NL
 	{
         if (m_ViewportHovered)
         {
-            // NL_ENGINE_INFO("Editor Camera Event");
-            m_EditorCamera.OnEvent(event);
+            // NL_ENGINE_INFO("Editor _Camera Event");
+            m_EditorCamera->OnEvent(event);
         }
 
 		EventDispatcher dispatcher(event);
@@ -680,6 +765,7 @@ namespace NL
 
         bool control = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
         bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift);
+        bool alt = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
         bool mouseRight = Input::IsMouseButtonPressed(Mouse::ButtonRight);
         switch (event.GetKeyCode())
         {
@@ -705,9 +791,9 @@ namespace NL
                 else
                     SaveScene();
             }
-            else
+            else if (shift)
             {
-                if (IsEditorMode() && (m_ViewportFocused || m_ViewportHovered))
+                if (IsEditorMode())
                     m_GuizmoType = ImGuizmo::OPERATION::SCALE;
             }
             break;
@@ -721,17 +807,20 @@ namespace NL
                     ScriptEngine::GetInstance().ReloadAssembly();
                 }
             }
-            else
+            else if (shift)
             {
-                if (IsEditorMode() && (m_ViewportFocused || m_ViewportHovered))
+                if (IsEditorMode())
                     m_GuizmoType = ImGuizmo::OPERATION::ROTATE;
             }
             break;
         }
         case Key::T:
         {
-            if (IsEditorMode() && (m_ViewportFocused || m_ViewportHovered))
-                m_GuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+            if (shift)
+            {
+                if (IsEditorMode())
+                    m_GuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+            }
             break;
         }
         // Focus
@@ -743,7 +832,7 @@ namespace NL
                 if (selectedEntity)
                 {
                     // Ought to have transform...
-                    m_EditorCamera.SetCenter(selectedEntity.GetComponent<TransformComponent>().Translation);
+                    m_EditorCamera->SetCenter(selectedEntity.GetComponent<TransformComponent>().Translation);
                 }
             }
             break;
@@ -755,6 +844,35 @@ namespace NL
                 m_IsRuntimeViewportFocused = false;
                 Application::GetInstance().ShowCursor();
                 // OnSceneStop();
+            }
+            break;
+        }
+        case Key::D:
+        {
+            if (shift)
+            {
+                Entity entity = m_HierarchyPanel->GetSelectedEntity();
+                if (entity != Entity())
+                {
+                    IsEditorMode() ? m_EditorScene->DestroyEntity(entity) : m_RuntimeScene->DestroyEntity(entity);
+                    m_HierarchyPanel->SetSelectedEntity(Entity());
+                }
+            }
+            else if (control)
+            {
+                Entity entity = m_HierarchyPanel->GetSelectedEntity();
+                if (entity != Entity())
+                {
+                    m_HierarchyPanel->SetSelectedEntity(IsEditorMode() ? m_EditorScene->DuplicateEntity(entity) : m_RuntimeScene->DuplicateEntity(entity));
+                }
+            }
+            break;
+        }
+        case Key::A:
+        {
+            if (shift)
+            {
+                m_HierarchyPanel->SetSelectedEntity(IsEditorMode() ? m_EditorScene->CreateEntity() : m_RuntimeScene->CreateEntity());
             }
             break;
         }
@@ -776,7 +894,7 @@ namespace NL
                 // Click a viewport entity
                 if (m_EntityHovered)
                 {
-                    NL_TRACE("Viewport select entity: {0}", m_EntityHovered.GetName());
+                    NL_TRACE("Viewport select entity: {0}, {1}", m_EntityHovered.GetName(), (uint32_t)m_EntityHovered);
                 }
             }
             else if (!IsEditorMode() && m_ViewportHovered && !m_IsRuntimeViewportFocused)
@@ -809,7 +927,7 @@ namespace NL
 
     bool EditorLayer::OnRuntimeCameraSwitched(RuntimeCameraSwitchedEvent& event)
     {
-        // NL_INFO("Runtime Camera Switch!");
+        // NL_INFO("Runtime _Camera Switch!");
 
         m_RuntimeCameraEntity = event.GetEntity();
 
@@ -819,13 +937,13 @@ namespace NL
     void EditorLayer::SerializeScene(Ref<Scene> scene, const std::string& path)
     {
         SceneSerializer serializer(scene);
-        std::unordered_map<std::string, int> sceneSettingsInt = {
+        /*std::unordered_map<std::string, int> sceneSettingsInt = {
             {"AntiAliasingType", (int)m_AntiAliasingType},
             {"MSAASamples", m_MSAASamples},
             {"EditorCameraClearFlag", (int)m_EditorCamera.GetClearFlagType()},
             {"ShowGizmos", m_EditorCamera.IsRenderGizmos() ? 1 : 0}
-        };
-        serializer.Serialize(path, sceneSettingsInt);
+        };*/
+        serializer.Serialize(path);
     }
 
     void EditorLayer::NewScene()
@@ -845,6 +963,7 @@ namespace NL
 
         // Switch Scene Context
         m_HierarchyPanel->SetSceneContext(m_EditorScene);
+        ResetSettingsEntityAfterSceneContextChanged(m_EditorScene);
 
         m_EditorScenePath = "";
 
@@ -878,13 +997,13 @@ namespace NL
 
         Ref<Scene> newScene = CreateRef<Scene>();
         SceneSerializer serializer(newScene);
-        std::unordered_map<std::string, int> sceneSettingsInt = {
+        /*std::unordered_map<std::string, int> sceneSettingsInt = {
             {"AntiAliasingType", (int)m_AntiAliasingType},
             {"MSAASamples", m_MSAASamples},
             {"EditorCameraClearFlag", (int)m_EditorCamera.GetClearFlagType()},
             {"ShowGizmos", m_EditorCamera.IsRenderGizmos() ? 1 : 0}
-        };
-        if (serializer.Deserialize(path, sceneSettingsInt))
+        };*/
+        if (serializer.Deserialize(path))
         {
             // if (m_EditorScene)
                // m_EditorScene->Registry.clear();
@@ -898,15 +1017,9 @@ namespace NL
 
             // Switch Scene Context
             m_HierarchyPanel->SetSceneContext(m_EditorScene);
+            ResetSettingsEntityAfterSceneContextChanged(m_EditorScene);
 
             Application::GetInstance().SetWindowTitle("Nameless Editor - " + path.substr(path.find_last_of("/\\") + 1));
-            
-            // Reset Scene Settings
-            m_AntiAliasingType = (AntiAliasingType)sceneSettingsInt.at("AntiAliasingType");
-            m_MSAASamples = sceneSettingsInt.at("MSAASamples");
-            m_EditorCamera.SetClearFlagType((Camera::ClearFlagType)sceneSettingsInt.at("EditorCameraClearFlag"));
-
-            m_EditorCamera.SetRenderGizmos(sceneSettingsInt.at("ShowGizmos"));
             
         }
     }
@@ -954,10 +1067,11 @@ namespace NL
     {
         m_ViewportMode = ViewportMode::Runtime;
 
-        m_RuntimeScene = Scene::Copy(m_EditorScene);
+        m_RuntimeScene = Scene::DuplicateScene(m_EditorScene);
         m_RuntimeScene->OnStartRuntime();
 
         m_HierarchyPanel->SetSceneContext(m_RuntimeScene);
+        ResetSettingsEntityAfterSceneContextChanged(m_RuntimeScene);
     }
     
     void EditorLayer::OnSceneStop()
@@ -971,39 +1085,87 @@ namespace NL
         m_RuntimeCameraEntity = {};
 
         m_HierarchyPanel->SetSceneContext(m_EditorScene);
+        ResetSettingsEntityAfterSceneContextChanged(m_EditorScene);
     }
 
-    void EditorLayer::UpdateRuntimeAspect()
+    void EditorLayer::UpdateRuntimeCameraInfo()
     {
-        if (this->m_RuntimeCameraEntity.HasComponent<CameraComponent>())
+        if (m_RuntimeCameraEntity.HasComponent<CameraComponent>())
         {
-            auto& cam = this->m_RuntimeCameraEntity.GetComponent<CameraComponent>();
+            auto& cam = m_RuntimeCameraEntity.GetComponent<CameraComponent>();
             if (cam.FixedAspectRatio)
             {
-                this->m_RuntimeAspect = nlm::vec2(cam.mCamera.GetViewportWidth(), cam.mCamera.GetViewportHeight());
+                this->m_RuntimeAspect = nlm::vec2(cam._Camera->GetViewportWidth(), cam._Camera->GetViewportHeight());
             }
             else
             {
                 this->m_RuntimeAspect = nlm::vec2((uint32_t)this->m_ViewportSize.x, (uint32_t)this->m_ViewportSize.y);
-                cam.mCamera.SetAspectRatio((uint32_t)this->m_ViewportSize.x, (uint32_t)this->m_ViewportSize.y);
+                cam._Camera->SetAspectRatio((uint32_t)this->m_ViewportSize.x, (uint32_t)this->m_ViewportSize.y);
             }
+
+            m_Settings.GetComponent<SettingsComponent>().RuntimeCameraID = m_RuntimeCameraEntity.GetID();
         }
     }
 
     void EditorLayer::UpdateFramebuffer()
     {
-        FramebufferSpecification msSpec;
-        msSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::Depth };
-        msSpec.Width = 1280;
-        msSpec.Height = 720;
-        if (m_AntiAliasingType == AntiAliasingType::None)
+        auto& settings = m_Settings.GetComponent<SettingsComponent>();
+        switch (settings.RenderMode)
         {
+        case RenderMode::Forward:
+        {
+            FramebufferSpecification msSpec;
+            msSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::Depth };
+            msSpec.Width = 1280;
+            msSpec.Height = 720;
+            if (settings.AntiAliasingType == AntiAliasingType::None)
+            {
+                msSpec.Samples = 1;
+            }
+            else if (settings.AntiAliasingType == AntiAliasingType::MSAA)
+            {
+                msSpec.Samples = settings.MSAASamples;
+            }
+            m_MidFramebuffer = Framebuffer::Create(msSpec);
+
             msSpec.Samples = 1;
+            m_Framebuffer = Framebuffer::Create(msSpec);
+
+            break;
         }
-        else if (m_AntiAliasingType == AntiAliasingType::MSAA)
+        case RenderMode::Deferred:
         {
-            msSpec.Samples = m_MSAASamples;
+            FramebufferSpecification msSpec;
+            msSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RedInteger, FramebufferTextureFormat::RGBA16F, FramebufferTextureFormat::RGBA16F, FramebufferTextureFormat::Depth };
+            msSpec.Width = 1280;
+            msSpec.Height = 720;
+            msSpec.Samples = 1;
+            m_MidFramebuffer = Framebuffer::Create(msSpec);
+            m_Framebuffer = Framebuffer::Create(msSpec);
+            break;
         }
-        m_MultisampledFramebuffer = Framebuffer::Create(msSpec);
+        default:
+            break;
+        }
+
     }
+
+    void EditorLayer::ResetSettingsEntityAfterSceneContextChanged(Ref<Scene>& scene)
+    {
+        m_Settings = scene->GetSettingsEntity();
+        if (m_Settings == Entity())
+        {
+            m_Settings = scene->CreateEntity(m_SettingsEntityName);
+            m_Settings.AddComponent<SettingsComponent>();
+            m_Settings.AddComponent<PostProcessingComponent>().Queue.push_back(CreateRef<Material>("EditorOutline.glsl"));
+        }
+
+        m_Settings.GetComponent<SettingsComponent>().EditorCamera = m_EditorCamera;
+        m_Settings.GetComponent<SettingsComponent>().RuntimeCameraID = m_RuntimeCameraEntity.GetID();
+        NL_ENGINE_INFO("Runtime Camera ID: {0}", m_RuntimeCameraEntity.GetID());
+        // Temp
+        m_EditorCamera->SetClearFlagType(m_Settings.GetComponent<SettingsComponent>().EditorCameraClearFlag);
+        UpdateFramebuffer();
+    }
+
 }

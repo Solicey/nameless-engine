@@ -3,7 +3,6 @@
 // Tmp
 #include "Camera/OrthographicCamera.h"
 #include "Camera/EditorCamera.h"
-
 #include "Core/Misc/PtrWrapper.h"
 #include "Resources/Shader.h"
 #include "Resources/Model.h"
@@ -12,8 +11,6 @@
 
 namespace NL
 {
-#define MAX_LIGHT_COUNT 4
-
 	enum class SpriteCameraReaction
 	{
 		Normal,
@@ -26,70 +23,31 @@ namespace NL
 		nlm::vec3 Position;
 		nlm::vec3 Color;
 		nlm::vec3 Attenuation;
-		bool IsValid = false;
+		uint32_t EntityId;
 	};
 
 	struct DirLightShadingData
 	{
+		nlm::vec3 Position;
 		nlm::vec3 Direction;
 		nlm::vec3 Color;
-		bool IsValid = false;
+		uint32_t EntityId;
 	};
 
 	class Renderer
 	{
 	public:
-		static void BeginScene(OrthographicCamera& camera);
-		static void BeginScene(EditorCamera& camera);
-		static void BeginScene(Camera& camera, const nlm::mat4& transform, const nlm::vec3& position);
-		static void EndScene();
-
-		static void Submit(
-			const Ref<VertexArray>& vertexArray,
-			const Ref<Material>& mat,
-			const nlm::mat4& transform = nlm::mat4(1.0f),
-			const std::vector<nlm::mat4>& finalMatrices = {}, 
-			int entityId = -1,
-			bool isSelected = false);
-
-		static void Submit(
-			const Ref<VertexArray>& vertexArray,
-			const Ref<Shader>& shader, 
-			const nlm::mat4& transform = nlm::mat4(1.0f));
-
-		static void DrawModel(const Ref<Model>& model, 
-			const Ref<Shader>& shader,
-			const nlm::mat4& transform);
-
-		static void DrawSprite(const Ref<Shader>& shader,
-			const Ref<Texture2D>& texture,
-			const nlm::mat4& transform,
-			const nlm::vec4& color,
-			SpriteCameraReaction camReact = SpriteCameraReaction::Normal,
-			int entityId = -1,
-			bool isSelected = false);
-
-		static void DrawModel(const Ref<Model>& model,
-			const nlm::mat4& transform,
-			int entityId,
-			bool isSelected);
+		static void SetUniformBuffer(Ref<EditorCamera> camera);
+		static void SetUniformBuffer(Ref<Camera> camera, const nlm::mat4& transform, const nlm::vec3& position);
 
 		// Bind shader first!
-		static void BindCustomShaderProperties(const Ref<Material>& mat);
+		static void BindCustomShaderProperties(const Ref<Material>& mat, int sampler2DStartIndex = 0);
 
 		static void OnWindowResize(unsigned int width, unsigned int height);
 
-		static void SetPointLightData(const PointLightShadingData data[MAX_LIGHT_COUNT])
-		{
-			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
-				s_PointLightDatas[i] = data[i];
-		}
+		// Bind shader first!
+		static void BindLightsData(const Ref<Shader>& shader, const std::vector<PointLightShadingData>& points, const std::vector<DirLightShadingData>& dirs);
 
-		static void SetDirLightData(const DirLightShadingData data[MAX_LIGHT_COUNT])
-		{
-			for (int i = 0; i < MAX_LIGHT_COUNT; i++)
-				s_DirLightDatas[i] = data[i];
-		}
 
 #pragma region Commands
 
@@ -159,6 +117,11 @@ namespace NL
 			s_RendererAPI->RasterizerDiscard(enable);
 		}
 
+		inline static void EnableBlend(bool enable)
+		{
+			s_RendererAPI->EnableBlend(enable);
+		}
+
 		/// <summary>
 		/// enable write into depth buffer
 		/// </summary>
@@ -183,9 +146,6 @@ namespace NL
 	private:
 		// static Scope<SceneData> s_SceneData;
 		static Scope<RendererAPI> s_RendererAPI;
-
-		static PointLightShadingData s_PointLightDatas[MAX_LIGHT_COUNT];
-		static DirLightShadingData s_DirLightDatas[MAX_LIGHT_COUNT];
 
 	};
 }

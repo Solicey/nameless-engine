@@ -9,7 +9,7 @@ namespace NL
 	{
 	public:
 		IdentityComponent() = default;
-		IdentityComponent(const IdentityComponent&) = default;
+		IdentityComponent(const IdentityComponent& comp) = default;
 		IdentityComponent(const ID& id, const std::string& name)
 			: ID(id), Name(name) {}
 

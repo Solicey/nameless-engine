@@ -1,8 +1,4 @@
 Scene: Untitled
-AntiAliasingType: 1
-MSAASamples: 4
-EditorCameraClearFlag: 0
-ShowGizmos: 1
 Entities:
   - ID: 10556544261542424117
     Name: Milky Way
@@ -58,11 +54,11 @@ Entities:
   - ID: 5188054474898580972
     Name: Camera
     TransformComponent:
-      Translation: [0, 0, 0]
+      Translation: [0, 0, -0.00857019424]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     CameraComponent:
-      FixedAspectRatio: true
+      FixedAspectRatio: false
       ClearColor: [0, 0, 0, 1]
       ProjectionType: 1
       OrthoSize: 10
@@ -74,3 +70,19 @@ Entities:
       ViewportWidth: 1280
       ViewportHeight: 720
       ClearFlagType: 0
+  - ID: 14090403629311050802
+    Name: SceneSettings
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SettingsComponent:
+      AntiAliasingType: 1
+      EditorCameraClearFlag: 0
+      MSAASamples: 4
+      ShowGizmos: true
+    PostProcessingComponent:
+      Materials:
+        - ShaderName: EditorOutline.glsl
+          ShaderProperties:
+            []

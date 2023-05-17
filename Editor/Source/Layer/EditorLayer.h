@@ -12,11 +12,6 @@ namespace NL
 		Editor, Runtime
 	};
 
-	enum class AntiAliasingType : int
-	{
-		None, MSAA
-	};
-
 	class EditorLayer : public Layer
 	{
 	public:
@@ -50,16 +45,21 @@ namespace NL
 		inline bool IsEditorMode() { return m_ViewportMode == ViewportMode::Editor; }
 
 		// TODO: Optimize
-		void UpdateRuntimeAspect();
+		void UpdateRuntimeCameraInfo();
 
 		void UpdateFramebuffer();
+
+		void ResetSettingsEntityAfterSceneContextChanged(Ref<Scene>& scene);
 
 	private:
 
 		friend class HierarchyPanel;
 
-		EditorCamera m_EditorCamera;
+		Ref<EditorCamera> m_EditorCamera;
 		Ref<Scene> m_EditorScene;
+
+		const std::string m_SettingsEntityName = "SceneSettings";
+		Entity m_Settings = {};
 		// ClearFlagType m_EditorCameraClearFlagType = ClearFlagType::Skybox;
 
 		Entity m_RuntimeCameraEntity = {};
@@ -69,12 +69,9 @@ namespace NL
 		std::string m_EditorScenePath = "";
 
 		// Viewport framebuffer
-		Ref<Framebuffer> m_MultisampledFramebuffer;
+		Ref<Framebuffer> m_MidFramebuffer;
 		Ref<Framebuffer> m_Framebuffer;
 
-		// Post-processing
-		std::vector<PostProcessingType> m_EditorPostProcessingQueue;
-		std::vector<PostProcessingType> m_RuntimePostProcessingQueue;
 		Ref<PostProcessing> m_PostProcessing;
 
 		// Viewport variables
@@ -101,15 +98,7 @@ namespace NL
 		bool m_IsMaximizeOnPlay = true;
 
 		// Scene Settings
-		/*
-		* Skybox
-		* Anti-Aliasing
-		* Runtime PostProcessing
-		*/
 		bool m_ShowSceneSettings;
-		int m_MSAASamples = 4;
-		AntiAliasingType m_AntiAliasingType = AntiAliasingType::MSAA;
-		// bool m_ShowGizmos;
 
 		// Resource List
 		bool m_ShowResourceList;

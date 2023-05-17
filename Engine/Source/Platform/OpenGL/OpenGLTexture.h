@@ -12,6 +12,7 @@ namespace NL
 	public:
 		OpenGLTexture2D(uint32_t width, uint32_t height);
 		OpenGLTexture2D(const std::string& path);
+		OpenGLTexture2D(uint32_t width, uint32_t height, const std::vector<nlm::vec4>& data);
 		~OpenGLTexture2D();
 
 		virtual uint32_t GetWidth() const override { return m_Width; }

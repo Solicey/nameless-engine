@@ -21,6 +21,8 @@ layout(std140, binding = 0) uniform Camera
 	mat4 u_View;
 	mat4 u_Projection;
     vec3 u_CameraPosition;
+    float u_Near;
+	float u_Far;
 };
 
 uniform mat4 u_Transform;
@@ -46,9 +48,16 @@ in VS_OUT {
     vec3 normal;
 } gs_in[];
 
-uniform float u_Magnitude;
+layout(std140, binding = 0) uniform Camera
+{
+	mat4 u_View;
+	mat4 u_Projection;
+    vec3 u_CameraPosition;
+    float u_Near;
+	float u_Far;
+};
 
-uniform mat4 u_Projection;
+uniform float u_Magnitude;
 
 void GenerateLine(int index)
 {
@@ -70,20 +79,14 @@ void main()
 #type fragment
 #version 450 core
 
-layout (location = 0) out vec4 color;
-layout (location = 1) out int color2;
-layout (location = 2) out vec4 color3;
+layout (location = 0) out vec4 f_Color;
+layout (location = 1) out int f_EntityId;
 
 uniform vec3 u_Color;
-uniform bool u_IsSelected;
 uniform int u_EntityId;
 			
 void main()
 {
-	color = vec4(u_Color, 1.0);
-	
-    color2 = u_EntityId;
-	color3 = vec4(0.1, 0.1, 0.1, 1);
-	if (u_IsSelected)
-		color3 = vec4(1, 1, 1, 1);
+	f_Color = vec4(u_Color, 1.0);
+    f_EntityId = u_EntityId;
 }			

@@ -16,7 +16,7 @@ namespace NL
 		ModelRendererComponent() {}
 
 		ModelRendererComponent(const ModelRendererComponent& comp)
-			: Path(comp.Path), _Model(CreateRef<Model>(comp._Model.get())), Flags(comp.Flags) {}
+			: Path(comp.Path), _Model(comp._Model ? CreateRef<Model>(comp._Model.get()) : nullptr), Flags(comp.Flags) {}
 
 		ModelRendererComponent(const std::string& path, ModelLoaderFlags flags = ModelLoaderFlags::Triangulate | ModelLoaderFlags::FlipUVs | ModelLoaderFlags::CalcTangentSpace | ModelLoaderFlags::PopulateArmatureData | ModelLoaderFlags::JoinIdenticalVertices | ModelLoaderFlags::GenSmoothNormals) : Path(std::regex_replace(path, std::regex("\\\\"), "/")), _Model(ModelLoader::Create(path, flags)), Flags(flags)
 		{

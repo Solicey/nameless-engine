@@ -25,6 +25,8 @@ layout(std140, binding = 0) uniform Camera
 	mat4 u_View;
 	mat4 u_Projection;
 	vec3 u_CameraPosition;
+	float u_Near;
+	float u_Far;
 };
 
 uniform mat4 u_Transform;
@@ -48,22 +50,16 @@ layout (location = 0) in vec3 v_Position;
 layout (location = 1) in vec2 v_TexCoord;
 layout (location = 2) in vec3 v_Normal;
 
-layout (location = 0) out vec4 color;
-layout (location = 1) out int color2;
-layout (location = 2) out vec4 color3;
+layout (location = 0) out vec4 f_Color;
+layout (location = 1) out int f_EntityId;
 
 uniform vec3 u_Color;
 uniform sampler2D u_Diffuse;
 uniform sampler2D u_Custom;
-uniform bool u_IsSelected;
 uniform int u_EntityId;
 			
 void main()
 {
-	color = vec4(texture2D(u_Diffuse, v_TexCoord).rgb, 1.0) * vec4(u_Color, 1.0);
-	color2 = u_EntityId;
-
-	color3 = vec4(0.1, 0.1, 0.1, 1);
-	if (u_IsSelected)
-		color3 = vec4(1, 1, 1, 1);
+	f_Color = vec4(texture2D(u_Diffuse, v_TexCoord).rgb, 1.0) * vec4(u_Color, 1.0);
+	f_EntityId = u_EntityId;
 }			
