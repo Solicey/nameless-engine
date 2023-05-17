@@ -65,187 +65,11 @@ namespace NL
 		cameraUniform->SetData(&farClip, 4, 144);
 	}
 
-	void Renderer::EndScene()
-	{
-	}
-
-	void Renderer::Submit(const Ref<VertexArray>& vertexArray, const Ref<Material>& material,
-		const std::vector<PointLightShadingData>& points, const std::vector<DirLightShadingData>& dirs, const nlm::mat4& transform, const std::vector<nlm::mat4>& finalMatrices, int entityId)
-	{
-		NL_ENGINE_ASSERT(material, "Material is nullptr!");
-
-		const auto& shader = material->GetShader();
-		if (!shader->HasCompiledSuccessfully())
-			return;
-
-		NL_ENGINE_ASSERT(shader, "Shader is nullptr!");
-
-		shader->Bind();
-
-		// Typical
-		// shader->SetUniformMat4("u_View", s_SceneData->ViewMatrix);
-		// shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
-		shader->SetUniformMat4("u_Transform", transform);
-		shader->SetUniformMat4("u_NormalMatrix", nlm::transpose(nlm::inverse(transform)));
-		//shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
-		shader->SetUniformInt("u_EntityId", entityId);
-
-		// Lights
-		// Post-processing...
-		if (shader->IsLightingRequired())
-		{
-			int cnt = 0;
-			const int maxCnt = shader->GetMaxLightsCount();
-			for (auto& l : points)
-			{
-				shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Color", l.Color);
-				shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Position", l.Position);
-				shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Attenuation", l.Attenuation);
-				cnt++;
-				if (cnt >= maxCnt)
-					break;
-			}
-			if (cnt < maxCnt)
-			{
-				for (int i = cnt; i < maxCnt; i++)
-				{
-					shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Color", nlm::vec3(-1.0));
-				}
-			}
-
-			cnt = 0;
-			for (auto& l : dirs)
-			{
-				shader->SetUniformFloat3("u_DirLights[" + std::to_string(cnt) + "].Color", l.Color);
-				shader->SetUniformFloat3("u_DirLights[" + std::to_string(cnt) + "].Direction", l.Direction);
-				cnt++;
-				if (cnt >= maxCnt)
-					break;
-			}
-			if (cnt < maxCnt)
-			{
-				for (int i = cnt; i < maxCnt; i++)
-				{
-					shader->SetUniformFloat3("u_DirLights[" + std::to_string(i) + "].Color", nlm::vec3(-1.0));
-				}
-			}
-		}
-		
-
-		if (!finalMatrices.empty())
-		{
-			/*for (int i = 0; i < finalMatrices.size(); i++)
-			{
-				NL_ENGINE_TRACE("final[{0}] = {1}", i, nlm::to_string(finalMatrices[i]));
-			}*/
-
-			shader->SetUniformMat4Array("u_FinalBoneMatrices", finalMatrices);
-		}
-
-		BindCustomShaderProperties(material);
-
-		vertexArray->Bind();
-
-		DrawIndices(vertexArray);
-
-		shader->Unbind();
-		vertexArray->Unbind();
-	}
-
-	void Renderer::Submit(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader, const nlm::mat4& transform)
-	{
-		if (!shader->HasCompiledSuccessfully())
-			return;
-
-		shader->Bind();
-		// shader->SetUniformMat4("u_View", s_SceneData->ViewMatrix);
-		// shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
-		shader->SetUniformMat4("u_Transform", transform);
-
-		vertexArray->Bind();
-		
-		DrawIndices(vertexArray);
-
-		shader->Unbind();
-		vertexArray->Unbind();
-	}
-
-	void Renderer::DrawModel(const Ref<Model>& model, const Ref<Shader>& shader, const nlm::mat4& transform)
-	{
-		const auto& meshes = model->GetMeshes();
-
-		for (const auto& mesh : meshes)
-		{
-			Submit(mesh->GetVertexArray(), shader, transform);
-		}
-	}
-
-	void Renderer::DrawSprite(const Ref<Shader>& shader,
-		const Ref<Texture2D>& texture,
-		const nlm::mat4& transform,
-		const nlm::vec4& color,
-		SpriteCameraReaction camReact,
-		int entityId)
-	{
-		static Ref<VertexArray> vao = nullptr;
-		if (vao == nullptr)
-		{
-			vao = VertexArray::Create();
-			BufferLayout layout = {
-				{ ShaderDataType::Float3, "a_Position" }
-			};
-			float vertices[] = { 0.0f, 0.0f, 0.0f };
-			Ref<VertexBuffer> vbo = VertexBuffer::Create(vertices, sizeof(vertices));
-			vbo->SetLayout(layout);
-			vao->AddVertexBuffer(vbo);
-		}
-
-		NL_ENGINE_ASSERT(shader, "Shader is nullptr!");
-		NL_ENGINE_ASSERT(texture, "Texture is nullptr!");
-
-		if (!shader->HasCompiledSuccessfully())
-			return;
-
-		shader->Bind();
-
-		// Typical
-		// shader->SetUniformMat4("u_View", s_SceneData->ViewMatrix);
-		// shader->SetUniformMat4("u_Projection", s_SceneData->ProjectionMatrix);
-		shader->SetUniformMat4("u_Transform", transform);
-		//shader->SetUniformInt("u_IsSelected", isSelected ? 1 : 0);
-		shader->SetUniformInt("u_EntityId", entityId);
-		shader->SetUniformFloat4("u_Color", color);
-		shader->SetUniformInt("u_Sprite", 0);
-		shader->SetUniformInt("u_CameraReaction", (int)camReact);
-		texture->Bind(0);
-
-		vao->Bind();
-
-		Renderer::DrawArrays_Points(0, 1);
-
-		shader->Unbind();
-		vao->Unbind();
-
-	}
-
-	void Renderer::DrawModel(const Ref<Model>& model, const nlm::mat4& transform, int entityId, const std::vector<PointLightShadingData>& points, const std::vector<DirLightShadingData>& dirs)
-	{
-		const auto& meshes = model->GetMeshes();
-		bool hasBones = model->HasBones();
-		std::vector<nlm::mat4> emptyMatrices = {};
-
-		for (const auto& mesh : meshes)
-		{
-			const auto& material = model->GetMaterial(mesh);
-			Submit(mesh->GetVertexArray(), material, points, dirs, transform, hasBones ? model->GetFinalBoneMatrices() : emptyMatrices, entityId);
-		}
-	}
-
-	void Renderer::BindCustomShaderProperties(const Ref<Material>& material)
+	void Renderer::BindCustomShaderProperties(const Ref<Material>& material, int sampler2DStartIndex)
 	{
 		const auto& shader = material->GetShader();
 		// Custom
-		int cntSampler2D = 0;
+		int cntSampler2D = sampler2DStartIndex;
 		for (const auto& prop : material->GetShaderProperties())
 		{
 			switch (prop.Type)
@@ -267,6 +91,10 @@ namespace NL
 				shader->SetUniformFloat(prop.Name.c_str(), std::get<float>(prop.Value));
 				break;
 
+			case ShaderUniformType::Int:
+				shader->SetUniformInt(prop.Name.c_str(), std::get<int>(prop.Value));
+				break;
+
 			default:
 				break;
 			}
@@ -276,6 +104,45 @@ namespace NL
 	void Renderer::OnWindowResize(unsigned int width, unsigned int height)
 	{
 		SetViewPort(0, 0, width, height);
+	}
+
+	void Renderer::BindLightsData(const Ref<Shader>& shader, const std::vector<PointLightShadingData>& points, const std::vector<DirLightShadingData>& dirs)
+	{
+		int cnt = 0;
+		const int maxCnt = shader->GetMaxLightsCount();
+		for (auto& l : points)
+		{
+			shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Color", l.Color);
+			shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Position", l.Position);
+			shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Attenuation", l.Attenuation);
+			cnt++;
+			if (cnt >= maxCnt)
+				break;
+		}
+		if (cnt < maxCnt)
+		{
+			for (int i = cnt; i < maxCnt; i++)
+			{
+				shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Color", nlm::vec3(-1.0));
+			}
+		}
+
+		cnt = 0;
+		for (auto& l : dirs)
+		{
+			shader->SetUniformFloat3("u_DirLights[" + std::to_string(cnt) + "].Color", l.Color);
+			shader->SetUniformFloat3("u_DirLights[" + std::to_string(cnt) + "].Direction", l.Direction);
+			cnt++;
+			if (cnt >= maxCnt)
+				break;
+		}
+		if (cnt < maxCnt)
+		{
+			for (int i = cnt; i < maxCnt; i++)
+			{
+				shader->SetUniformFloat3("u_DirLights[" + std::to_string(i) + "].Color", nlm::vec3(-1.0));
+			}
+		}
 	}
 
 	

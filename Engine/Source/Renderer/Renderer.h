@@ -39,41 +39,14 @@ namespace NL
 	public:
 		static void SetUniformBuffer(Ref<EditorCamera> camera);
 		static void SetUniformBuffer(Ref<Camera> camera, const nlm::mat4& transform, const nlm::vec3& position);
-		static void EndScene();
-
-		static void Submit(
-			const Ref<VertexArray>& vertexArray,
-			const Ref<Material>& mat, 
-			const std::vector<PointLightShadingData>& points, 
-			const std::vector<DirLightShadingData>& dirs,
-			const nlm::mat4& transform = nlm::mat4(1.0f),
-			const std::vector<nlm::mat4>& finalMatrices = {}, 
-			int entityId = -1);
-
-		static void Submit(
-			const Ref<VertexArray>& vertexArray,
-			const Ref<Shader>& shader, 
-			const nlm::mat4& transform = nlm::mat4(1.0f));
-
-		static void DrawModel(const Ref<Model>& model, 
-			const Ref<Shader>& shader,
-			const nlm::mat4& transform);
-
-		static void DrawSprite(const Ref<Shader>& shader,
-			const Ref<Texture2D>& texture,
-			const nlm::mat4& transform,
-			const nlm::vec4& color,
-			SpriteCameraReaction camReact = SpriteCameraReaction::Normal,
-			int entityId = -1);
-
-		static void DrawModel(const Ref<Model>& model,
-			const nlm::mat4& transform,
-			int entityId, const std::vector<PointLightShadingData>& points, const std::vector<DirLightShadingData>& dirs);
 
 		// Bind shader first!
-		static void BindCustomShaderProperties(const Ref<Material>& mat);
+		static void BindCustomShaderProperties(const Ref<Material>& mat, int sampler2DStartIndex = 0);
 
 		static void OnWindowResize(unsigned int width, unsigned int height);
+
+		// Bind shader first!
+		static void BindLightsData(const Ref<Shader>& shader, const std::vector<PointLightShadingData>& points, const std::vector<DirLightShadingData>& dirs);
 
 
 #pragma region Commands

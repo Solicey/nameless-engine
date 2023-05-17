@@ -45,7 +45,7 @@ namespace NL
 		inline bool IsEditorMode() { return m_ViewportMode == ViewportMode::Editor; }
 
 		// TODO: Optimize
-		void UpdateRuntimeAspect();
+		void UpdateRuntimeCameraInfo();
 
 		void UpdateFramebuffer();
 

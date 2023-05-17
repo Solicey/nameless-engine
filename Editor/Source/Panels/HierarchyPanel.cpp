@@ -126,7 +126,7 @@ namespace NL
 			ImGui::NextColumn();
 
 			std::string emitLabel = "##" + label;
-			bool isModified = ImGui::DragFloat(emitLabel.c_str(), &value);
+			bool isModified = ImGui::DragFloat(emitLabel.c_str(), &value, 0.1f);
 			ImGui::Columns(1);
 			ImGui::PopItemWidth();
 
@@ -198,6 +198,11 @@ namespace NL
 
 			std::string emitLabel = "##" + label;
 			bool isModified = ImGui::InputText(emitLabel.c_str(), buffer, size);
+
+			if (isModified)
+			{
+				Application::GetInstance().GetImGuiLayer()->BlockEvents(true);
+			}
 
 			ImGui::Columns(1);
 			ImGui::PopItemWidth();
@@ -316,10 +321,14 @@ namespace NL
 		}
 
 		bool entityDeleted = false;
+		bool entityDuplicated = false;
 		if (ImGui::BeginPopupContextItem(0, 1))
 		{
 			if (ImGui::MenuItem("Delete Entity"))
 				entityDeleted = true;
+			
+			if (ImGui::MenuItem("Duplicate Entity"))
+				entityDuplicated = true;
 
 			ImGui::EndPopup();
 		}
@@ -337,6 +346,11 @@ namespace NL
 			m_Scene->DestroyEntity(entity);
 			if (m_EntitySelected == entity)
 				m_EntitySelected = {};
+		}
+
+		if (entityDuplicated)
+		{
+			m_EntitySelected = m_Scene->DuplicateEntity(entity);
 		}
 	}
 
@@ -357,6 +371,8 @@ namespace NL
 			if (ImGui::InputText("##Name", buffer, sizeof(buffer)))
 			{
 				name = std::string(buffer);
+				//NL_INFO("Block Events!");
+				Application::GetInstance().GetImGuiLayer()->BlockEvents(true);
 			}
 		}
 
@@ -1119,7 +1135,15 @@ namespace NL
 				}
 				break;
 			}
-
+			case ShaderUniformType::Int:
+			{
+				int i = std::get<int>(prop.Value);
+				if (Utils::DragIntStyle1(prop.Name, RIGHT_COLUMN_WIDTH, i))
+				{
+					prop.Value = i;
+				}
+				break;
+			}
 			default:
 				break;
 			}

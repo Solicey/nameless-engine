@@ -28,10 +28,11 @@ namespace NL
 		Scene();
 		~Scene();
 
-		static Ref<Scene> Copy(Ref<Scene> other);
+		static Ref<Scene> DuplicateScene(Ref<Scene> other);
 
 		Entity CreateEntity(const std::string& name = "Entity");
 		Entity CreateEntityWithID(ID id, const std::string& name = "Entity");
+		Entity DuplicateEntity(Entity entity);
 		// Called when entity is deleted.
 		void DestroyEntity(Entity entity);
 		// Must be called every time a scene is deleted!

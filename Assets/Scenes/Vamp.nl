@@ -1,39 +1,69 @@
 Scene: Untitled
 Entities:
-  - ID: 12530318649489246455
-    Name: SceneSettings
+  - ID: 10440442477373005482
+    Name: Entity
     TransformComponent:
-      Translation: [0, 0, 0]
+      Translation: [0, 12.2700138, 14.8968887]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    SettingsComponent:
-      AntiAliasingType: 1
-      EditorCameraClearFlag: 1
-      MSAASamples: 4
-      ShowGizmos: true
+    CameraComponent:
+      FixedAspectRatio: false
+      ClearColor: [0.192000002, 0.301999986, 0.474999994, 1]
+      ProjectionType: 1
+      OrthoSize: 10
+      OrthoFar: 100
+      OrthoNear: 0.00999999978
+      PerspFOV: 0.785398185
+      PerspFar: 1000
+      PerspNear: 0.00999999978
+      ViewportWidth: 1280
+      ViewportHeight: 720
+      ClearFlagType: 1
     PostProcessingComponent:
       Materials:
-        - ShaderName: EditorOutline.glsl
+        - ShaderName: SSAO.glsl
+          ShaderProperties:
+            - Type: 10
+              Name: u_KernelSize
+              Value: 64
+            - Type: 1
+              Name: u_Radius
+              Value: 1
+        - ShaderName: Blur.glsl
           ShaderProperties:
             []
-  - ID: 4213880577989747900
+        - ShaderName: DeferredShading(SSAO).glsl
+          ShaderProperties:
+            []
+  - ID: 10740630454451859384
+    Name: Light
+    TransformComponent:
+      Translation: [-0.852597773, 16.1530685, 2.1991806]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    LightComponent:
+      LightType: 1
+      Color: [1, 1, 1]
+      Intensity: 1
+      Attenuation: [1, 0.699999988, 1.79999995]
+  - ID: 6719405073046164596
     Name: Vampire
     TransformComponent:
       Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [0.00999999978, 0.00999999978, 0.00999999978]
+      Rotation: [-3.14159203, 0.456436574, 3.14159226]
+      Scale: [0.100000001, 0.100000001, 0.100000001]
     ModelRendererComponent:
       ModelPath: ../Assets/Models/vampire/Vampire.fbx
       Materials:
         - MaterialName: Vampire_MAT1
-          ShaderName: TexLit(MultipleLights).glsl
+          ShaderName: Tex(Deferred).glsl
           ShaderProperties:
-            - Type: 1
-              Name: u_AmbientStrength
-              Value: 0.100000001
+            - Type: 6
+              Name: u_Color
+              Value: [1, 1, 1]
             - Type: 1
               Name: u_SpecularStrength
-              Value: 1
+              Value: 0
             - Type: 15
               Name: u_Diffuse
               Value: ../Assets/Models/vampire/test\textures\Vampire_diffuse.png
@@ -42,19 +72,16 @@ Entities:
               Value: ../Assets/Models/vampire/test\textures\Vampire_specular.png
             - Type: 15
               Name: u_Normals
-              Value: ../Assets\Models\vampire\test\textures\Vampire_normal.png
-            - Type: 1
-              Name: u_IsNormalsCompressed
-              Value: 0
+              Value: ../Assets/Models/vampire/test\textures\Vampire_normal.png
         - MaterialName: Vampire_MAT_Transparent
-          ShaderName: TexLit(MultipleLights).glsl
+          ShaderName: Tex(Deferred).glsl
           ShaderProperties:
-            - Type: 1
-              Name: u_AmbientStrength
-              Value: 0.100000001
+            - Type: 6
+              Name: u_Color
+              Value: [1, 1, 1]
             - Type: 1
               Name: u_SpecularStrength
-              Value: 1
+              Value: 0
             - Type: 15
               Name: u_Diffuse
               Value: ../Assets/Models/vampire/test\textures\Vampire_diffuse_transparent.png
@@ -64,9 +91,6 @@ Entities:
             - Type: 15
               Name: u_Normals
               Value: ../Assets/Models/vampire/test\textures\Vampire_normal.png
-            - Type: 1
-              Name: u_IsNormalsCompressed
-              Value: 0
       Bones:
         - Parent: "null"
           Child: mixamorig:Hips
@@ -266,14 +290,31 @@ Entities:
           Child: mixamorig:F_skirt3
         - Parent: mixamorig:F_skirt3
           Child: mixamorig:F_skirt4
-  - ID: 4761814790072133303
-    Name: Sun
+  - ID: 18128042128108063409
+    Name: SceneSettings
     TransformComponent:
-      Translation: [-0.988165259, 2.75693107, -0.899175823]
-      Rotation: [-2.92302275, -0.858725727, 0.667505085]
-      Scale: [0.999999881, 1.00000167, 1.00000072]
-    LightComponent:
-      LightType: 0
-      Color: [1, 0.951965511, 0.768976927]
-      Intensity: 1.39999998
-      Attenuation: [1, 0.699999988, 1.79999995]
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    SettingsComponent:
+      AntiAliasingType: 0
+      EditorCameraClearFlag: 0
+      MSAASamples: 4
+      ShowGizmos: true
+      RenderMode: 1
+    PostProcessingComponent:
+      Materials:
+        - ShaderName: SSAO.glsl
+          ShaderProperties:
+            - Type: 10
+              Name: u_KernelSize
+              Value: 64
+            - Type: 1
+              Name: u_Radius
+              Value: 20.1000004
+        - ShaderName: Blur.glsl
+          ShaderProperties:
+            []
+        - ShaderName: DeferredShading(SSAO).glsl
+          ShaderProperties:
+            []

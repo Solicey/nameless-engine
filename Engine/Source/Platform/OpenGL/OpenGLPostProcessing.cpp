@@ -121,42 +121,11 @@ namespace NL
             // Renderer...
             if (shader->IsLightingRequired())
             {
-                int cnt = 0;
-                const int maxCnt = shader->GetMaxLightsCount();
-                for (auto& l : points)
-                {
-                    shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Color", l.Color);
-                    shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Position", l.Position);
-                    shader->SetUniformFloat3("u_PointLights[" + std::to_string(cnt) + "].Attenuation", l.Attenuation);
-                    cnt++;
-                    if (cnt >= maxCnt)
-                        break;
-                }
-                if (cnt < maxCnt)
-                {
-                    for (int i = cnt; i < maxCnt; i++)
-                    {
-                        shader->SetUniformFloat3("u_PointLights[" + std::to_string(i) + "].Color", nlm::vec3(-1.0));
-                    }
-                }
-
-                cnt = 0;
-                for (auto& l : dirs)
-                {
-                    shader->SetUniformFloat3("u_DirLights[" + std::to_string(cnt) + "].Color", l.Color);
-                    shader->SetUniformFloat3("u_DirLights[" + std::to_string(cnt) + "].Direction", l.Direction);
-                    cnt++;
-                    if (cnt >= maxCnt)
-                        break;
-                }
-                if (cnt < maxCnt)
-                {
-                    for (int i = cnt; i < maxCnt; i++)
-                    {
-                        shader->SetUniformFloat3("u_DirLights[" + std::to_string(i) + "].Color", nlm::vec3(-1.0));
-                    }
-                }
+                Renderer::BindLightsData(shader, points, dirs);
             }
+
+            // WARNING: index should be changed accordingly
+            Renderer::BindCustomShaderProperties(mat, 6);
 
             if (shader->CheckTag(ShaderTag::SrcColor))
             {

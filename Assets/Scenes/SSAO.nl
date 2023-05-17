@@ -1,5 +1,37 @@
 Scene: Untitled
 Entities:
+  - ID: 16939305440333559909
+    Name: Cam
+    TransformComponent:
+      Translation: [8.45195293, 7.97469664, 16.3556309]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      FixedAspectRatio: false
+      ClearColor: [0.192000002, 0.301999986, 0.474999994, 1]
+      ProjectionType: 1
+      OrthoSize: 10
+      OrthoFar: 100
+      OrthoNear: 0.00999999978
+      PerspFOV: 0.785398185
+      PerspFar: 1000
+      PerspNear: 0.00999999978
+      ViewportWidth: 1280
+      ViewportHeight: 720
+      ClearFlagType: 0
+    PostProcessingComponent:
+      Materials:
+        - ShaderName: SSAO.glsl
+          ShaderProperties:
+            - Type: 10
+              Name: u_KernelSize
+              Value: 64
+            - Type: 1
+              Name: u_Radius
+              Value: 3
+        - ShaderName: Blur.glsl
+          ShaderProperties:
+            []
   - ID: 14195874083846681537
     Name: SceneSettings
     TransformComponent:
@@ -16,8 +48,16 @@ Entities:
       Materials:
         - ShaderName: SSAO.glsl
           ShaderProperties:
-            []
+            - Type: 10
+              Name: u_KernelSize
+              Value: 64
+            - Type: 1
+              Name: u_Radius
+              Value: 2
         - ShaderName: Blur.glsl
+          ShaderProperties:
+            []
+        - ShaderName: EditorOutline.glsl
           ShaderProperties:
             []
   - ID: 5062354456308492637
@@ -95,6 +135,41 @@ Entities:
       ModelPath: ../Assets/Models/Box.obj
       Materials:
         - MaterialName: Material
+          ShaderName: Default.glsl
+          ShaderProperties:
+            []
+      Bones:
+        []
+  - ID: 17340892127560612441
+    Name: Entity
+    TransformComponent:
+      Translation: [9.61150742, 17.5039272, 1.67278719]
+      Rotation: [-1.60169053, -0.00643929327, -0.0377605297]
+      Scale: [1.00011766, 1.00015354, 1.00004661]
+    ModelRendererComponent:
+      ModelPath: ../Assets/Models/nanosuit/nanosuit.obj
+      Materials:
+        - MaterialName: Glass
+          ShaderName: Default.glsl
+          ShaderProperties:
+            []
+        - MaterialName: Leg
+          ShaderName: Default.glsl
+          ShaderProperties:
+            []
+        - MaterialName: Helmet
+          ShaderName: Default.glsl
+          ShaderProperties:
+            []
+        - MaterialName: Hand
+          ShaderName: Default.glsl
+          ShaderProperties:
+            []
+        - MaterialName: Body
+          ShaderName: Default.glsl
+          ShaderProperties:
+            []
+        - MaterialName: Arm
           ShaderName: Default.glsl
           ShaderProperties:
             []

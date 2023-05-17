@@ -137,6 +137,18 @@ namespace NL
 		fieldInstance.SetValue(data);                  \
 		break;                                         \
 	}
+
+#define WRITE_SHADER_PROP(id) \
+	case id:		\
+		out << YAML::Key << "Value" << YAML::Value << std::get<id>(prop.Value); \
+		break;
+
+#define READ_SHADER_PROP(PropType, Type)			\
+	case ShaderUniformType::PropType:				\
+	{												\
+		newProp.Value = prop["Value"].as<Type>();	\
+		break;										\
+	}												
 {
 	void SceneSerializer::Serialize(const std::string& path)
 	{
@@ -682,15 +694,10 @@ namespace NL
 			// variant TODO
 			switch (index)
 			{
-			case 0:		// std::string
-				out << YAML::Key << "Value" << YAML::Value << std::get<0>(prop.Value);
-				break;
-			case 1:		// nlm::vec3
-				out << YAML::Key << "Value" << YAML::Value << std::get<1>(prop.Value);
-				break;
-			case 2:		// float
-				out << YAML::Key << "Value" << YAML::Value << std::get<2>(prop.Value);
-				break;
+			WRITE_SHADER_PROP(0)	// std::string
+			WRITE_SHADER_PROP(1)	// nlm::vec3
+			WRITE_SHADER_PROP(2)	// float
+			WRITE_SHADER_PROP(3)	// int
 			default:
 				break;
 			}
@@ -708,9 +715,6 @@ namespace NL
 			newProp.Name = prop["Name"].as<std::string>();
 			switch (newProp.Type)
 			{
-			case ShaderUniformType::Color3:
-				newProp.Value = prop["Value"].as<nlm::vec3>();
-				break;
 			case ShaderUniformType::Sampler2D:
 			{
 				newProp.Value = prop["Value"].as<std::string>();
@@ -726,11 +730,10 @@ namespace NL
 
 				break;
 			}
-			case ShaderUniformType::Float:
-			{
-				newProp.Value = prop["Value"].as<float>();
-				break;
-			}
+			READ_SHADER_PROP(Color3, nlm::vec3)
+			READ_SHADER_PROP(Float, float)
+			READ_SHADER_PROP(Int, int)
+			
 			default:
 				break;
 			}
@@ -756,6 +759,10 @@ namespace NL
 
 			case ShaderUniformType::Float:
 				prop.Value = 0.0f;
+				break;
+
+			case ShaderUniformType::Int:
+				prop.Value = 0;
 				break;
 
 			default:

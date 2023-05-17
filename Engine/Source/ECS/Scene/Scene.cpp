@@ -54,7 +54,23 @@ namespace NL
         CopyComponent<C...>(dst, src, enttMap);
     }
 
-    Ref<Scene> Scene::Copy(Ref<Scene> scene)
+    template<Component... C>
+    static void CopyComponentIfExists(Entity dst, Entity src)
+    {
+        ([&]()
+            {
+                if (src.HasComponent<C>())
+                    dst.AddOrReplaceComponent<C>(src.GetComponent<C>());
+            }(), ...);
+    }
+
+    template<Component... C>
+    static void CopyComponentIfExists(Components<C...>, Entity dst, Entity src)
+    {
+        CopyComponentIfExists<C...>(dst, src);
+    }
+
+    Ref<Scene> Scene::DuplicateScene(Ref<Scene> scene)
     {
         NL_ENGINE_TRACE("Ready to copy.");
 
@@ -74,7 +90,7 @@ namespace NL
             enttMap[id] = newEntity;
         }
 
-        // Copy components (except IdentityComponent)
+        // DuplicateScene components (except IdentityComponent)
         CopyComponent(AllComponents{}, dstSceneRegistry, srcSceneRegistry, enttMap);
 
         return newScene;
@@ -95,6 +111,15 @@ namespace NL
         m_EntityMap[id] = entity;
 
         return entity;
+    }
+
+    Entity Scene::DuplicateEntity(Entity entity)
+    {
+        Entity newEntity = CreateEntity(entity.GetName());
+        CopyComponentIfExists(AllComponents{}, newEntity, entity);
+
+        NL_ENGINE_INFO("New Entity ID: {0}, prototype ID: {1}", newEntity.GetID(), entity.GetID());
+        return newEntity;
     }
 
     void Scene::DestroyEntity(Entity entity)

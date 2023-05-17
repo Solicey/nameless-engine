@@ -69,7 +69,7 @@ namespace NL
 
         // Hierarchy
         m_HierarchyPanel = CreateRef<HierarchyPanel>(m_EditorScene);
-        m_HierarchyPanel->SetUpdateRuntimeCameraCallback([this]() { EditorLayer::UpdateRuntimeAspect(); });
+        m_HierarchyPanel->SetUpdateRuntimeCameraCallback([this]() { EditorLayer::UpdateRuntimeCameraInfo(); });
 
         // Icons
         m_PlayButton = Library<Texture2D>::GetInstance().Fetch(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/PlayButton.png");
@@ -101,7 +101,7 @@ namespace NL
         if (!IsEditorMode())
         {
             // m_RuntimeScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-            UpdateRuntimeAspect();
+            UpdateRuntimeCameraInfo();
         }
 
         // Framebuffer preparation
@@ -144,8 +144,6 @@ namespace NL
                 for (auto entity : camView)
                 {
                     m_RuntimeCameraEntity = Entity(entity, m_RuntimeScene.get());
-                    NL_ENGINE_INFO("Runtime Camera ID: {0}", m_RuntimeCameraEntity.GetID());
-                    m_Settings.GetComponent<SettingsComponent>().RuntimeCameraID = m_RuntimeCameraEntity.GetID();
                     break;
                 }
             }
@@ -372,9 +370,7 @@ namespace NL
                                 if (!isSelected)
                                 {
                                     m_RuntimeCameraEntity = Entity(entity, m_RuntimeScene.get());
-                                    m_Settings.GetComponent<SettingsComponent>().RuntimeCameraID = m_RuntimeCameraEntity.GetID();
-                                    NL_ENGINE_INFO("Runtime Camera ID: {0}", m_RuntimeCameraEntity.GetID());
-                                    // UpdateRuntimeAspect();
+                                    // UpdateRuntimeCameraInfo();
                                 }
                             }
                         }
@@ -769,6 +765,7 @@ namespace NL
 
         bool control = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
         bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift);
+        bool alt = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
         bool mouseRight = Input::IsMouseButtonPressed(Mouse::ButtonRight);
         switch (event.GetKeyCode())
         {
@@ -794,9 +791,9 @@ namespace NL
                 else
                     SaveScene();
             }
-            else
+            else if (shift)
             {
-                if (IsEditorMode() && (m_ViewportFocused || m_ViewportHovered))
+                if (IsEditorMode())
                     m_GuizmoType = ImGuizmo::OPERATION::SCALE;
             }
             break;
@@ -810,17 +807,20 @@ namespace NL
                     ScriptEngine::GetInstance().ReloadAssembly();
                 }
             }
-            else
+            else if (shift)
             {
-                if (IsEditorMode() && (m_ViewportFocused || m_ViewportHovered))
+                if (IsEditorMode())
                     m_GuizmoType = ImGuizmo::OPERATION::ROTATE;
             }
             break;
         }
         case Key::T:
         {
-            if (IsEditorMode() && (m_ViewportFocused || m_ViewportHovered))
-                m_GuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+            if (shift)
+            {
+                if (IsEditorMode())
+                    m_GuizmoType = ImGuizmo::OPERATION::TRANSLATE;
+            }
             break;
         }
         // Focus
@@ -844,6 +844,35 @@ namespace NL
                 m_IsRuntimeViewportFocused = false;
                 Application::GetInstance().ShowCursor();
                 // OnSceneStop();
+            }
+            break;
+        }
+        case Key::D:
+        {
+            if (shift)
+            {
+                Entity entity = m_HierarchyPanel->GetSelectedEntity();
+                if (entity != Entity())
+                {
+                    IsEditorMode() ? m_EditorScene->DestroyEntity(entity) : m_RuntimeScene->DestroyEntity(entity);
+                    m_HierarchyPanel->SetSelectedEntity(Entity());
+                }
+            }
+            else if (control)
+            {
+                Entity entity = m_HierarchyPanel->GetSelectedEntity();
+                if (entity != Entity())
+                {
+                    m_HierarchyPanel->SetSelectedEntity(IsEditorMode() ? m_EditorScene->DuplicateEntity(entity) : m_RuntimeScene->DuplicateEntity(entity));
+                }
+            }
+            break;
+        }
+        case Key::A:
+        {
+            if (shift)
+            {
+                m_HierarchyPanel->SetSelectedEntity(IsEditorMode() ? m_EditorScene->CreateEntity() : m_RuntimeScene->CreateEntity());
             }
             break;
         }
@@ -901,7 +930,6 @@ namespace NL
         // NL_INFO("Runtime _Camera Switch!");
 
         m_RuntimeCameraEntity = event.GetEntity();
-        m_Settings.GetComponent<SettingsComponent>().RuntimeCameraID = m_RuntimeCameraEntity.GetID();
 
         return false;
     }
@@ -1039,7 +1067,7 @@ namespace NL
     {
         m_ViewportMode = ViewportMode::Runtime;
 
-        m_RuntimeScene = Scene::Copy(m_EditorScene);
+        m_RuntimeScene = Scene::DuplicateScene(m_EditorScene);
         m_RuntimeScene->OnStartRuntime();
 
         m_HierarchyPanel->SetSceneContext(m_RuntimeScene);
@@ -1060,7 +1088,7 @@ namespace NL
         ResetSettingsEntityAfterSceneContextChanged(m_EditorScene);
     }
 
-    void EditorLayer::UpdateRuntimeAspect()
+    void EditorLayer::UpdateRuntimeCameraInfo()
     {
         if (m_RuntimeCameraEntity.HasComponent<CameraComponent>())
         {
@@ -1074,6 +1102,8 @@ namespace NL
                 this->m_RuntimeAspect = nlm::vec2((uint32_t)this->m_ViewportSize.x, (uint32_t)this->m_ViewportSize.y);
                 cam._Camera->SetAspectRatio((uint32_t)this->m_ViewportSize.x, (uint32_t)this->m_ViewportSize.y);
             }
+
+            m_Settings.GetComponent<SettingsComponent>().RuntimeCameraID = m_RuntimeCameraEntity.GetID();
         }
     }
 

@@ -46,12 +46,13 @@ void main()
 {
 	v_Position = vec3(u_View * u_Transform * vec4(a_Position, 1.0));
 	v_TexCoord = a_TexCoord;
-	v_Normal = a_Normal;
 	gl_Position = u_Projection * u_View * u_Transform * vec4(a_Position, 1.0);
 
-	vec3 T = vec3(normalize(u_NormalMatrix * vec4(a_Tangent, 0)));
-	vec3 B = vec3(normalize(u_NormalMatrix * vec4(a_Bitangent, 0)));
-	vec3 N = vec3(normalize(u_NormalMatrix * vec4(a_Normal, 0)));
+	mat3 normalMatrix = transpose(inverse(mat3(u_View * u_Transform)));
+	vec3 T = normalize(normalMatrix * a_Tangent);
+	vec3 B = normalize(normalMatrix * a_Bitangent);
+	vec3 N = normalize(normalMatrix * a_Normal);
+	v_Normal = N;
 	v_TBN = mat3(T, B, N);
 }
 
@@ -112,8 +113,6 @@ void main()
 	{
 		normal = v_Normal;
 	}
-	mat3 normalMatrix = transpose(inverse(mat3(u_View * u_Transform)));
-	normal = normalize(normalMatrix * normal);
 	// For compressed normal map
 	// normal.z = sqrt(1 - normal.x * normal.x - normal.y * normal.y);
 	
