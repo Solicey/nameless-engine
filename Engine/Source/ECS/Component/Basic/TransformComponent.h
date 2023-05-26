@@ -28,19 +28,19 @@ namespace NL
         nlm::vec3 GetForward() const 
         {
             nlm::vec4 forward = GetRotationMatrix() * nlm::vec4(0, 0, 1, 1);
-            return nlm::vec3(forward);
+            return nlm::normalize(nlm::vec3(forward));
         }
 
         nlm::vec3 GetRight() const
         {
             nlm::vec4 right = GetRotationMatrix() * nlm::vec4(-1, 0, 0, 1);
-            return nlm::vec3(right);
+            return nlm::normalize(nlm::vec3(right));
         }
 
         nlm::vec3 GetUp() const
         {
             nlm::vec4 up = GetRotationMatrix() * nlm::vec4(0, 1, 0, 1);
-            return nlm::vec3(up);
+            return nlm::normalize(nlm::vec3(up));
         }
 
         void Rotate(const nlm::vec3& rotateAxis, float angle)

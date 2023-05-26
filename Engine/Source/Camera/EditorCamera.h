@@ -25,10 +25,13 @@ namespace NL
 		inline nlm::vec3 GetForwardDirection() const;
 		inline nlm::vec3 GetPosition() const { return m_Position; }
 		inline nlm::quat GetOrientation() const;
+		inline float GetFocalDistance() const { return m_Distance; }
+		inline const nlm::vec3& GetFocalPoint() const { return m_FocalPoint; }
 
 		// For Viewport Interactions
 		bool IsMouseButtonHolding() const { return m_IsMouseButtonHolding; }
 
+		void SetState(const nlm::vec3& pos, const nlm::vec3& euler, const nlm::vec3& focalPoint);
 		void SetCenter(const nlm::vec3& center);
 
 	private:

@@ -75,6 +75,11 @@ namespace NL
 		glUniform4f(GetUniformLocation(name), value.x, value.y, value.z, value.w);
 	}
 
+	void OpenGLShader::SetUniformMat3(const std::string& name, const nlm::mat3& value)
+	{
+		glUniformMatrix3fv(GetUniformLocation(name), 1, GL_FALSE, nlm::value_ptr(value));
+	}
+
 	void OpenGLShader::SetUniformMat4(const std::string& name, const nlm::mat4& value)
 	{
 		// GL_FALSE£∫¡–”≈œ»æÿ’Û

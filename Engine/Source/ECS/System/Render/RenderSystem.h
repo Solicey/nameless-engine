@@ -20,7 +20,7 @@ namespace NL
 
 	private:
 		void UpdateParticleSystem();
-		void DrawModel(const Ref<Model>& model, const nlm::mat4& transform, int entityId = -1, const Ref<Shader>& shader = nullptr);
+		void DrawModel(const Ref<Model>& model, const nlm::mat4& transform, const nlm::mat4& viewMatrix, int entityId = -1, const Ref<Shader>& shader = nullptr);
 		void DrawSprite(const Ref<Shader>& shader,
 			const Ref<Texture2D>& texture,
 			const nlm::mat4& transform,

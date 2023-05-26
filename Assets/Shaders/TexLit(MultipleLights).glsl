@@ -37,7 +37,7 @@ layout(std140, binding = 0) uniform Camera
 
 uniform mat4 u_Transform;
 // Normal Matrix
-uniform mat4 u_NormalMatrix;
+uniform mat3 u_NormalMatrixWS;
 
 layout (location = 0) out vec3 v_Position;
 layout (location = 1) out vec2 v_TexCoord;
@@ -48,12 +48,12 @@ void main()
 {
 	v_Position = vec3(u_Transform * vec4(a_Position, 1.0));
 	v_TexCoord = a_TexCoord;
-	v_Normal = normalize(vec3(u_NormalMatrix * vec4(a_Normal, 0.0)));
+	v_Normal = normalize(u_NormalMatrixWS * a_Normal);
 	gl_Position = u_Projection * u_View * u_Transform * vec4(a_Position, 1.0);
 
-	vec3 T = vec3(normalize(u_NormalMatrix * vec4(a_Tangent, 0)));
-	vec3 B = vec3(normalize(u_NormalMatrix * vec4(a_Bitangent, 0)));
-	vec3 N = vec3(normalize(u_NormalMatrix * vec4(a_Normal, 0)));
+	vec3 T = normalize(u_NormalMatrixWS * a_Tangent);
+	vec3 B = normalize(u_NormalMatrixWS * a_Bitangent);
+	vec3 N = normalize(u_NormalMatrixWS * a_Normal);
 	v_TBN = mat3(T, B, N);
 }
 

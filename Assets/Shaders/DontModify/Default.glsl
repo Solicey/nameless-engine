@@ -22,7 +22,7 @@ layout(std140, binding = 0) uniform Camera
 };
 
 uniform mat4 u_Transform;
-uniform mat4 u_NormalMatrix;
+uniform mat3 u_NormalMatrixVS;
 			
 layout (location = 0) out vec3 v_Position;
 layout (location = 1) out vec3 v_Normal;
@@ -32,8 +32,8 @@ void main()
 	// G buffer under view space
 	v_Position = vec3(u_View * u_Transform * vec4(a_Position, 1.0));
 	//v_Position = vec3(u_Transform * vec4(a_Position, 1.0));
-	mat3 normalMatrix = transpose(inverse(mat3(u_View * u_Transform)));
-	v_Normal = normalize(normalMatrix * a_Normal);
+	//mat3 normalMatrix = transpose(inverse(mat3(u_View * u_Transform)));
+	v_Normal = normalize(u_NormalMatrixVS * a_Normal);
 	//v_Normal = normalize(a_Normal);
 	gl_Position = u_Projection * u_View * u_Transform * vec4(a_Position, 1.0);
 }
