@@ -22,9 +22,9 @@ Entities:
   - ID: 15550377673903496467
     Name: SceneSettings
     TransformComponent:
-      Translation: [0, 0, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
+      Translation: [-7.09964514, -5.9398365, 3.78330183]
+      Rotation: [-0.636001766, 1.08118725, 3.1415925]
+      Scale: [0, 0, 0]
     SettingsComponent:
       AntiAliasingType: 1
       EditorCameraClearFlag: 0

@@ -94,6 +94,19 @@ namespace NL
 		return nlm::quat(nlm::vec3(-m_Pitch, -m_Yaw, 0.0f));
 	}
 
+	void EditorCamera::SetState(const nlm::vec3& pos, const nlm::vec3& euler, const nlm::vec3& focalPoint)
+	{
+		m_Position = pos;
+		m_FocalPoint = focalPoint;
+		m_Distance = nlm::length(pos - focalPoint);
+		
+		m_Pitch = -euler.x;
+		m_Yaw = -euler.y;
+		nlm::quat orientation = GetOrientation();
+		m_ViewMatrix = nlm::translate(nlm::mat4(1.0f), m_Position) * nlm::toMat4(orientation);
+		m_ViewMatrix = nlm::inverse(m_ViewMatrix);
+	}
+
 	void EditorCamera::SetCenter(const nlm::vec3& center)
 	{
 		m_FocalPoint = center;

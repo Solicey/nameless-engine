@@ -943,6 +943,13 @@ namespace NL
             {"EditorCameraClearFlag", (int)m_EditorCamera.GetClearFlagType()},
             {"ShowGizmos", m_EditorCamera.IsRenderGizmos() ? 1 : 0}
         };*/
+
+        // Temp
+        auto& transform = m_Settings.GetComponent<TransformComponent>();
+        transform.Translation = m_EditorCamera->GetPosition();
+        transform.Rotation = nlm::eulerAngles(m_EditorCamera->GetOrientation());
+        transform.Scale = m_EditorCamera->GetFocalPoint();
+
         serializer.Serialize(path);
     }
 
@@ -1158,13 +1165,31 @@ namespace NL
             m_Settings = scene->CreateEntity(m_SettingsEntityName);
             m_Settings.AddComponent<SettingsComponent>();
             m_Settings.AddComponent<PostProcessingComponent>().Queue.push_back(CreateRef<Material>("EditorOutline.glsl"));
+
+            // Set editor camera transform
+            auto& transform = m_Settings.GetComponent<TransformComponent>();
+            auto pos = transform.GetTranslation();
+            NL_ENGINE_INFO("set editor cam pos: ({0}, {1}, {2})", pos.x, pos.y, pos.z);
+
+            transform.Translation = m_EditorCamera->GetPosition();
+            transform.Rotation = nlm::eulerAngles(m_EditorCamera->GetOrientation());
+            transform.Scale = m_EditorCamera->GetFocalPoint();
+        }
+        else
+        {
+            auto& transform = m_Settings.GetComponent<TransformComponent>();
+            m_EditorCamera->SetState(transform.GetTranslation(), transform.GetRotation(), transform.GetScale());
+            auto pos = transform.GetTranslation();
+            NL_ENGINE_INFO("set editor cam pos: ({0}, {1}, {2})", pos.x, pos.y, pos.z);
         }
 
-        m_Settings.GetComponent<SettingsComponent>().EditorCamera = m_EditorCamera;
-        m_Settings.GetComponent<SettingsComponent>().RuntimeCameraID = m_RuntimeCameraEntity.GetID();
+        auto& setComp = m_Settings.GetComponent<SettingsComponent>();
+
+        setComp.EditorCamera = m_EditorCamera;
+        setComp.RuntimeCameraID = m_RuntimeCameraEntity.GetID();
         NL_ENGINE_INFO("Runtime Camera ID: {0}", m_RuntimeCameraEntity.GetID());
         // Temp
-        m_EditorCamera->SetClearFlagType(m_Settings.GetComponent<SettingsComponent>().EditorCameraClearFlag);
+        m_EditorCamera->SetClearFlagType(setComp.EditorCameraClearFlag);
         UpdateFramebuffer();
     }
 

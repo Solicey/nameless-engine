@@ -64,6 +64,7 @@ namespace NL
 		auto& camera = cameraEntity.GetComponent<CameraComponent>();
 		auto& camTransform = cameraEntity.GetComponent<TransformComponent>();
 		auto clearFlag = camera._Camera->GetClearFlagType();
+		auto viewMatrix = nlm::inverse(camTransform.GetTransform());
 
 		m_Scene->PackUpLightDatas();
 		Renderer::SetUniformBuffer(camera._Camera, camTransform.GetTransform(), camTransform.GetTranslation());
@@ -80,7 +81,7 @@ namespace NL
 
 				if (model._Model != nullptr)
 				{
-					DrawModel(model._Model, transform.GetTransform(), (int)(uint32_t)entity);
+					DrawModel(model._Model, transform.GetTransform(), viewMatrix, (int)(uint32_t)entity);
 				}
 			}
 		}
@@ -116,7 +117,7 @@ namespace NL
 			m_SkyboxTextureCubemap->Bind(0);
 			m_SkyboxShader->SetUniformInt("u_Skybox", 0);
 			NL_ENGINE_ASSERT(cameraEntity.HasComponent<TransformComponent>(), "Camera does NOT have transform!");
-			DrawModel(m_Skybox, nlm::translate(nlm::mat4(1.0f), cameraEntity.GetComponent<TransformComponent>().GetTranslation()), -1, m_SkyboxShader);
+			DrawModel(m_Skybox, nlm::translate(nlm::mat4(1.0f), cameraEntity.GetComponent<TransformComponent>().GetTranslation()), viewMatrix, -1, m_SkyboxShader);
 
 			Renderer::DepthFunc(DepthComp::Less);
 			Renderer::SetCullFace(CullFace::Back);
@@ -141,6 +142,7 @@ namespace NL
 		bool renderGizmos = settings.GetComponent<SettingsComponent>().ShowGizmos;
 		nlm::mat4 cameraRotation = nlm::mat4(camera->GetOrientation());
 		bool isDeferred = settings.GetComponent<SettingsComponent>().RenderMode == RenderMode::Deferred;
+		const auto& viewMatrix = camera->GetViewMatrix();
 
 		m_Scene->PackUpLightDatas();
 		Renderer::SetUniformBuffer(camera);
@@ -157,7 +159,7 @@ namespace NL
 
 				if (model._Model != nullptr)
 				{
-					DrawModel(model._Model, transform.GetTransform(), (int)(uint32_t)entity);
+					DrawModel(model._Model, transform.GetTransform(), viewMatrix, (int)(uint32_t)entity);
 				}
 			}
 		}
@@ -195,7 +197,7 @@ namespace NL
 
 				if (camera.Gizmos != nullptr)
 				{
-					DrawModel(camera.Gizmos, transform.GetTransform() * nlm::scale(nlm::mat4(1.0f), nlm::vec3(1.0f, 1.0f, -1.0f)), (int)(uint32_t)entity);
+					DrawModel(camera.Gizmos, transform.GetTransform() * nlm::scale(nlm::mat4(1.0f), nlm::vec3(1.0f, 1.0f, -1.0f)), viewMatrix, (int)(uint32_t)entity);
 				}
 			}
 			Renderer::SetCullFace(CullFace::Back);
@@ -214,7 +216,7 @@ namespace NL
 			// tmp
 			m_SkyboxTextureCubemap->Bind(0);
 			m_SkyboxShader->SetUniformInt("u_Skybox", 0);
-			DrawModel(m_Skybox, nlm::translate(nlm::mat4(1.0f), camera->GetPosition()), -1, m_SkyboxShader);
+			DrawModel(m_Skybox, nlm::translate(nlm::mat4(1.0f), camera->GetPosition()), viewMatrix, -1, m_SkyboxShader);
 
 			Renderer::DepthFunc(DepthComp::Less);
 			Renderer::SetCullFace(CullFace::Back);
@@ -223,9 +225,11 @@ namespace NL
 		// 2D Gizmos
 		if (renderGizmos)
 		{
-			Renderer::DepthMask(false);
 			if (!isDeferred)
+			{
+				Renderer::DepthMask(false);
 				Renderer::EnableBlend(true);
+			}
 			Renderer::BlendFunc(BlendFactor::SrcAlpha, BlendFactor::One);
 
 			auto& pointLightDatas = m_Scene->GetPointLightShadingDataNotConst();
@@ -349,7 +353,7 @@ namespace NL
 		Renderer::BlendFunc(BlendFactor::SrcAlpha, BlendFactor::OneMinusSrcAlpha);
 	}
 
-	void RenderSystem::DrawModel(const Ref<Model>& model, const nlm::mat4& transform, int entityId, const Ref<Shader>& externShader)
+	void RenderSystem::DrawModel(const Ref<Model>& model, const nlm::mat4& transform, const nlm::mat4& viewMatrix, int entityId, const Ref<Shader>& externShader)
 	{
 		const auto& meshes = model->GetMeshes();
 		bool hasBones = model->HasBones();
@@ -371,7 +375,11 @@ namespace NL
 
 			// Typical
 			shader->SetUniformMat4("u_Transform", transform);
-			shader->SetUniformMat4("u_NormalMatrix", nlm::transpose(nlm::inverse(transform)));
+			//shader->SetUniformMat4("u_NormalMatrix", nlm::transpose(nlm::inverse(transform)));
+			// World space normal matrix
+			shader->SetUniformMat3("u_NormalMatrixWS", nlm::mat3(nlm::transpose(nlm::inverse(transform))));
+			// View space normal matrix
+			shader->SetUniformMat3("u_NormalMatrixVS", nlm::mat3(nlm::transpose(nlm::inverse(viewMatrix * transform))));
 			shader->SetUniformInt("u_EntityId", entityId);
 
 			// Lights

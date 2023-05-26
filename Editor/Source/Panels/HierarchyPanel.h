@@ -42,7 +42,7 @@ namespace NL
 		void InspectorAddComponent(const char* componentName);
 
 		template<Component C, typename UIFunction>
-		void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction);
+		void DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction, bool canDelete = true);
 
 		static bool DrawVec3Control(const std::string& label, glm::vec3& values, float resetValue = 0.0f, float columnWidth = 140.0f);
 

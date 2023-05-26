@@ -25,6 +25,7 @@ namespace NL
 		virtual void SetUniformFloat2(const std::string& name, const nlm::vec2& value) override;
 		virtual void SetUniformFloat3(const std::string& name, const nlm::vec3& value) override;
 		virtual void SetUniformFloat4(const std::string& name, const nlm::vec4& value) override;
+		virtual void SetUniformMat3(const std::string& name, const nlm::mat3& value) override;
 		virtual void SetUniformMat4(const std::string& name, const nlm::mat4& value) override;
 		virtual void SetUniformMat4Array(const std::string& name, const std::vector<nlm::mat4>& values) override;
 		virtual void Reload() override;
