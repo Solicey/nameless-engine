@@ -410,7 +410,7 @@ namespace NL
 		DrawVec3Control("Scale", component.Scale, 1.0f);
 		ImGui::Dummy(ImVec2{ 0, 1 });
 
-		});
+		}, false);
 
 #pragma endregion
 
@@ -1337,7 +1337,7 @@ namespace NL
 	}
 
 	template<Component C, typename UIFunction>
-	void HierarchyPanel::DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
+	void HierarchyPanel::DrawComponent(const std::string& name, Entity entity, UIFunction uiFunction, bool canDelete)
 	{
 		const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_FramePadding;
 
@@ -1364,7 +1364,7 @@ namespace NL
 			bool removeComponent = false;
 			if (ImGui::BeginPopup("ComponentSettings"))
 			{
-				if (ImGui::MenuItem("Remove Component"))
+				if (canDelete && ImGui::MenuItem("Remove Component"))
 					removeComponent = true;
 
 				ImGui::EndPopup();

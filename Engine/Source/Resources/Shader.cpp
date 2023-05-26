@@ -18,6 +18,7 @@ namespace NL
 
 	std::unordered_map<std::string, ShaderTag> Shader::s_ShaderTagMap =
 	{
+		{"none", ShaderTag::None},
 		{"ssao", ShaderTag::SSAO},
 		{"src", ShaderTag::SrcColor}
 	};

@@ -1,45 +1,5 @@
 Scene: Untitled
 Entities:
-  - ID: 1141227927795100365
-    Name: SceneSettings
-    TransformComponent:
-      Translation: [0.669212222, -2.70763445, -4.05147839]
-      Rotation: [2.24158859, 1.29241061, 1.08449285e-07]
-      Scale: [1.97885036, -0.991186559, -3.67717338]
-    SettingsComponent:
-      AntiAliasingType: 1
-      EditorCameraClearFlag: 0
-      MSAASamples: 4
-      ShowGizmos: true
-      RenderMode: 0
-    PostProcessingComponent:
-      Materials:
-        - ShaderName: EditorOutline.glsl
-          ShaderProperties:
-            []
-  - ID: 10223125187507918363
-    Name: Entity
-    TransformComponent:
-      Translation: [0, 1.1920929e-07, 0]
-      Rotation: [0, 0, 0]
-      Scale: [1, 1, 1]
-    ModelRendererComponent:
-      ModelPath: ../Assets/Models/Box.obj
-      Materials:
-        - MaterialName: Material
-          ShaderName: Lit(SingleDirLight).glsl
-          ShaderProperties:
-            - Type: 6
-              Name: u_Color
-              Value: [0.970297039, 0.467535853, 0.467535853]
-            - Type: 1
-              Name: u_AmbientStrength
-              Value: 0.300000012
-            - Type: 1
-              Name: u_SpecularStrength
-              Value: 0.200000003
-      Bones:
-        []
   - ID: 9613750654330948600
     Name: Entity
     TransformComponent:
@@ -51,3 +11,43 @@ Entities:
       Color: [1, 1, 1]
       Intensity: 1
       Attenuation: [1, 0.699999988, 1.79999995]
+  - ID: 10223125187507918363
+    Name: Entity
+    TransformComponent:
+      Translation: [2.32830644e-10, 1.18277967e-07, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    ModelRendererComponent:
+      ModelPath: ../Assets/Models/Box.obj
+      Materials:
+        - MaterialName: Material
+          ShaderName: Template.glsl
+          ShaderProperties:
+            - Type: 6
+              Name: u_Color
+              Value: [1, 0.831683159, 0.831683159]
+            - Type: 15
+              Name: u_Custom
+              Value: Default
+            - Type: 15
+              Name: u_Diffuse
+              Value: ../Assets\Textures\MilkyWay.jpg
+      Bones:
+        []
+  - ID: 1141227927795100365
+    Name: SceneSettings
+    TransformComponent:
+      Translation: [-3.3153429, -1.83417928, 0.961256266]
+      Rotation: [-0.16498889, 1.23717201, 3.14159274]
+      Scale: [3.02045727, -0.717691779, -1.23460269]
+    SettingsComponent:
+      AntiAliasingType: 1
+      EditorCameraClearFlag: 0
+      MSAASamples: 4
+      ShowGizmos: true
+      RenderMode: 0
+    PostProcessingComponent:
+      Materials:
+        - ShaderName: EditorOutline.glsl
+          ShaderProperties:
+            []
