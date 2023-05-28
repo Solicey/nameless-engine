@@ -138,7 +138,7 @@ namespace NL
 		m_DeltaTime = ts;
 
 		auto settings = m_Scene->GetSettingsEntity();
-		auto camera = settings.GetComponent<SettingsComponent>().EditorCamera;
+		auto &camera = settings.GetComponent<SettingsComponent>().EditorCamera;
 		bool renderGizmos = settings.GetComponent<SettingsComponent>().ShowGizmos;
 		nlm::mat4 cameraRotation = nlm::mat4(camera->GetOrientation());
 		bool isDeferred = settings.GetComponent<SettingsComponent>().RenderMode == RenderMode::Deferred;
