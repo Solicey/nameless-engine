@@ -11,6 +11,8 @@ sampler2D u_Diffuse;
 sampler2D u_Specular;
 sampler2D u_Normals;
 float u_IsNormalsCompressed;
+sampler2D u_ReliefMap;
+float u_ReliefParam;
 
 #end
 
@@ -52,9 +54,10 @@ void main()
 	gl_Position = u_Projection * u_View * u_Transform * vec4(a_Position, 1.0);
 
 	vec3 T = normalize(u_NormalMatrixWS * a_Tangent);
-	vec3 B = normalize(u_NormalMatrixWS * a_Bitangent);
 	vec3 N = normalize(u_NormalMatrixWS * a_Normal);
-	v_TBN = mat3(T, B, N);
+	T = normalize(T - dot(T, N) * N); // Orthogonalization
+	vec3 B = cross(N, T);
+	v_TBN = mat3(T, B, N); // Tangent Space to World Space
 }
 
 // FRAGMENT
@@ -86,7 +89,9 @@ uniform float u_SpecularStrength;
 uniform sampler2D u_Diffuse;
 uniform sampler2D u_Specular;
 uniform sampler2D u_Normals;
+uniform sampler2D u_ReliefMap;
 uniform float u_IsNormalsCompressed;
+uniform float u_ReliefParam;
 
 #define MAX_LIGHT_COUNT 4
 
@@ -137,20 +142,71 @@ vec3 CalculatePointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewP
 		return atten * (ambient + diffuse) * light.Color;
 	else 
 		return atten * (ambient + diffuse + specular) * light.Color;
-	// return atten * (ambient + diffuse) * light.Color;
+}
+
+vec2 ReliefMapping(vec3 viewDirTS)
+{
+	const float numLayers = 10;
+	float deltaLayerDepth = 1.0 / numLayers;
+	float currLayerDepth = 0.0;
+	vec2 deltaTexCoord = viewDirTS.xy * u_ReliefParam / numLayers;
+
+	vec2 currTexCoord = v_TexCoord;
+	float currDepthMapValue = texture(u_ReliefMap, currTexCoord).r;
+
+	while (currLayerDepth < currDepthMapValue)
+	{
+		currTexCoord -= deltaTexCoord;
+		currDepthMapValue = texture(u_ReliefMap, currTexCoord).r;
+		currLayerDepth += deltaLayerDepth;
+	}
+
+	deltaTexCoord = deltaTexCoord / 2;
+	deltaLayerDepth = deltaLayerDepth / 2;
+
+	currTexCoord += deltaTexCoord;
+	currLayerDepth -= deltaLayerDepth;
+
+	const int numSearches = 8;
+	for (int i = 0; i < numSearches; i++)
+	{
+		deltaTexCoord / 2;
+		deltaLayerDepth / 2;
+
+		currDepthMapValue = texture(u_ReliefMap, currTexCoord).r;
+		if (currDepthMapValue > currLayerDepth)
+		{
+			currTexCoord -= deltaTexCoord;
+			currLayerDepth += deltaLayerDepth;
+		}
+		else
+		{
+			currTexCoord += deltaTexCoord;
+			currLayerDepth -= deltaLayerDepth;
+		}
+	}
+
+	return currTexCoord;
 }
 			
 void main()
 {
-	vec4 diffuseFactor = texture(u_Diffuse, v_TexCoord).rgba;
+	mat3 invTBN = transpose(v_TBN);		// World Space to Tangent Space
+	vec3 viewPosTS = invTBN * u_CameraPosition;
+	vec3 fragPosTS = invTBN * v_Position;
+	vec3 viewDirTS = normalize(viewPosTS - fragPosTS);
+	vec2 texCoord = ReliefMapping(viewDirTS);
+	//texCoord = v_TexCoord;
+
+	vec4 diffuseFactor = texture(u_Diffuse, texCoord).rgba;
 	if (diffuseFactor.a <= 0.05) discard;
 	vec3 diffuseColor = diffuseFactor.rgb;
 
-	vec4 specularFactor = texture(u_Specular, v_TexCoord).rgba;
+	vec4 specularFactor = texture(u_Specular, texCoord).rgba;
 	vec3 specularColor  = specularFactor.rgb;
 	float shininess     = specularFactor.a * 64;
 
-	vec3 normal = texture(u_Normals, v_TexCoord).rgb;
+	vec3 normal = texture(u_Normals, texCoord).rgb;
 	// For compressed normal map
 	if (u_IsNormalsCompressed != 0)
 		normal.z = sqrt(1 - normal.x * normal.x - normal.y * normal.y);
@@ -182,7 +238,7 @@ void main()
 
 	f_Color = vec4(result, 1.0);
 
-	//f_Color = vec4(normal, 1.0);
+	// f_Color = vec4(normal, 1.0);
 
 	// Dont Modify
 	f_EntityId = u_EntityId;
