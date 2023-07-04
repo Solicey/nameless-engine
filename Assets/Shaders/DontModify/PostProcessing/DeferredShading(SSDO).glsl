@@ -67,8 +67,8 @@ void main()
 	float spec = texture(u_SrcColorTex, v_TexCoords).a;
 	vec3 fragPos = texture(u_PositionDepthTex, v_TexCoords).xyz;
 	float depth = texture(u_PositionDepthTex, v_TexCoords).w;
-	vec3 normal = texture(u_NormalTex, v_TexCoords).rgb;
-	vec3 ambientOcclusion = texture(u_ColorTex, v_TexCoords).rgb;
+	vec3 normal = texture(u_NormalTex, v_TexCoords).xyz;
+	vec3 ssdo = texture(u_ColorTex, v_TexCoords).rgb;
 	
 	if (depth <= 0)
 	{
@@ -79,7 +79,7 @@ void main()
 	if (u_PointLights[0].Color.r >= 0)
 	{
 		PointLight light = u_PointLights[0];
-		vec3 ambient = 0.2 * ambientOcclusion;
+		vec3 ambient = ssdo * albedo;
 		vec3 lighting = ambient;
 		vec3 viewDir = normalize(-fragPos);
 		// diffuse
@@ -100,7 +100,7 @@ void main()
 	}
 	else
 	{
-		color = vec4(ambientOcclusion * albedo, 1.0);
+		color = vec4(ssdo * albedo, 1.0);
 	}
 	//color = vec4(normal, 1.0);
 }			
