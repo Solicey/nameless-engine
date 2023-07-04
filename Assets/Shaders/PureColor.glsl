@@ -1,7 +1,7 @@
 #use model
 
 #prop
-
+color3 u_Color;
 #end
 
 // nlsl template shader file
@@ -53,7 +53,7 @@ layout (location = 1) out int f_EntityId;
 layout (location = 2) out vec4 f_PositionDepth;
 layout (location = 3) out vec4 f_Normal;
 
-// uniform vec3 u_Color;
+uniform vec3 u_Color;
 uniform int u_EntityId;
 
 layout(std140, binding = 0) uniform Camera
@@ -73,7 +73,7 @@ float LinearizeDepth(float depth, float near, float far)
 			
 void main()
 {
-	f_Color = vec4(v_NormalWS.x * 0.5 + 0.5, v_NormalWS.y * 0.5 + 0.5, v_NormalWS.z * 0.5 + 0.5, 1.0); // * vec4(u_Color, 1.0);
+	f_Color = vec4(u_Color, 1.0); // * vec4(u_Color, 1.0);
 	f_EntityId = u_EntityId;
 
 	f_PositionDepth = vec4(v_Position, LinearizeDepth(gl_FragCoord.z, u_Near, u_Far));//LinearizeDepth(depth, u_Near, u_Far));
