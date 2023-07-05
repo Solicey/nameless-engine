@@ -42,7 +42,7 @@ namespace NL
 		// 获取当前mesh绑定的material
 		const Ref<Material>& GetMaterial(const Ref<Mesh>& mesh) const
 		{
-			const std::string& name = mesh->GetMeshName();
+			const std::string& name = mesh->GetMaterialName();
 			NL_ENGINE_ASSERT(m_Materials.contains(name), "Model get shader failed!");
 			return m_Materials.at(name);
 		}

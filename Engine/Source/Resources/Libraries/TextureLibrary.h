@@ -34,7 +34,7 @@ namespace NL
 		}
 
 		// Use this function instead of Add or Get 
-		Ref<Texture2D> Fetch(const std::string& texPath)
+		Ref<Texture2D> Fetch(const std::string& texPath, bool useMipmap)
 		{
 			Ref<Texture2D> tex = nullptr;
 			if (Library<Texture2D>::GetInstance().Contains(texPath))
@@ -43,7 +43,7 @@ namespace NL
 			}
 			else
 			{
-				tex = Texture2D::Create(texPath);
+				tex = Texture2D::Create(texPath, useMipmap);
 				Library<Texture2D>::GetInstance().Add(texPath, tex);
 			}
 			return tex;

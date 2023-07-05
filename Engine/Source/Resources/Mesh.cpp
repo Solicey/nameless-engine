@@ -5,10 +5,10 @@
 
 namespace NL
 {
-	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<SkinnedVertex>& skinnedVertices, const std::vector<uint32_t>& indices, uint32_t matIndex, const std::string& modelPath, const std::string& name, bool hasBones) :
+	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<SkinnedVertex>& skinnedVertices, const std::vector<uint32_t>& indices, const std::string& matName, const std::string& modelPath, const std::string& name, bool hasBones) :
 		m_VertexCount(static_cast<uint32_t>(vertices.size())),
 		m_IndexCount(static_cast<uint32_t>(indices.size())),
-		m_MaterialIndex(matIndex),
+		m_MaterialName(matName),
 		m_ModelPath(modelPath),
 		m_MeshName(name),
 		m_HasBones(hasBones)
@@ -39,11 +39,6 @@ namespace NL
 	uint32_t Mesh::GetIndexCount() const
 	{
 		return m_IndexCount;
-	}
-
-	uint32_t Mesh::GetMaterialIndex() const
-	{
-		return m_MaterialIndex;
 	}
 
 	void Mesh::CreateBuffers(const std::vector<Vertex>& vertices, const std::vector<uint32_t>& indices)

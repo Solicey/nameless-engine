@@ -720,7 +720,7 @@ namespace NL
 				newProp.Value = prop["Value"].as<std::string>();
 				const std::string& path = std::get<std::string>(newProp.Value);
 
-				Ref<Texture2D> newTex = Library<Texture2D>::GetInstance().Fetch(path);
+				Ref<Texture2D> newTex = Library<Texture2D>::GetInstance().Fetch(path, true);
 
 				material->ReplaceTexture(newProp.Name, newTex);
 

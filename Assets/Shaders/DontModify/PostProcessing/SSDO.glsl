@@ -45,8 +45,9 @@ uniform int u_ScreenWidth;
 uniform int u_ScreenHeight;
 
 // tag ssao;
+#define SSAO_SAMPLE_COUNT 256
 uniform sampler2D u_NoiseTex;
-uniform vec3 u_Samples[64];
+uniform vec3 u_Samples[SSAO_SAMPLE_COUNT];
 
 uniform float u_Radius;
 uniform int u_KernelSize;
@@ -77,7 +78,7 @@ void main()
 	vec3 normal = normalize(texture(u_NormalTex, v_TexCoords).rgb);
 	vec3 randomVec = texture(u_NoiseTex, v_TexCoords * noiseScale).xyz;
 	//randomVec = normalize(vec3(random(normal.x), random(v_TexCoords.y), random(fragPos.x)));
-
+	//randomVec = vec3(1, 1, 1);
 	vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
 	vec3 bitangent = cross(normal, tangent);
 	mat3 TBN = mat3(tangent, bitangent, normal);
@@ -87,15 +88,15 @@ void main()
 	vec3 dirLight = vec3(0, 0, 0);
 	float validCount = 0;
 
-	for (int i = 0; i < min(u_KernelSize, 128); i++)
+	for (int i = 0; i < min(u_KernelSize, SSAO_SAMPLE_COUNT); i++)
 	{
-		vec3 samp = TBN * u_Samples[(i % 64)]; // 切线->观察空间
+		vec3 samp = TBN * u_Samples[i]; // 切线->观察空间
 
 		if (dot(samp, normal) < u_Threshold)	// Avoid artifact
 			continue;
 		validCount = validCount + 1.0;
 
-		samp = fragPos + samp * u_Radius; // radius 
+		samp = fragPos + samp * u_Radius; 
 		vec4 offset = vec4(samp, 1.0);
 		offset = u_Projection * offset; // 观察->裁剪空间
 		offset.xyz /= offset.w; // 透视除法
@@ -120,7 +121,7 @@ void main()
 			else
 			{
 				vec3 skyboxColor = vec3(0.1, 0.1, 0.1);
-				dirLight += rangeCheck * skyboxColor * dot(normal, normalize(samp - fragPos));
+				dirLight += rangeCheck * skyboxColor * max(dot(normal, normalize(samp - fragPos)), 0.0);
 			}
 		}
 	}

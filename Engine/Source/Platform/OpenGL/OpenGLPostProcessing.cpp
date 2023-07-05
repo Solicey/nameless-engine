@@ -10,14 +10,17 @@
 
 namespace NL
 {
+    #define SSAO_SAMPLE_COUNT 256
+
     OpenGLPostProcessing::OpenGLPostProcessing()
     {
-        m_SSAONoiseTex = Library<Texture2D>::GetInstance().Fetch(Library<Texture2D>::GetInstance().GetSSAONoiseTextureName());
+        m_SSAONoiseTex = Library<Texture2D>::GetInstance().Fetch(Library<Texture2D>::GetInstance().GetSSAONoiseTextureName(), false);
 
         // SSAO Kernel Generate
         std::uniform_real_distribution<float> randomFloats(0.0, 1.0); // Ëæ»ú¸¡µãÊý£¬·¶Î§0.0 - 1.0
         std::default_random_engine generator;
-        for (GLuint i = 0; i < 64; ++i)
+        const int sampleCount = SSAO_SAMPLE_COUNT;
+        for (GLuint i = 0; i < sampleCount; ++i)
         {
             glm::vec3 sample(
                 randomFloats(generator) * 2.0 - 1.0,
@@ -26,7 +29,7 @@ namespace NL
             );
             sample = glm::normalize(sample);
             sample *= randomFloats(generator);
-            float scale = float(i) / 64.0;
+            float scale = float(i) / sampleCount;
             scale = std::lerp(0.1f, 1.0f, scale * scale);
             sample *= scale;
             m_SSAOKernel.push_back(sample);
@@ -141,7 +144,7 @@ namespace NL
             {
                 shader->SetUniformInt("u_NoiseTex", 4);
                 m_SSAONoiseTex->Bind(4);
-                for (int i = 0; i < 64; i++)
+                for (int i = 0; i < SSAO_SAMPLE_COUNT; i++)
                 {
                     shader->SetUniformFloat3("u_Samples[" + std::to_string(i) + "]", m_SSAOKernel[i]);
                 }

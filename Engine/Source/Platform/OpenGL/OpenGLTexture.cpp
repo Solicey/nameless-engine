@@ -3,6 +3,7 @@
 #include "OpenGLTexture.h"
 #include "Core/Log/Log.h"
 #include "Core/Math/Math.h"
+#include "Resources/Libraries/TextureLibrary.h"
 
 #include <stb_image.h>
 
@@ -24,7 +25,7 @@ namespace NL
 		glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	}
 
-	OpenGLTexture2D::OpenGLTexture2D(const std::string& path)
+	OpenGLTexture2D::OpenGLTexture2D(const std::string& path, bool useMipmap)
 		: m_Path(path)
 	{
 		int width, height, channels;
@@ -58,22 +59,50 @@ namespace NL
 			m_InternalFormat = internalFormat;
 			m_DataFormat = dataFormat;
 
-			NL_ENGINE_ASSERT(internalFormat & dataFormat, "Format not supported!");
+			// NL_ENGINE_ASSERT(internalFormat & dataFormat, "Format not supported!");
+			if (!(internalFormat & dataFormat))
+			{
+				m_Path = Library<Texture2D>::GetInstance().GetDefaultTextureName();
+				return;
+			}
 
-			glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
-			glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
+			if (useMipmap)
+			{			
+				glGenTextures(1, &m_RendererID);
+				glBindTexture(GL_TEXTURE_2D, m_RendererID);
 
-			glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+				glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-			// 1字节对齐读取数据，以适配各种通道的格式
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-			GLenum type = internalFormat == GL_RGBA16F ? GL_FLOAT : GL_UNSIGNED_BYTE;
-			glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, dataFormat, type, data);
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+				GLenum type = internalFormat == GL_RGBA16F ? GL_FLOAT : GL_UNSIGNED_BYTE;
+				glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, m_Width, m_Height, 0, dataFormat, type, data);
+
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);
+				glGenerateMipmap(GL_TEXTURE_2D);
+			}
+			else
+			{
+				glCreateTextures(GL_TEXTURE_2D, 1, &m_RendererID);
+				glTextureStorage2D(m_RendererID, 1, internalFormat, m_Width, m_Height);
+
+				glTextureParameteri(m_RendererID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+				glTextureParameteri(m_RendererID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+				glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTextureParameteri(m_RendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+				// 1字节对齐读取数据，以适配各种通道的格式
+				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+				GLenum type = internalFormat == GL_RGBA16F ? GL_FLOAT : GL_UNSIGNED_BYTE;
+				glTextureSubImage2D(m_RendererID, 0, 0, 0, m_Width, m_Height, dataFormat, type, data);
+				glGenerateTextureMipmap(m_RendererID);
+
+				glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+			}	
 
 			stbi_image_free(data);
 
@@ -81,7 +110,8 @@ namespace NL
 		}
 		else
 		{
-			NL_ENGINE_ASSERT(false, "Failed to load textures!");
+			// NL_ENGINE_ASSERT(false, "Failed to load textures!");
+			m_Path = Library<Texture2D>::GetInstance().GetDefaultTextureName();
 		}
 	}
 

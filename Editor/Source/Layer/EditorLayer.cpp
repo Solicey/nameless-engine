@@ -72,8 +72,8 @@ namespace NL
         m_HierarchyPanel->SetUpdateRuntimeCameraCallback([this]() { EditorLayer::UpdateRuntimeCameraInfo(); });
 
         // Icons
-        m_PlayButton = Library<Texture2D>::GetInstance().Fetch(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/PlayButton.png");
-        m_StopButton = Library<Texture2D>::GetInstance().Fetch(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/StopButton.png");
+        m_PlayButton = Library<Texture2D>::GetInstance().Fetch(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/PlayButton.png", false);
+        m_StopButton = Library<Texture2D>::GetInstance().Fetch(PathConfig::GetInstance().GetAssetsFolder().string() + "/Icons/StopButton.png", false);
 
         // Scripting
         ScriptEngine::GetInstance().Init();
@@ -947,7 +947,7 @@ namespace NL
         // Temp
         auto& transform = m_Settings.GetComponent<TransformComponent>();
         transform.Translation = m_EditorCamera->GetPosition();
-        transform.Rotation = nlm::eulerAngles(m_EditorCamera->GetOrientation());
+        transform.Rotation = m_EditorCamera->GetPitchAndYaw();
         transform.Scale = m_EditorCamera->GetFocalPoint();
 
         serializer.Serialize(path);
@@ -1172,7 +1172,7 @@ namespace NL
             NL_ENGINE_INFO("set editor cam pos: ({0}, {1}, {2})", pos.x, pos.y, pos.z);
 
             transform.Translation = m_EditorCamera->GetPosition();
-            transform.Rotation = nlm::eulerAngles(m_EditorCamera->GetOrientation());
+            transform.Rotation = m_EditorCamera->GetPitchAndYaw();
             transform.Scale = m_EditorCamera->GetFocalPoint();
         }
         else

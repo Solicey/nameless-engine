@@ -97,7 +97,7 @@ namespace NL
 
 							NL_ENGINE_INFO("Load Texture: {0}, Type: {1}", texPath, type);
 
-							Ref<Texture2D> tex = Library<Texture2D>::GetInstance().Fetch(texPath);
+							Ref<Texture2D> tex = Library<Texture2D>::GetInstance().Fetch(texPath, true);
 
 							/*if (Library<Texture2D>::GetInstance().Contains(texPath))
 							{
@@ -206,6 +206,7 @@ namespace NL
 
 			std::vector<uint32_t> indices;
 			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+			std::string meshName = std::string(mesh->mName.C_Str());
 
 			NL_ENGINE_INFO("Mesh {0} Vertices count: {1}", i, mesh->mNumVertices);
 
@@ -339,15 +340,15 @@ namespace NL
 			std::string matName = std::string(scene->mMaterials[mesh->mMaterialIndex]->GetName().C_Str());
 			materials[matName] = nullptr;
 			
-			if (!Library<Mesh>::GetInstance().HasMesh(modelPath, matName))
+			if (!Library<Mesh>::GetInstance().HasMesh(modelPath, meshName))
 			{
-				Ref<Mesh> m = CreateRef<Mesh>(vertices, skinnedVertices, indices, mesh->mMaterialIndex, modelPath, matName, hasBones);
+				Ref<Mesh> m = CreateRef<Mesh>(vertices, skinnedVertices, indices, matName, modelPath, meshName, hasBones);
 				meshes.push_back(m); // The model will handle mesh destruction
-				Library<Mesh>::GetInstance().AddMesh(modelPath, matName, m);
+				Library<Mesh>::GetInstance().AddMesh(modelPath, meshName, m);
 			}
 			else
 			{
-				meshes.push_back(Library<Mesh>::GetInstance().GetMesh(modelPath, matName));
+				meshes.push_back(Library<Mesh>::GetInstance().GetMesh(modelPath, meshName));
 			}
 		}
 

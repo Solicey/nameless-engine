@@ -8,7 +8,7 @@
 namespace NL
 {
 	SpriteRendererComponent::SpriteRendererComponent(const std::string& texPath, const nlm::vec4& color, SpriteCameraReaction reaction)
-		: SpriteTexture(Library<Texture2D>::GetInstance().Fetch(texPath)), Color(color), Reaction(reaction)
+		: SpriteTexture(Library<Texture2D>::GetInstance().Fetch(texPath, true)), Color(color), Reaction(reaction)
 	{
 		if (SpriteTexture != nullptr)
 			Path = std::regex_replace(texPath, std::regex("\\\\"), "/");
@@ -21,7 +21,7 @@ namespace NL
 		SpriteTexture.reset();
 		NL_ENGINE_INFO("Replace Sprite: {0}", Path);
 		Library<Texture2D>::GetInstance().Delete(Path);
-		SpriteTexture = Library<Texture2D>::GetInstance().Fetch(texPath);
+		SpriteTexture = Library<Texture2D>::GetInstance().Fetch(texPath, true);
 		Path = texPath;
 	}
 }

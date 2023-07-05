@@ -23,8 +23,8 @@ namespace NL
 		m_GizmosShader = Library<Shader>::GetInstance().Fetch("Gizmos.glsl");
 
 		std::string assetFolder = PathConfig::GetInstance().GetAssetsFolder().string();
-		m_PointGizmosTexture = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Icons/PointLight.png");
-		m_DirGizmosTexture = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Icons/DirLight.png");
+		m_PointGizmosTexture = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Icons/PointLight.png", false);
+		m_DirGizmosTexture = Library<Texture2D>::GetInstance().Fetch(assetFolder + "/Icons/DirLight.png", false);
 
 		m_SpriteShader = Library<Shader>::GetInstance().Fetch("Sprite.glsl");
 	}
@@ -71,6 +71,7 @@ namespace NL
 
 		// Render Models (Opaque)
 		{
+			// Renderer::EnableCullFace(false);
 			auto view = m_Scene->Registry.view<TransformComponent, ModelRendererComponent>();
 			for (auto& e : view)
 			{
@@ -84,6 +85,7 @@ namespace NL
 					DrawModel(model._Model, transform.GetTransform(), viewMatrix, (int)(uint32_t)entity);
 				}
 			}
+			// Renderer::EnableCullFace(true);
 		}
 
 		// Render Sprites
@@ -149,6 +151,7 @@ namespace NL
 
 		// Render Entities (Opaque)
 		{
+			// Renderer::EnableCullFace(false);
 			auto view = m_Scene->Registry.view<TransformComponent, ModelRendererComponent>();
 			for (auto& e : view)
 			{
@@ -162,6 +165,7 @@ namespace NL
 					DrawModel(model._Model, transform.GetTransform(), viewMatrix, (int)(uint32_t)entity);
 				}
 			}
+			// Renderer::EnableCullFace(true);
 		}
 
 		// Render Sprites
@@ -237,11 +241,11 @@ namespace NL
 
 			for (auto& l : pointLightDatas)
 			{
-				DrawSprite(m_GizmosShader, m_PointGizmosTexture, nlm::translate(nlm::mat4(1.0), l.Position) * cameraRotation * nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(l.Color, 0.7), SpriteCameraReaction::LookAt, (int)l.EntityId);
+				DrawSprite(m_GizmosShader, m_PointGizmosTexture, nlm::translate(nlm::mat4(1.0), l.Position) * cameraRotation * nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(l.Color, 0.5), SpriteCameraReaction::LookAt, (int)l.EntityId);
 			}
 			for (auto& l : dirLightDatas)
 			{
-				DrawSprite(m_GizmosShader, m_DirGizmosTexture, nlm::translate(nlm::mat4(1.0), l.Position) * cameraRotation * nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(l.Color, 0.7), SpriteCameraReaction::LookAt, (int)l.EntityId);
+				DrawSprite(m_GizmosShader, m_DirGizmosTexture, nlm::translate(nlm::mat4(1.0), l.Position) * cameraRotation * nlm::scale(nlm::mat4(1.0), nlm::vec3(0.7)), nlm::vec4(l.Color, 0.5), SpriteCameraReaction::LookAt, (int)l.EntityId);
 			}
 			Renderer::DepthMask(true);
 			Renderer::EnableBlend(false);

@@ -11,7 +11,7 @@ namespace NL
 	{
 	public:
 		OpenGLTexture2D(uint32_t width, uint32_t height);
-		OpenGLTexture2D(const std::string& path);
+		OpenGLTexture2D(const std::string& path, bool useMipmap);
 		OpenGLTexture2D(uint32_t width, uint32_t height, const std::vector<nlm::vec4>& data);
 		~OpenGLTexture2D();
 

@@ -56,7 +56,7 @@ namespace NL
 
 	private:
 		static Ref<Texture2D> Create(uint32_t width, uint32_t height);
-		static Ref<Texture2D> Create(const std::string& path);
+		static Ref<Texture2D> Create(const std::string& path, bool useMipmap = true);
 		static Ref<Texture2D> Create(uint32_t width, uint32_t height, const std::vector<nlm::vec4>& data);
 	};
 

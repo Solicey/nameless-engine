@@ -828,7 +828,7 @@ namespace NL
 			const Ref<Texture2D>& tex = component.SpriteTexture;
 			// if (tex == nullptr) tex = Library<Texture2D>::GetInstance().Fetch(Library<Texture2D>::GetInstance().GetDefaultTextureName());
 
-			if (Utils::ImageReplaceStyle1("Sprite", RIGHT_COLUMN_WIDTH, tex == nullptr ? Library<Texture2D>::GetInstance().Fetch(Library<Texture2D>::GetInstance().GetDefaultTextureName()) : tex))
+			if (Utils::ImageReplaceStyle1("Sprite", RIGHT_COLUMN_WIDTH, tex == nullptr ? Library<Texture2D>::GetInstance().Fetch(Library<Texture2D>::GetInstance().GetDefaultTextureName(), true) : tex))
 			{
 				std::string filepath = Application::GetInstance().OpenFileDialogue(L"Texture2D(*.png;*.jpg)\0*.png;*.jpg\0\0");
 
@@ -1102,7 +1102,7 @@ namespace NL
 			case ShaderUniformType::Sampler2D:
 			{
 				const std::string& oldTexPath = std::get<std::string>(prop.Value);
-				Ref<Texture2D> oldTex = Library<Texture2D>::GetInstance().Fetch(oldTexPath);
+				Ref<Texture2D> oldTex = Library<Texture2D>::GetInstance().Fetch(oldTexPath, true);
 				
 				if (Utils::ImageReplaceStyle1(prop.Name, RIGHT_COLUMN_WIDTH, oldTex))
 				{
@@ -1112,7 +1112,7 @@ namespace NL
 					if (pos != std::string::npos)
 					{
 						filepath = PathConfig::GetInstance().GetAssetsFolder().string() + filepath.substr(pos + 6);
-						Ref<Texture2D> newTex = Library<Texture2D>::GetInstance().Fetch(filepath);
+						Ref<Texture2D> newTex = Library<Texture2D>::GetInstance().Fetch(filepath, true);
 
 						oldTex.reset();
 						mat->ReplaceTexture(prop.Name, newTex);

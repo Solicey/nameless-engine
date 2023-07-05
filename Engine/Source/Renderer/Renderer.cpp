@@ -83,7 +83,7 @@ namespace NL
 				//NL_ENGINE_TRACE("Sampler2D filepath: {0}", std::get<std::string>(prop.Value));
 				shader->SetUniformInt(prop.Name.c_str(), cntSampler2D);
 				// std::get<std::string>(prop.Value)
-				Library<Texture2D>::GetInstance().Fetch(std::get<std::string>(prop.Value))->Bind(cntSampler2D);
+				Library<Texture2D>::GetInstance().Fetch(std::get<std::string>(prop.Value), true)->Bind(cntSampler2D);
 				cntSampler2D++;
 				break;
 

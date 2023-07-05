@@ -21,7 +21,7 @@ namespace NL
 			{
 				std::string texPath = PathConfig::GetInstance().GetAssetsFolder().string() + "/Textures/DontModify/DefaultParticle.png";
 				// Bad design, should be replaced later or so
-				Pass2->ReplaceTexture("u_Sprite", Library<Texture2D>::GetInstance().Fetch(texPath));
+				Pass2->ReplaceTexture("u_Sprite", Library<Texture2D>::GetInstance().Fetch(texPath, true));
 				prop.Value = texPath;
 			}
 		}
