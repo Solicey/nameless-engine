@@ -19,6 +19,7 @@ namespace NL
 		None = 0x0,
 		SSAO = 0x1,
 		SrcColor = 0x2,		// Post processing pass requires original color texture
+		Skybox = 0x4
 	};
 
 	inline ShaderTag operator~ (ShaderTag a) { return (ShaderTag)~(int)a; }

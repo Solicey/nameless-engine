@@ -1,53 +1,82 @@
 Scene: Untitled
 Entities:
-  - ID: 16241618240402484313
+  - ID: 2196302291656917860
     Name: Entity
     TransformComponent:
-      Translation: [0, 0, 1.38888335]
+      Translation: [-0.236014381, 2.3592391, -1.65631258]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
-    LightComponent:
-      LightType: 0
-      Color: [1, 1, 1]
-      Intensity: 1
-      Attenuation: [1, 0.699999988, 1.79999995]
-  - ID: 251931277435229708
+    ModelRendererComponent:
+      ModelPath: ../Assets/Models/Sphere.obj
+      Materials:
+        - MaterialName: None
+          ShaderName: PBRTexLit(MultipleLights).glsl
+          ShaderProperties:
+            - Type: 15
+              Name: u_Diffuse
+              Value: ../Assets\Textures\PBR\tj0iajlbw_2K_Albedo.jpg
+            - Type: 15
+              Name: u_Metalness
+              Value: Default
+            - Type: 15
+              Name: u_Normals
+              Value: ../Assets\Textures\PBR\tj0iajlbw_2K_Normal.jpg
+            - Type: 15
+              Name: u_Roughness
+              Value: ../Assets\Textures\PBR\tj0iajlbw_2K_Roughness.jpg
+            - Type: 1
+              Name: u_IsNormalsCompressed
+              Value: 0
+      Bones:
+        []
+  - ID: 6812967650305617139
     Name: SceneSettings
     TransformComponent:
-      Translation: [0.724750996, -0.0941501856, 6.04037809]
-      Rotation: [0.135000169, 0, -0.0419987477]
-      Scale: [0.416056633, -1.0927788, -1.30538499]
+      Translation: [3.57068086, 2.32509708, -2.34519768]
+      Rotation: [0.222012907, 0, 16.6893196]
+      Scale: [-0.283780068, 1.27838373, 0.232453912]
     SettingsComponent:
       AntiAliasingType: 1
-      EditorCameraClearFlag: 0
+      EditorCameraClearFlag: 1
       MSAASamples: 4
-      ShowGizmos: true
+      ShowGizmos: false
       RenderMode: 0
     PostProcessingComponent:
       Materials:
         - ShaderName: EditorOutline.glsl
           ShaderProperties:
             []
-  - ID: 10164215708358918445
+  - ID: 10250129764006599626
     Name: Entity
     TransformComponent:
-      Translation: [0.533386171, 0.307433963, -3.77377748]
+      Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     ModelRendererComponent:
       ModelPath: ../Assets/Models/Box.fbx
       Materials:
         - MaterialName: DefaultMaterial
-          ShaderName: TexUnlit.glsl
+          ShaderName: PBRLit(MultipleLights).glsl
           ShaderProperties:
             - Type: 6
-              Name: u_Color
-              Value: [1, 1, 1]
-            - Type: 15
-              Name: u_Custom
-              Value: Default
-            - Type: 15
-              Name: u_Diffuse
-              Value: ../Assets\Textures\wood_texture.jpg
+              Name: u_Albedo
+              Value: [0.297029674, 1, 0.422311366]
+            - Type: 1
+              Name: u_Metallic
+              Value: 0
+            - Type: 1
+              Name: u_Roughness
+              Value: 1
       Bones:
         []
+  - ID: 16823263282777613680
+    Name: Entity
+    TransformComponent:
+      Translation: [0.786752939, 2.49873614, -0.857508183]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    LightComponent:
+      LightType: 1
+      Color: [1, 1, 1]
+      Intensity: 3
+      Attenuation: [1, 0.699999988, 1.79999995]

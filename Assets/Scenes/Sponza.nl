@@ -1,5 +1,52 @@
 Scene: Untitled
 Entities:
+  - ID: 12454486741017926062
+    Name: Entity
+    TransformComponent:
+      Translation: [0, 1.99952626, 0]
+      Rotation: [0.81395191, 0, 0]
+      Scale: [1, 0.999999881, 0.999999881]
+    LightComponent:
+      LightType: 0
+      Color: [1, 1, 1]
+      Intensity: 1
+      Attenuation: [1, 0.699999988, 1.79999995]
+  - ID: 6791577370053867193
+    Name: Entity
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    CameraComponent:
+      FixedAspectRatio: false
+      ClearColor: [0.192000002, 0.301999986, 0.474999994, 1]
+      ProjectionType: 1
+      OrthoSize: 10
+      OrthoFar: 100
+      OrthoNear: 0.00999999978
+      PerspFOV: 0.785398185
+      PerspFar: 1000
+      PerspNear: 0.00999999978
+      ViewportWidth: 1280
+      ViewportHeight: 720
+      ClearFlagType: 0
+  - ID: 12418745565055627628
+    Name: SceneSettings
+    TransformComponent:
+      Translation: [-10.0203533, 2.5116806, -1.7132113]
+      Rotation: [0.185998917, 0, -4.46100378]
+      Scale: [-4.94038439, 1.52474213, -0.408584774]
+    SettingsComponent:
+      AntiAliasingType: 1
+      EditorCameraClearFlag: 0
+      MSAASamples: 4
+      ShowGizmos: true
+      RenderMode: 0
+    PostProcessingComponent:
+      Materials:
+        - ShaderName: EditorOutline.glsl
+          ShaderProperties:
+            []
   - ID: 5713983307806275842
     Name: Entity
     TransformComponent:
@@ -17,7 +64,7 @@ Entities:
               Value: [1, 1, 1]
             - Type: 15
               Name: u_Custom
-              Value: Default
+              Value: ""
             - Type: 15
               Name: u_Diffuse
               Value: ../Assets/Models/sponza/textures/background.png
@@ -311,20 +358,3 @@ Entities:
               Value: ../Assets/Models/sponza/textures/sponza_roof_diff.png
       Bones:
         []
-  - ID: 12418745565055627628
-    Name: SceneSettings
-    TransformComponent:
-      Translation: [2.86294031, 1.05734241, 0.648372412]
-      Rotation: [0.767999053, 0, -1.59900379]
-      Scale: [1.20241618, -0.547019005, 0.695224106]
-    SettingsComponent:
-      AntiAliasingType: 1
-      EditorCameraClearFlag: 0
-      MSAASamples: 4
-      ShowGizmos: true
-      RenderMode: 0
-    PostProcessingComponent:
-      Materials:
-        - ShaderName: EditorOutline.glsl
-          ShaderProperties:
-            []

@@ -2,7 +2,7 @@
 // For post-processing only, don't use it on entities
 
 #use post
-#lit 32
+#lit 4
 #tag src;
 
 #prop
@@ -27,7 +27,7 @@ void main()
 
 layout (location = 0) in vec2 v_TexCoords;
 
-layout (location = 0) out vec4 color;
+layout (location = 0) out vec4 f_Color;
 
 // ssao tex
 uniform sampler2D u_ColorTex;
@@ -35,7 +35,7 @@ uniform sampler2D u_PositionDepthTex;
 uniform sampler2D u_NormalTex;
 uniform sampler2D u_SrcColorTex;
 
-#define MAX_LIGHT_COUNT 32
+#define MAX_LIGHT_COUNT 4
 
 struct PointLight
 {
@@ -64,7 +64,7 @@ layout(std140, binding = 0) uniform Camera
 void main()
 {
 	vec3 albedo = texture(u_SrcColorTex, v_TexCoords).rgb;
-	float spec = texture(u_SrcColorTex, v_TexCoords).a;
+	float specStrength = texture(u_SrcColorTex, v_TexCoords).a;
 	vec3 fragPos = texture(u_PositionDepthTex, v_TexCoords).xyz;
 	float depth = texture(u_PositionDepthTex, v_TexCoords).w;
 	vec3 normal = texture(u_NormalTex, v_TexCoords).xyz;
@@ -72,35 +72,51 @@ void main()
 	
 	if (depth <= 0)
 	{
-		color = vec4(albedo, spec);
+		f_Color = vec4(albedo, specStrength);
 		return;
 	}	
 
-	if (u_PointLights[0].Color.r >= 0)
+	vec3 result = vec3(0, 0, 0);
+
+	for (int i = 0; i < MAX_LIGHT_COUNT; i++)
 	{
-		PointLight light = u_PointLights[0];
-		vec3 ambient = ssdo * albedo;
-		vec3 lighting = ambient;
-		vec3 viewDir = normalize(-fragPos);
-		// diffuse
-		vec3 lightPos = vec3(u_View * vec4(light.Position, 1.0));
-		vec3 lightDir = normalize(lightPos - fragPos);
-		vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * light.Color;
-		// specular
-		vec3 halfwayDir = normalize(lightDir + viewDir);
-		float spec = pow(max(dot(normal, halfwayDir), 0.0), 32);
-		vec3 specular = light.Color * spec;
-		// atten
-		float dist = length(lightPos - fragPos);
-		float atten = 1.0 / (light.Attenuation.x + light.Attenuation.y * dist + light.Attenuation.z * dist * dist);
-		diffuse *= atten;
-		specular *= atten;
-		lighting += diffuse + specular;
-		color = vec4(lighting, 1.0);
+		if (u_DirLights[i].Color.r >= 0)
+		{
+			DirLight light = u_DirLights[i];
+			vec3 viewDir = normalize(-fragPos);
+			// diffuse
+			vec3 lightDir = -normalize(vec3(u_View * vec4(light.Direction, 0)));
+			vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * light.Color;
+			// specular
+			vec3 halfwayDir = normalize(lightDir + viewDir);
+			float spec = pow(max(dot(normal, halfwayDir), 0.0), 32);
+			vec3 specular = light.Color * spec * specStrength;
+
+			result += diffuse + specular;
+		}
+
+		if (u_PointLights[i].Color.r >= 0)
+		{
+			PointLight light = u_PointLights[i];
+			vec3 viewDir = normalize(-fragPos);
+			// diffuse
+			vec3 lightPos = vec3(u_View * vec4(light.Position, 1.0));
+			vec3 lightDir = normalize(lightPos - fragPos);
+			vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * light.Color;
+			// specular
+			vec3 halfwayDir = normalize(lightDir + viewDir);
+			float spec = pow(max(dot(normal, halfwayDir), 0.0), 32);
+			vec3 specular = light.Color * spec * specStrength;
+			// atten
+			float dist = length(lightPos - fragPos);
+			float atten = 1.0 / (light.Attenuation.x + light.Attenuation.y * dist + light.Attenuation.z * dist * dist);
+			diffuse *= atten;
+			specular *= atten;
+			result += diffuse + specular;
+		}
 	}
-	else
-	{
-		color = vec4(ssdo * albedo, 1.0);
-	}
-	//color = vec4(normal, 1.0);
+
+	vec3 ambient = albedo * ssdo;
+	f_Color = vec4(result + ambient, 1.0);
+
 }			

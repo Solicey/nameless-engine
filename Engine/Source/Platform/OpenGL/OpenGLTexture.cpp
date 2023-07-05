@@ -59,6 +59,8 @@ namespace NL
 			m_InternalFormat = internalFormat;
 			m_DataFormat = dataFormat;
 
+			NL_ENGINE_INFO("Texture {0}, channel count: {1}", m_Path, channels);
+
 			// NL_ENGINE_ASSERT(internalFormat & dataFormat, "Format not supported!");
 			if (!(internalFormat & dataFormat))
 			{

@@ -112,13 +112,12 @@ vec3 CalculateDirLight(DirLight light, vec3 normal, vec3 viewPos, vec3 diffuseCo
 	float diff = max(dot(normal, lightDir), 0.0);
 	vec3 reflectDir = reflect(-lightDir, normal);
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-	vec3 ambient = u_AmbientStrength * diffuseColor;
 	vec3 diffuse = diff * diffuseColor;
 	vec3 specular = u_SpecularStrength * spec * specularColor;
 	if (u_SpecularStrength == 0)
-		return (ambient + diffuse) * light.Color;
+		return (diffuse) * light.Color;
 	else 
-		return (ambient + diffuse + specular) * light.Color;
+		return (diffuse + specular) * light.Color;
 }
 
 vec3 CalculatePointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewPos, vec3 diffuseColor, vec3 specularColor, float shininess)
@@ -130,13 +129,12 @@ vec3 CalculatePointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewP
 	float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
 	float dist = length(light.Position - fragPos);
 	float atten = 1.0 / (light.Attenuation.x + light.Attenuation.y * dist + light.Attenuation.z * dist * dist);
-	vec3 ambient = u_AmbientStrength * diffuseColor;
 	vec3 diffuse = diff * diffuseColor;
 	vec3 specular = u_SpecularStrength * spec * specularColor;
 	if (u_SpecularStrength == 0)
-		return atten * (ambient + diffuse) * light.Color;
+		return atten * (diffuse) * light.Color;
 	else 
-		return atten * (ambient + diffuse + specular) * light.Color;
+		return atten * (diffuse + specular) * light.Color;
 	// return atten * (ambient + diffuse) * light.Color;
 }
 			
@@ -180,7 +178,8 @@ void main()
 		}
 	}
 
-	f_Color = vec4(result, 1.0);
+	vec3 ambient = u_AmbientStrength * diffuseColor;
+	f_Color = vec4(result + ambient, 1.0);
 
 	//f_Color = vec4(normal, 1.0);
 

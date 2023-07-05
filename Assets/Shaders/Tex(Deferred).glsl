@@ -7,6 +7,7 @@
 color3 u_Color;
 float u_SpecularStrength;
 sampler2D u_Diffuse;
+float u_UseSpecular;
 sampler2D u_Specular;
 sampler2D u_Normals;
 
@@ -93,6 +94,7 @@ uniform sampler2D u_Diffuse;
 uniform sampler2D u_Specular;
 uniform sampler2D u_Normals;
 uniform mat4 u_Transform;
+uniform float u_UseSpecular;
 	
 void main()
 {
@@ -117,7 +119,9 @@ void main()
 	
 
 	f_AlbedoSpec.rgb = diffuseColor;
-	f_AlbedoSpec.a = u_SpecularStrength * specularFactor.r;
+	f_AlbedoSpec.a = u_SpecularStrength;
+	if (u_UseSpecular != 0.0)
+		f_AlbedoSpec.a *= specularFactor.r;
 	f_EntityId = u_EntityId;
 	f_Position = vec4(v_Position, LinearizeDepth(gl_FragCoord.z, u_Near, u_Far));
 	f_Normal = vec4(normal, 1.0);

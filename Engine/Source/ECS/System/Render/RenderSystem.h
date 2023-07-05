@@ -3,6 +3,7 @@
 #include "ECS/System/System.h"
 #include "Resources/Shader.h"
 #include "ECS/Entity/Entity.h"
+#include "Renderer/Framebuffer.h"
 
 namespace NL
 {

@@ -35,6 +35,8 @@ namespace NL
             m_SSAOKernel.push_back(sample);
         }
 
+        m_SkyboxTextureCubemap = Library<TextureCubeMap>::GetInstance().FetchDefault();
+
         Init();
     }
 
@@ -128,7 +130,13 @@ namespace NL
             }
 
             // WARNING: index should be changed accordingly
-            Renderer::BindCustomShaderProperties(mat, 6);
+            Renderer::BindCustomShaderProperties(mat, 7);
+
+            if (shader->CheckTag(ShaderTag::Skybox))
+            {
+                shader->SetUniformInt("u_Skybox", 6);
+                m_SkyboxTextureCubemap->Bind(6);
+            }
 
             if (shader->CheckTag(ShaderTag::SrcColor))
             {

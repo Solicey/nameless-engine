@@ -21,6 +21,7 @@ namespace NL
 
 		// Depth/stencil
 		Depth24Stencil8,
+		Depth32F,
 
 		// Defaults
 		Depth = Depth24Stencil8

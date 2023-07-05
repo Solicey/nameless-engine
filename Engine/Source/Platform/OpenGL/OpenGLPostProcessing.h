@@ -33,5 +33,6 @@ namespace NL
 
 		Ref<Texture2D> m_SSAONoiseTex;
 		std::vector<nlm::vec3> m_SSAOKernel;
+		Ref<TextureCubeMap> m_SkyboxTextureCubemap;
 	};
 }

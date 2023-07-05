@@ -90,6 +90,7 @@ namespace NL
 				m_ColorAttachmentSpecifications.emplace_back(tex);
 				break;
 			case FramebufferTextureFormat::Depth24Stencil8:
+			case FramebufferTextureFormat::Depth32F:
 				m_DepthAttachmentSpecification = tex;
 				break;
 			}
@@ -321,6 +322,9 @@ namespace NL
 			{
 			case FramebufferTextureFormat::Depth24Stencil8:
 				Utils::AttachDepthTexture(m_DepthAttachment, m_Specification.Samples, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL_ATTACHMENT, m_Specification.Width, m_Specification.Height);
+				break;
+			case FramebufferTextureFormat::Depth32F:
+
 				break;
 			}
 		}
