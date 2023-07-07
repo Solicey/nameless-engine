@@ -10,6 +10,7 @@ float u_EnableShadow;
 float u_ShadowBiasModifier;
 float u_EnableSRGBCorrection;
 float u_EnableGammaCorrection;
+float u_ShadowMaxLength;
 #end
 
 #type vertex
@@ -43,8 +44,10 @@ uniform float u_EnableShadow;
 uniform float u_ShadowBiasModifier;
 uniform float u_EnableSRGBCorrection;
 uniform float u_EnableGammaCorrection;
+uniform float u_ShadowMaxLength;
 
 #define MAX_LIGHT_COUNT 4
+const float PI = 3.14159265359;
 
 struct PointLight
 {
@@ -135,29 +138,79 @@ float ShadowCaster(vec3 fragPosVS, vec3 fragPosWS, vec3 normalVS)
 		for (int y = -2; y <= 2; y++)
 		{
 			float sampleDepth = texture(u_ShadowMaps, vec3(fragPosNDC.xy + vec2(x, y) * texelSize, layer)).r;
-			shadow += (fragDepth - bias) > sampleDepth ? 1.0 : 0.0;
+			float len = (fragDepth - bias) - sampleDepth;
+			shadow += len > 0.0 ? 1.0 * max((u_ShadowMaxLength - len), 0.0 ) / u_ShadowMaxLength : 0.0;
 		}
 	}
 	shadow /= 25.0;
 	return shadow;
 }
+
+vec3 FresnelSchlick(float cosTheta, vec3 F0)
+{
+    return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+} 
+
+float DistributionGGX(vec3 N, vec3 H, float roughness)
+{
+    float a      = roughness * roughness;
+    float a2     = a * a;
+    float NdotH  = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH * NdotH;
+
+    float num   = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+
+    return num / denom;
+}
+
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = (roughness + 1.0);
+    float k = (r * r) / 8.0;
+
+    float num   = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+
+    return num / denom;
+}
+
+float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2  = GeometrySchlickGGX(NdotV, roughness);
+    float ggx1  = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggx1 * ggx2;
+}
 			
 void main()
 {
 	vec3 albedo = texture(u_SrcColorTex, v_TexCoords).rgb;
-	float specStrength = texture(u_SrcColorTex, v_TexCoords).a;
+	float roughness = texture(u_SrcColorTex, v_TexCoords).a;
 	vec3 fragPos = texture(u_PositionDepthTex, v_TexCoords).xyz;
 	float depth = texture(u_PositionDepthTex, v_TexCoords).w;
 	vec3 normal = texture(u_NormalTex, v_TexCoords).xyz;
+	float metallic = texture(u_NormalTex, v_TexCoords).w;
 	vec3 ssdo = texture(u_ColorTex, v_TexCoords).rgb;
 	
 	if (depth <= 0)
 	{
-		f_Color = vec4(albedo, specStrength);
+		f_Color = vec4(albedo, roughness);
 		return;
 	}	
 
-	vec3 result = vec3(0, 0, 0);
+	mat4 invView = inverse(u_View);
+	mat4 transView = transpose(u_View);
+	vec3 worldPos = vec3(invView * vec4(fragPos, 1.0));	// Pos WS
+	vec3 N = vec3(transView * vec4(normal, 0.0));	// Normal WS
+	vec3 V = normalize(u_CameraPosition - worldPos);
+	vec3 Lo = vec3(0.0);
+	vec3 F0 = vec3(0.04);
+	F0 = mix(F0, albedo, metallic);
+
 	float shadow = ShadowCaster(fragPos, vec3(inverse(u_View) * vec4(fragPos, 1.0)), normal);
 
 	float hasCastShadow = 0;
@@ -167,21 +220,38 @@ void main()
 		{
 			DirLight light = u_DirLights[i];
 			vec3 lightColor = light.Color;
+			vec3 lightDir = light.Direction;
 			if (u_EnableSRGBCorrection != 0)
 			{
 				lightColor = pow(lightColor, vec3(2.2));
 			}
 
-			vec3 viewDir = normalize(-fragPos);
+			vec3 L = -normalize(lightDir);
+			vec3 H = normalize(V + L);
+
+			vec3 F = FresnelSchlick(max(dot(H, V), 0.0), F0);
+			float NDF = DistributionGGX(N, H, roughness);
+			float G = GeometrySmith(N, V, L, roughness);
+
+			vec3 nominator = NDF * G * F;
+			float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001;
+			vec3 specular = nominator / denominator;
+
+			vec3 kS = F;
+			vec3 kD = vec3(1.0) - kS;
+			kD *= 1.0 - metallic;
+
+			float NdotL = max(dot(N, L), 0.0);
+			vec3 ds = (kD * albedo / PI + specular) * lightColor * NdotL;
+
+			/*vec3 viewDir = normalize(-fragPos);
 			// diffuse
 			vec3 lightDir = -normalize(vec3(u_View * vec4(light.Direction, 0)));
 			vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lightColor;
 			// specular
 			vec3 halfwayDir = normalize(lightDir + viewDir);
 			float spec = pow(max(dot(normal, halfwayDir), 0.0), 32);
-			vec3 specular = lightColor * spec * specStrength;
-
-			vec3 ds = diffuse + specular;
+			vec3 specular = lightColor * spec * specStrength;*/
 
 			if (hasCastShadow == 0.0 && u_EnableShadow != 0.0)
 			{
@@ -189,19 +259,45 @@ void main()
 				ds = ds * (1.0 - shadow);
 			}
 
-			result += ds;
+			Lo += ds;
 		}
 
 		if (u_PointLights[i].Color.r >= 0)
 		{
 			PointLight light = u_PointLights[i];
 			vec3 lightColor = light.Color;
+			vec3 lightPos = light.Position;
+			vec3 lightAtten = light.Attenuation;
+
 			if (u_EnableSRGBCorrection != 0)
 			{
 				lightColor = pow(lightColor, vec3(2.2));
 			}
 
-			vec3 viewDir = normalize(-fragPos);
+			vec3 L = normalize(lightPos - worldPos);
+			vec3 H = normalize(V + L);
+
+			float dist = length(lightPos - worldPos);
+			// float atten = 1.0 / (lightAtten.x + lightAtten.y * dist + lightAtten.z * dist * dist);
+			float atten = 1.0 / (dist * dist);
+			vec3 radiance = lightColor * atten;
+
+			vec3 F = FresnelSchlick(max(dot(H, V), 0.0), F0);
+			float NDF = DistributionGGX(N, H, roughness);
+			float G = GeometrySmith(N, V, L, roughness);
+
+			vec3 nominator = NDF * G * F;
+			float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001;
+			vec3 specular = nominator / denominator;
+
+			vec3 kS = F;
+			vec3 kD = vec3(1.0) - kS;
+			kD *= 1.0 - metallic;
+
+			float NdotL = max(dot(N, L), 0.0);
+			Lo += (kD * albedo / PI + specular) * radiance * NdotL;
+
+			/*vec3 viewDir = normalize(-fragPos);
 			// diffuse
 			vec3 lightPos = vec3(u_View * vec4(light.Position, 1.0));
 			vec3 lightDir = normalize(lightPos - fragPos);
@@ -214,12 +310,11 @@ void main()
 			float dist = length(lightPos - fragPos);
 			float atten = 1.0 / (light.Attenuation.x + light.Attenuation.y * dist + light.Attenuation.z * dist * dist);
 			diffuse *= atten;
-			specular *= atten;
-			result += diffuse + specular;
+			specular *= atten;*/
 		}
 	}
 
-	vec3 color = result + albedo * ssdo;
+	vec3 color = Lo + albedo * ssdo;
 
 	// Gamma Correction
 	if (u_EnableGammaCorrection != 0)

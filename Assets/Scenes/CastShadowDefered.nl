@@ -3,16 +3,16 @@ Entities:
   - ID: 6348400089869497228
     Name: SceneSettings
     TransformComponent:
-      Translation: [31.5445023, 40.1565475, 44.4421234]
-      Rotation: [0.530998588, 0, -13.0439091]
-      Scale: [6.81822968, 8.56188297, -3.33939719]
+      Translation: [3.29049635, 19.6746464, 34.9845581]
+      Rotation: [0.467993796, 0, -50.0847969]
+      Scale: [10.1036673, 0.511577129, -2.31153059]
     SettingsComponent:
       AntiAliasingType: 0
       EditorCameraClearFlag: 1
       MSAASamples: 4
       ShowGizmos: true
       RenderMode: 1
-      ShadowZMult: 10.0
+      ShadowZMult: 10
     PostProcessingComponent:
       Materials:
         - ShaderName: SSDO.glsl
@@ -22,13 +22,22 @@ Entities:
               Value: 64
             - Type: 1
               Name: u_Radius
-              Value: 1
+              Value: 10
             - Type: 1
-              Name: u_Threshold
-              Value: 0.0500000007
+              Name: u_Bias
+              Value: 0.00999999978
             - Type: 1
               Name: u_EnableSRGBCorrection
-              Value: 0
+              Value: 1
+            - Type: 1
+              Name: u_DirectLightWeight
+              Value: 1
+            - Type: 1
+              Name: u_IndirectLightWeight
+              Value: 5
+            - Type: 6
+              Name: u_AmbientColor
+              Value: [0.640329361, 0.678502679, 0.683168292]
         - ShaderName: Blur.glsl
           ShaderProperties:
             []
@@ -39,16 +48,19 @@ Entities:
               Value: 1
             - Type: 1
               Name: u_ShadowBiasModifier
-              Value: 2.0999999
+              Value: 3
+            - Type: 1
+              Name: u_EnableSRGBCorrection
+              Value: 1
             - Type: 1
               Name: u_EnableGammaCorrection
               Value: 1
   - ID: 6213896353434949577
     Name: Entity
     TransformComponent:
-      Translation: [0, -2.38418579e-07, 0]
+      Translation: [22.0733871, -2.66050108e-07, 9.16891289]
       Rotation: [0, 0, 0]
-      Scale: [61.2999992, 0.999999881, 33.2999992]
+      Scale: [39.2999992, 0.999999881, 28.6000004]
     ModelRendererComponent:
       ModelPath: ../Assets/Models/Plane.obj
       Materials:
@@ -57,7 +69,7 @@ Entities:
           ShaderProperties:
             - Type: 6
               Name: u_Color
-              Value: [0.614536703, 0.656800747, 0.716171622]
+              Value: [0.598802805, 0.679867983, 0.587872684]
             - Type: 1
               Name: u_Specular
               Value: 0.300000012
@@ -73,8 +85,8 @@ Entities:
     Name: Entity
     TransformComponent:
       Translation: [-17.1233959, 37.1884956, -13.9176025]
-      Rotation: [1.17160094, 0, 0]
-      Scale: [1, 1, 1]
+      Rotation: [0.702328742, 0.260870248, 0.685190141]
+      Scale: [0.999999881, 0.999999881, 0.999999881]
     LightComponent:
       LightType: 0
       Color: [1, 1, 1]

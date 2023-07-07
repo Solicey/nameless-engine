@@ -10,11 +10,13 @@
 #prop
 int u_KernelSize;
 float u_Radius;
-float u_Threshold;
+float u_Bias;
 float u_EnableSRGBCorrection;
+float u_DirectLightWeight;
+float u_IndirectLightWeight;
+color3 u_AmbientColor;
 #end
 
-// u_Threshold = 0.05
 
 #type vertex
 #version 450 core
@@ -40,6 +42,7 @@ layout (location = 0) out vec4 color;
 uniform sampler2D u_PositionDepthTex;
 uniform sampler2D u_NormalTex;
 uniform sampler2D u_SrcColorTex;
+uniform sampler2D u_ColorTex;
 uniform samplerCube u_Skybox;
 
 uniform int u_ScreenWidth;
@@ -52,8 +55,11 @@ uniform vec3 u_Samples[SSAO_SAMPLE_COUNT];
 
 uniform float u_Radius;
 uniform int u_KernelSize;
-uniform float u_Threshold;
+uniform float u_Bias;
 uniform float u_EnableSRGBCorrection;
+uniform float u_DirectLightWeight;
+uniform float u_IndirectLightWeight;
+uniform vec3 u_AmbientColor;
 
 layout(std140, binding = 0) uniform Camera
 {
@@ -84,20 +90,15 @@ void main()
 	vec3 bitangent = cross(normal, tangent);
 	mat3 TBN = mat3(tangent, bitangent, normal);
 	
-	float occlusion = 0.0;
 	vec3 indirLight = vec3(0, 0, 0);
-	vec3 dirLight = vec3(0, 0, 0);
-	float validCount = 0;
+	float occlusion = 0.0;
 
 	mat4 invView = inverse(u_View);
+	float kernelSize = min(u_KernelSize, SSAO_SAMPLE_COUNT);
 
-	for (int i = 0; i < min(u_KernelSize, SSAO_SAMPLE_COUNT); i++)
+	for (int i = 0; i < kernelSize; i++)
 	{
 		vec3 samp = TBN * u_Samples[i]; // 切线->观察空间
-
-		if (dot(samp, normal) < u_Threshold)	// Avoid artifact
-			continue;
-		validCount = validCount + 1.0;
 
 		samp = fragPos + samp * u_Radius; 
 		vec4 offset = vec4(samp, 1.0);
@@ -108,35 +109,40 @@ void main()
 		vec3 samplePos = texture(u_PositionDepthTex, offset.xy).xyz;
 		float sampleDepth = -texture(u_PositionDepthTex, offset.xy).w;
 		vec3 sampleNormal = texture(u_NormalTex, offset.xy).xyz;
-		vec3 sampleColor = texture(u_SrcColorTex, offset.xy).rgb;
+		vec3 sampleColor = texture(u_ColorTex, offset.xy).rgb;
 
 		//vec3 tmp = texture(u_NormalTex, offset.xy).xyz;
-		float depthDiff = sampleDepth - samp.z;
 
-		if (sampleDepth < 0 && depthDiff > 0.0)
+		if (sampleDepth < 0 && sampleDepth > samp.z + u_Bias)
 		{
 			float rangeCheck = smoothstep(0.0, 1.0, u_Radius / abs(fragPos.z - sampleDepth));
-			indirLight += rangeCheck * sampleColor * max(dot(sampleNormal, normalize(fragPos - samplePos)), 0.0);
+			vec3 indirLightDir = samplePos - fragPos;
+			vec3 indirLightNorm = normalize(indirLightDir);
+			float cosS = max(dot(-indirLightNorm, sampleNormal), 0.0);
+			float cosR = max(dot(indirLightNorm, normal), 0.0);
+			float len = length(indirLightDir);
+			float d2 = len * len;
+					
+			indirLight += cosS * cosR * sampleColor * min(3.0, 1.0 / d2);
+			//indirLight += sampleColor * max(dot(sampleNormal, normalize(fragPos - samplePos)), 0.0);
 			occlusion += rangeCheck;
 		}
-		else
-		{
-			vec4 dir = invView * vec4(samp - fragPos, 0.0);
-			vec3 skyboxColor = texture(u_Skybox, dir.xyz).xyz;
-			if (u_EnableSRGBCorrection != 0)
-			{
-				skyboxColor = pow(skyboxColor, vec3(2.2));
-			}
-			dirLight += skyboxColor * max(dot(normal, normalize(samp - fragPos)), 0.0);
-		}
+		
 	}
-	occlusion = 1.0 - (occlusion / validCount);
-	indirLight = indirLight / validCount;
-	dirLight = dirLight / validCount;
+	indirLight = indirLight / kernelSize;
+	occlusion = 1.0 - (occlusion / kernelSize);
 
-	color = vec4(indirLight + dirLight, 1);
+	vec3 ambient = u_AmbientColor;
+	if (u_EnableSRGBCorrection != 0)
+	{
+		ambient = pow(ambient, vec3(2.2));
+	}
+
+	color = vec4(u_IndirectLightWeight * indirLight + u_DirectLightWeight * vec3(occlusion) * ambient, 1);
 
 	//color = vec4(vec3(avg / 64.0), 1);
 	//color = vec4(vec3(depth), 1.0);
 	//color = vec4(fragColor, 1.0);
+	//color = vec4(vec3(dirLight), 1.0);
+	//color = vec4(vec3(occlusion), 1.0);
 }			

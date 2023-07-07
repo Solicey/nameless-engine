@@ -55,7 +55,9 @@ namespace NL
 
         // called after user change a texture
         // void DeleteOldTextures(Ref<Texture2D> oldTex, Ref<Texture2D> newTex);
-
+        void SetEnabled(bool enabled) { m_Enabled = enabled; }
+        bool IsEnabled() const { return m_Enabled; }
+        bool* GetEnabled() { return &m_Enabled; }
 
 	private:
         std::string m_Name;
@@ -66,5 +68,8 @@ namespace NL
         std::unordered_map<TextureType, Ref<Texture2D>, EnumClassHash> m_TextureMap;
         // std::unordered_map<TextureType, bool, EnumClassHash> m_UseDefaultTexture;
         static std::unordered_map<std::string, TextureType> s_String2TexTypeMap;
+
+        // For post-processing
+        bool m_Enabled = true;
 	};
 }

@@ -103,7 +103,7 @@ namespace NL
             uint32_t dstAttachment = (i % 2 == 0) ? 1 : 0;
 
             auto& mat = queue[i];
-            if (mat->GetShaderName() == Library<Shader>::GetInstance().GetDefaultShaderName())
+            if (mat->GetShaderName() == Library<Shader>::GetInstance().GetDefaultShaderName() || !mat->IsEnabled())
             {
                 m_FBO->ColorBlit(srcAttachment, m_FBO, dstAttachment);
                 continue;

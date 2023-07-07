@@ -8,6 +8,7 @@
 #prop
 float u_EnableShadow;
 float u_ShadowBiasModifier;
+float u_EnableSRGBCorrection;
 float u_EnableGammaCorrection;
 #end
 
@@ -40,6 +41,7 @@ uniform sampler2D u_SrcColorTex;
 uniform sampler2DArray u_ShadowMaps;
 uniform float u_EnableShadow;
 uniform float u_ShadowBiasModifier;
+uniform float u_EnableSRGBCorrection;
 uniform float u_EnableGammaCorrection;
 
 #define MAX_LIGHT_COUNT 4
@@ -128,15 +130,15 @@ float ShadowCaster(vec3 fragPosVS, vec3 fragPosWS, vec3 normalVS)
 	// PCF
 	float shadow = 0.0;
 	vec2 texelSize = 1.0 / vec2(textureSize(u_ShadowMaps, 0));
-	for (int x = -1; x <= 1; x++)
+	for (int x = -2; x <= 2; x++)
 	{
-		for (int y = -1; y <= 1; y++)
+		for (int y = -2; y <= 2; y++)
 		{
 			float sampleDepth = texture(u_ShadowMaps, vec3(fragPosNDC.xy + vec2(x, y) * texelSize, layer)).r;
 			shadow += (fragDepth - bias) > sampleDepth ? 1.0 : 0.0;
 		}
 	}
-	shadow /= 9.0;
+	shadow /= 25.0;
 	return shadow;
 }
 			
@@ -164,21 +166,27 @@ void main()
 		if (u_DirLights[i].Color.r >= 0)
 		{
 			DirLight light = u_DirLights[i];
+			vec3 lightColor = light.Color;
+			if (u_EnableSRGBCorrection != 0)
+			{
+				lightColor = pow(lightColor, vec3(2.2));
+			}
+
 			vec3 viewDir = normalize(-fragPos);
 			// diffuse
 			vec3 lightDir = -normalize(vec3(u_View * vec4(light.Direction, 0)));
-			vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * light.Color;
+			vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lightColor;
 			// specular
 			vec3 halfwayDir = normalize(lightDir + viewDir);
 			float spec = pow(max(dot(normal, halfwayDir), 0.0), 32);
-			vec3 specular = light.Color * spec * specStrength;
+			vec3 specular = lightColor * spec * specStrength;
 
 			vec3 ds = diffuse + specular;
 
 			if (hasCastShadow == 0.0 && u_EnableShadow != 0.0)
 			{
 				hasCastShadow = 1.0;
-				ds = ds * (1.0 - 0.7 * shadow);
+				ds = ds * (1.0 - shadow);
 			}
 
 			result += ds;
@@ -187,15 +195,21 @@ void main()
 		if (u_PointLights[i].Color.r >= 0)
 		{
 			PointLight light = u_PointLights[i];
+			vec3 lightColor = light.Color;
+			if (u_EnableSRGBCorrection != 0)
+			{
+				lightColor = pow(lightColor, vec3(2.2));
+			}
+
 			vec3 viewDir = normalize(-fragPos);
 			// diffuse
 			vec3 lightPos = vec3(u_View * vec4(light.Position, 1.0));
 			vec3 lightDir = normalize(lightPos - fragPos);
-			vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * light.Color;
+			vec3 diffuse = max(dot(normal, lightDir), 0.0) * albedo * lightColor;
 			// specular
 			vec3 halfwayDir = normalize(lightDir + viewDir);
 			float spec = pow(max(dot(normal, halfwayDir), 0.0), 32);
-			vec3 specular = light.Color * spec * specStrength;
+			vec3 specular = lightColor * spec * specStrength;
 			// atten
 			float dist = length(lightPos - fragPos);
 			float atten = 1.0 / (light.Attenuation.x + light.Attenuation.y * dist + light.Attenuation.z * dist * dist);
@@ -205,7 +219,7 @@ void main()
 		}
 	}
 
-	vec3 color = result * ssao;
+	vec3 color = result + albedo * ssao;
 
 	if (u_EnableGammaCorrection != 0)
 	{

@@ -173,13 +173,15 @@ void main()
 		}
 	}
 
-	vec3 ambient = vec3(0.03) * u_Albedo;
-	vec3 color = ambient + Lo;
+	//vec3 ambient = vec3(0.03) * u_Albedo;
+	//vec3 color = ambient + Lo;
+
+	f_Color = vec4(Lo, 1.0);
 
 	// Gamma Correction
-	color = color / (color + vec3(1.0));
+	/*color = color / (color + vec3(1.0));
 	color = pow(color, vec3(1.0 / 2.2));
-	f_Color = vec4(color, 1.0);
+	f_Color = vec4(color, 1.0);*/
 
 	// Dont Modify
 	f_EntityId = u_EntityId;

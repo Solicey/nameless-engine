@@ -9,7 +9,7 @@
 float u_EnableShadow;
 float u_ShadowBiasModifier;
 float u_EnableSRGBCorrection;
-float u_EnableGammaCorrection;
+color3 u_AmbientColor;
 #end
 
 #type vertex
@@ -42,7 +42,7 @@ uniform sampler2DArray u_ShadowMaps;
 uniform float u_EnableShadow;
 uniform float u_ShadowBiasModifier;
 uniform float u_EnableSRGBCorrection;
-uniform float u_EnableGammaCorrection;
+uniform vec3 u_AmbientColor;
 
 #define MAX_LIGHT_COUNT 4
 
@@ -149,7 +149,6 @@ void main()
 	vec3 fragPos = texture(u_PositionDepthTex, v_TexCoords).xyz;
 	float depth = texture(u_PositionDepthTex, v_TexCoords).w;
 	vec3 normal = texture(u_NormalTex, v_TexCoords).xyz;
-	vec3 ssdo = texture(u_ColorTex, v_TexCoords).rgb;
 	
 	if (depth <= 0)
 	{
@@ -219,14 +218,7 @@ void main()
 		}
 	}
 
-	vec3 color = result + albedo * ssdo;
-
-	// Gamma Correction
-	if (u_EnableGammaCorrection != 0)
-	{
-		color = pow(color, vec3(1.0 / 2.2));
-	}
-	f_Color = vec4(color, 1.0);
+	f_Color = vec4(result + u_AmbientColor * albedo, 1.0);
 
 	//albedo = pow(albedo, vec3(1.0 / 2.2));
 	//f_Color = vec4(albedo, 1.0);

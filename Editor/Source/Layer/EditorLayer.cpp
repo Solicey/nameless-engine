@@ -651,6 +651,7 @@ namespace NL
                         std::string name = std::to_string(i) + "." + mat->GetShaderNameNoSuffix();
                         if (ImGui::BeginTabItem(name.c_str(), &open, ImGuiTabItemFlags_None))
                         {
+                            ImGui::Checkbox("Enabled", mat->GetEnabled());
                             //ImGui::Text("This is the %d tab!", i);
                             /*HierarchyPanel::DrawShaderCombo<PostProcessingComponent>(mat, mat->GetName(), m_HierarchyPanel->m_ShaderSelectOpen, [](auto& comp, const std::string& shaderName)
                                 {

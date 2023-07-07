@@ -9,6 +9,9 @@
 int u_KernelSize;
 float u_Radius;
 float u_Bias;
+float u_EnableSRGBCorrection;
+float u_DirectLightWeight;
+color3 u_AmbientColor;
 #end
 
 // u_Threshold = 0.05
@@ -41,12 +44,17 @@ uniform int u_ScreenWidth;
 uniform int u_ScreenHeight;
 
 // tag ssao;
+#define SSAO_SAMPLE_COUNT 256
 uniform sampler2D u_NoiseTex;
-uniform vec3 u_Samples[64];
+uniform vec3 u_Samples[SSAO_SAMPLE_COUNT];
 
 uniform float u_Radius;
 uniform int u_KernelSize;
 uniform float u_Bias;
+uniform float u_EnableSRGBCorrection;
+uniform samplerCube u_Skybox;
+uniform float u_DirectLightWeight;
+uniform vec3 u_AmbientColor;
 
 layout(std140, binding = 0) uniform Camera
 {
@@ -71,9 +79,11 @@ void main()
 	mat3 TBN = mat3(tangent, bitangent, normal);
 	
 	float occlusion = 0.0;
-	float tot = 0;
+	//vec3 dirLight = vec3(0, 0, 0);
+	mat4 invView = inverse(u_View);
+	float kernelSize = min(u_KernelSize, SSAO_SAMPLE_COUNT);
 
-	for (int i = 0; i < min(u_KernelSize, 64); i++)
+	for (int i = 0; i < kernelSize; i++)
 	{
 		vec3 samp = TBN * u_Samples[i]; // 切线->观察空间
 
@@ -84,19 +94,35 @@ void main()
 		offset.xyz = offset.xyz * 0.5 + 0.5;
 		float sampleDepth = -texture(u_PositionDepthTex, offset.xy).w;
 		//vec3 tmp = texture(u_NormalTex, offset.xy).xyz;
+
 		if (sampleDepth < 0)
 		{
 			float rangeCheck = smoothstep(0.0, 1.0, u_Radius / abs(fragPos.z - sampleDepth));
 			float depthDiff = sampleDepth - samp.z - u_Bias;
 			occlusion += ((depthDiff > 0.0) ? 1.0 : 0.0) * rangeCheck;
-			tot += 1.0;
 		}
+
+		/*if (sampleDepth <= samp.z + u_Bias || sampleDepth >= 0)
+		{
+			vec4 dir = invView * vec4(samp - fragPos, 0.0);
+			vec3 skyboxColor = texture(u_Skybox, dir.xyz).xyz;
+			if (u_EnableSRGBCorrection != 0)
+			{
+				skyboxColor = pow(skyboxColor, vec3(2.2));
+			}
+			dirLight += skyboxColor * max(dot(normal, normalize(samp - fragPos)), 0.0);
+		}*/	
 	}
-	occlusion = 1.0 - (occlusion / u_KernelSize);
-	tot = tot / u_KernelSize;
+	occlusion = 1.0 - (occlusion / kernelSize);
+	//dirLight = dirLight / kernelSize;
+	//color = vec4(u_DirectLightWeight * dirLight, 1);
 
-	color = vec4(vec3(occlusion), 1);
-
+	vec3 ambient = u_AmbientColor;
+	if (u_EnableSRGBCorrection != 0)
+	{
+		ambient = pow(ambient, vec3(2.2));
+	}
+	color = vec4(vec3(occlusion) * ambient * u_DirectLightWeight, 1);
 	//color = vec4(vec3(avg / 64.0), 1);
 	//color = vec4(normal, 1.0);
 }			
