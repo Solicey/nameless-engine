@@ -235,6 +235,7 @@ namespace NL
 				comp.MSAASamples = settingsComponent["MSAASamples"].as<int>();
 				comp.ShowGizmos = settingsComponent["ShowGizmos"].as<bool>();
 				comp.RenderMode = (RenderMode)settingsComponent["RenderMode"].as<int>();
+				comp.zMult = settingsComponent["ShadowZMult"].as<float>();
 			}
 
 			// Model
@@ -456,6 +457,7 @@ namespace NL
 			out << YAML::Key << "MSAASamples" << YAML::Value << comp.MSAASamples;
 			out << YAML::Key << "ShowGizmos" << YAML::Value << comp.ShowGizmos;
 			out << YAML::Key << "RenderMode" << YAML::Value << (int)comp.RenderMode;
+			out << YAML::Key << "ShadowZMult" << YAML::Value << comp.zMult;
 
 			out << YAML::EndMap; // SettingsComponent
 		}

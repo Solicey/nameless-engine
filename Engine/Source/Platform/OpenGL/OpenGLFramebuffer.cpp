@@ -75,6 +75,24 @@ namespace NL
 
 			glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, TextureTarget(isMultisample), id, 0);
 		}
+
+		static void AttachDepthTexture3D(uint32_t id, GLenum format, uint32_t width, uint32_t height, int depth = 5)
+		{
+			glGenTextures(1, &id);
+
+			glBindTexture(GL_TEXTURE_2D_ARRAY, id);
+			glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, format, width, height, depth, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+			glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+			constexpr float bordercolor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+			glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, bordercolor);
+
+			glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, id, 0);
+		}
 	}
 
 	OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec)
@@ -90,7 +108,7 @@ namespace NL
 				m_ColorAttachmentSpecifications.emplace_back(tex);
 				break;
 			case FramebufferTextureFormat::Depth24Stencil8:
-			case FramebufferTextureFormat::Depth32F:
+			case FramebufferTextureFormat::Depth32F3D:
 				m_DepthAttachmentSpecification = tex;
 				break;
 			}
@@ -124,6 +142,12 @@ namespace NL
 		}
 	}
 
+	void OpenGLFramebuffer::BindTex3D(uint32_t slot)
+	{
+		glActiveTexture(GL_TEXTURE0 + slot);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, m_DepthAttachment);
+	}
+
 	void OpenGLFramebuffer::BindOneColorOnly(uint32_t attachmentIndex)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
@@ -145,6 +169,12 @@ namespace NL
 
 		GLenum buffers[1] = { GL_FRONT_LEFT };
 		glDrawBuffers(1, buffers);
+	}
+
+	void OpenGLFramebuffer::UnbindTex3D(uint32_t slot)
+	{
+		glActiveTexture(GL_TEXTURE0 + slot);
+		glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 	}
 
 	void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height)
@@ -323,8 +353,8 @@ namespace NL
 			case FramebufferTextureFormat::Depth24Stencil8:
 				Utils::AttachDepthTexture(m_DepthAttachment, m_Specification.Samples, GL_DEPTH24_STENCIL8, GL_DEPTH_STENCIL_ATTACHMENT, m_Specification.Width, m_Specification.Height);
 				break;
-			case FramebufferTextureFormat::Depth32F:
-
+			case FramebufferTextureFormat::Depth32F3D:
+				Utils::AttachDepthTexture3D(m_DepthAttachment, GL_DEPTH_COMPONENT32, m_Specification.Width, m_Specification.Height);
 				break;
 			}
 		}

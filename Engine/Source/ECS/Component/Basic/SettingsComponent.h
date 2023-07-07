@@ -28,8 +28,10 @@ namespace NL
 		Camera::ClearFlagType EditorCameraClearFlag = Camera::ClearFlagType::Color;
 		bool ShowGizmos = true;
 		RenderMode RenderMode = RenderMode::Forward;
+		float zMult = 10;
 
 		ID RuntimeCameraID;
 		Ref<EditorCamera> EditorCamera = nullptr;
+		nlm::vec2 ViewportSize = { 0, 0 };
 	};
 }

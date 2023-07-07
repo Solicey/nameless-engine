@@ -237,11 +237,16 @@ namespace NL
 
     Entity Scene::GetSettingsEntity()
     {
+        if (m_SettingEntt != entt::entity())
+           return Entity{ m_SettingEntt, this };
+        
         auto view = Registry.view<SettingsComponent>();
         for (auto entity : view)
         {
+            m_SettingEntt = entity;
             return Entity{ entity, this };
         }
+
         return {};
     }
 

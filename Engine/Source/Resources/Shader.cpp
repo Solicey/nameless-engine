@@ -21,7 +21,8 @@ namespace NL
 		{"none", ShaderTag::None},
 		{"ssao", ShaderTag::SSAO},
 		{"src", ShaderTag::SrcColor},
-		{"skybox", ShaderTag::Skybox}
+		{"skybox", ShaderTag::Skybox},
+		{"shadow", ShaderTag::Shadow}
 	};
 
 	ShaderUse Shader::ParseAndGetShaderUse(const std::string& path)

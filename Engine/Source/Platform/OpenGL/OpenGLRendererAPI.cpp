@@ -160,4 +160,16 @@ namespace NL
 		else 
 			glDisable(GL_BLEND);
 	}
+
+	int OpenGLRendererAPI::GetDrawFramebuffer()
+	{
+		int framebufferID = 0;
+		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &framebufferID);
+		return framebufferID;
+	}
+
+	void OpenGLRendererAPI::BindFramebuffer(uint32_t framebufferID)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
+	}
 }

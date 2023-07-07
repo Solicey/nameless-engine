@@ -11,6 +11,8 @@ namespace NL
 	// Scope<Renderer::SceneData> Renderer::s_SceneData = CreateScope<Renderer::SceneData>();
 	Scope<RendererAPI> Renderer::s_RendererAPI = RendererAPI::Create();
 
+	Ref<Framebuffer> Renderer::s_LightFBO = nullptr;
+
 	void Renderer::SetUniformBuffer(Ref<EditorCamera> camera)
 	{
 		//s_SceneData->ViewPositionMatrix = camera.GetViewProjectionMatrix();

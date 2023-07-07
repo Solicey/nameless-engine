@@ -84,5 +84,7 @@ namespace NL
 		std::vector<std::string> m_SkyboxTextures;
 		std::vector<PointLightShadingData> m_PointLightShadingDatas;
 		std::vector<DirLightShadingData> m_DirLightShadingDatas;
+
+		entt::entity m_SettingEntt = {};
 	};
 }

@@ -12,9 +12,13 @@ namespace NL
 
 		virtual void Bind() override;
 
+		virtual void BindTex3D(uint32_t slot) override;
+
 		virtual void BindOneColorOnly(uint32_t attachmentIndex) override;
 
 		virtual void Unbind() override;
+
+		virtual void UnbindTex3D(uint32_t slot) override;
 
 		virtual void Resize(uint32_t width, uint32_t height) override;
 

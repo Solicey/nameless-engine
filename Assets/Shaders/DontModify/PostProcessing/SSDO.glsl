@@ -5,13 +5,13 @@
 #use post
 
 // Require ssao noise tex and src color tex
-#tag ssao;src;
+#tag ssao;src;skybox;
 
 #prop
 int u_KernelSize;
 float u_Radius;
 float u_Threshold;
-color3 u_AmbientColor;
+float u_EnableSRGBCorrection;
 #end
 
 // u_Threshold = 0.05
@@ -40,6 +40,7 @@ layout (location = 0) out vec4 color;
 uniform sampler2D u_PositionDepthTex;
 uniform sampler2D u_NormalTex;
 uniform sampler2D u_SrcColorTex;
+uniform samplerCube u_Skybox;
 
 uniform int u_ScreenWidth;
 uniform int u_ScreenHeight;
@@ -52,7 +53,7 @@ uniform vec3 u_Samples[SSAO_SAMPLE_COUNT];
 uniform float u_Radius;
 uniform int u_KernelSize;
 uniform float u_Threshold;
-uniform vec3 u_AmbientColor;
+uniform float u_EnableSRGBCorrection;
 
 layout(std140, binding = 0) uniform Camera
 {
@@ -72,7 +73,7 @@ float random(float x)
 void main()
 {
 	vec2 noiseScale = vec2(u_ScreenWidth / 4.0, u_ScreenHeight / 4.0);
-
+	vec3 fragColor = texture(u_SrcColorTex, v_TexCoords).rgb;
 	vec3 fragPos = texture(u_PositionDepthTex, v_TexCoords).xyz;
 	float depth = texture(u_PositionDepthTex, v_TexCoords).w;
 	vec3 normal = normalize(texture(u_NormalTex, v_TexCoords).rgb);
@@ -87,6 +88,8 @@ void main()
 	vec3 indirLight = vec3(0, 0, 0);
 	vec3 dirLight = vec3(0, 0, 0);
 	float validCount = 0;
+
+	mat4 invView = inverse(u_View);
 
 	for (int i = 0; i < min(u_KernelSize, SSAO_SAMPLE_COUNT); i++)
 	{
@@ -108,29 +111,32 @@ void main()
 		vec3 sampleColor = texture(u_SrcColorTex, offset.xy).rgb;
 
 		//vec3 tmp = texture(u_NormalTex, offset.xy).xyz;
-		if (sampleDepth < 0)
+		float depthDiff = sampleDepth - samp.z;
+
+		if (sampleDepth < 0 && depthDiff > 0.0)
 		{
 			float rangeCheck = smoothstep(0.0, 1.0, u_Radius / abs(fragPos.z - sampleDepth));
-			float depthDiff = sampleDepth - samp.z;
-
-			if (depthDiff > 0.0)
+			indirLight += rangeCheck * sampleColor * max(dot(sampleNormal, normalize(fragPos - samplePos)), 0.0);
+			occlusion += rangeCheck;
+		}
+		else
+		{
+			vec4 dir = invView * vec4(samp - fragPos, 0.0);
+			vec3 skyboxColor = texture(u_Skybox, dir.xyz).xyz;
+			if (u_EnableSRGBCorrection != 0)
 			{
-				indirLight += rangeCheck * sampleColor * max(dot(sampleNormal, normalize(fragPos - samplePos)), 0.0);
-				occlusion += ((depthDiff > 0.0) ? 1.0 : 0.0) * rangeCheck;
+				skyboxColor = pow(skyboxColor, vec3(2.2));
 			}
-			else
-			{
-				vec3 skyboxColor = vec3(0.1, 0.1, 0.1);
-				dirLight += rangeCheck * skyboxColor * max(dot(normal, normalize(samp - fragPos)), 0.0);
-			}
+			dirLight += skyboxColor * max(dot(normal, normalize(samp - fragPos)), 0.0);
 		}
 	}
 	occlusion = 1.0 - (occlusion / validCount);
 	indirLight = indirLight / validCount;
 	dirLight = dirLight / validCount;
 
-	color = vec4((indirLight) * 3 + dirLight, 1);
+	color = vec4(indirLight + dirLight, 1);
 
 	//color = vec4(vec3(avg / 64.0), 1);
-	//color = vec4(normal, 1.0);
+	//color = vec4(vec3(depth), 1.0);
+	//color = vec4(fragColor, 1.0);
 }			

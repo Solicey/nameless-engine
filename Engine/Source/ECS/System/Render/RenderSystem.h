@@ -28,6 +28,7 @@ namespace NL
 			const nlm::vec4& color,
 			SpriteCameraReaction camReact,
 			int entityId);
+		void UpdateLightFBO(float nearClip, float farClip, float fov, float aspect, const nlm::mat4& viewMatrix, LightComponent& light, TransformComponent& transform);
 
 	private:
 		// Ref<Shader> m_GrayScaleShader;
@@ -39,6 +40,7 @@ namespace NL
 		Ref<Texture2D> m_PointGizmosTexture, m_DirGizmosTexture;
 
 		Ref<Shader> m_SpriteShader;
+		Ref<Shader> m_CSMShader;
 
 		// Time
 		float m_TotalTime = 0.0f;

@@ -44,6 +44,7 @@ Entities:
       MSAASamples: 4
       ShowGizmos: true
       RenderMode: 1
+      ShadowZMult: 10.0
     PostProcessingComponent:
       Materials:
         - ShaderName: SSAO.glsl

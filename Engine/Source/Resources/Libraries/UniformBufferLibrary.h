@@ -22,13 +22,22 @@ namespace NL
 	public:
 		Library(Singleton::token)
 		{
-			Ref<UniformBuffer>	CameraUniformBuffer = UniformBuffer::Create(148, 0);
+			Ref<UniformBuffer> CameraUniformBuffer = UniformBuffer::Create(148, 0);
 			Add("CameraUniform", CameraUniformBuffer);
+
+			Ref<UniformBuffer> ShadowUniformBuffer = UniformBuffer::Create(sizeof(nlm::mat4x4) * 16 + sizeof(nlm::vec4) * 16 + sizeof(nlm::vec3) + sizeof(float) * 2 + sizeof(int), 1);
+			// lightSpaceMatrices * 16 + shadowCascadeLevels * 16 + lightDir + lightIntensity + farClip + cascadeLevel
+			Add("ShadowUniform", ShadowUniformBuffer);
 		}
 
 		Ref<UniformBuffer> GetCameraUniformBuffer() const
 		{
 			return Get("CameraUniform");
+		}
+
+		Ref<UniformBuffer> GetShadowUniformBuffer() const
+		{
+			return Get("ShadowUniform");
 		}
 	};
 }

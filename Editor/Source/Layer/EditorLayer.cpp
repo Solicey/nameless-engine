@@ -10,6 +10,8 @@
 
 namespace NL
 {
+#define RIGHT_COLUMN_WIDTH 180
+
     namespace Utils
     {
         // from https://github.com/Acmen-Team/Epoch/tree/dev
@@ -35,6 +37,23 @@ namespace NL
             ImGui::SetNextWindowBgAlpha(0.0f); // Transparent background
 
             uiFunc(corner, work_area_size, window_flags);
+        }
+
+        static bool DragFloatStyle1(const std::string& label, float dragFloatWidth, float& value)
+        {
+            ImGui::Columns(2);
+            ImGui::SetColumnWidth(0, ImGui::GetWindowContentRegionWidth() - dragFloatWidth);
+            ImGui::PushMultiItemsWidths(1, ImGui::CalcItemWidth());
+
+            ImGui::Text(label.c_str());
+            ImGui::NextColumn();
+
+            std::string emitLabel = "##" + label;
+            bool isModified = ImGui::DragFloat(emitLabel.c_str(), &value, 0.1f);
+            ImGui::Columns(1);
+            ImGui::PopItemWidth();
+
+            return isModified;
         }
     }
 
@@ -447,6 +466,7 @@ namespace NL
             ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
             // Update Viewport Size
             m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
+            m_Settings.GetComponent<SettingsComponent>().ViewportSize = m_ViewportSize;
 
             // Update Viewport Image
             uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
@@ -587,9 +607,8 @@ namespace NL
         {
             ImGui::Begin("Scene Settings");
 
-            auto& settings = m_Settings.GetComponent<SettingsComponent>();
-
             bool hasRenderModeModified = false;
+            auto& settings = m_Settings.GetComponent<SettingsComponent>();
             if (ImGui::TreeNode("Render Mode"))
             {
                 if (ImGui::RadioButton("Forward", (settings.RenderMode == RenderMode::Forward)))
@@ -724,6 +743,12 @@ namespace NL
                         m_EditorPostProcessingQueue = { CreateRef<Material>("EditorOutline.glsl") };
                     else m_EditorPostProcessingQueue.clear();*/
                 }
+                ImGui::TreePop();
+            }
+
+            if (ImGui::TreeNode("Shadows"))
+            {
+                Utils::DragFloatStyle1("zMult", RIGHT_COLUMN_WIDTH, settings.zMult);
                 ImGui::TreePop();
             }
 

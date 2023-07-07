@@ -75,6 +75,10 @@ namespace NL
 
 		virtual void EnableBlend(bool enable) = 0;
 
+		virtual int GetDrawFramebuffer() = 0;
+
+		virtual void BindFramebuffer(uint32_t) = 0;
+
 		inline static API GetCurrent() { return s_API; }
 
 		static Scope<RendererAPI> Create();

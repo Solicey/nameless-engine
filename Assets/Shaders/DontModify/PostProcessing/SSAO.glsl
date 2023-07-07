@@ -3,12 +3,12 @@
 // You don't need to expose any properties
 
 #use post
-#tag ssao;ssao;
+#tag ssao;ssao;skybox;
 
 #prop
 int u_KernelSize;
 float u_Radius;
-float u_Threshold;
+float u_Bias;
 #end
 
 // u_Threshold = 0.05
@@ -46,7 +46,7 @@ uniform vec3 u_Samples[64];
 
 uniform float u_Radius;
 uniform int u_KernelSize;
-uniform float u_Threshold;
+uniform float u_Bias;
 
 layout(std140, binding = 0) uniform Camera
 {
@@ -72,14 +72,10 @@ void main()
 	
 	float occlusion = 0.0;
 	float tot = 0;
-	int validCount = 0;
+
 	for (int i = 0; i < min(u_KernelSize, 64); i++)
 	{
 		vec3 samp = TBN * u_Samples[i]; // 切线->观察空间
-
-		if (dot(samp, normal) < u_Threshold)	// Avoid artifact
-			continue;
-		validCount++;
 
 		samp = fragPos + samp * u_Radius; // radius 
 		vec4 offset = vec4(samp, 1.0);
@@ -91,13 +87,13 @@ void main()
 		if (sampleDepth < 0)
 		{
 			float rangeCheck = smoothstep(0.0, 1.0, u_Radius / abs(fragPos.z - sampleDepth));
-			float depthDiff = sampleDepth - samp.z;
+			float depthDiff = sampleDepth - samp.z - u_Bias;
 			occlusion += ((depthDiff > 0.0) ? 1.0 : 0.0) * rangeCheck;
 			tot += 1.0;
 		}
 	}
-	occlusion = 1.0 - (occlusion / validCount);
-	tot = tot / validCount;
+	occlusion = 1.0 - (occlusion / u_KernelSize);
+	tot = tot / u_KernelSize;
 
 	color = vec4(vec3(occlusion), 1);
 

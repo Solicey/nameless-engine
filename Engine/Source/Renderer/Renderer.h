@@ -8,6 +8,7 @@
 #include "Resources/Model.h"
 #include "Renderer/VertexArray.h"
 #include "Renderer/RendererAPI.h"
+#include "Renderer/Framebuffer.h"
 
 namespace NL
 {
@@ -54,6 +55,12 @@ namespace NL
 		inline static void Init()
 		{
 			s_RendererAPI->Init();
+
+			FramebufferSpecification spec;
+			spec.Attachments = { FramebufferTextureFormat::Depth32F3D };
+			spec.Width = 4096;
+			spec.Height = 4096;
+			s_LightFBO = Framebuffer::Create(spec);
 		}
 
 		inline static void SetClearColor(const nlm::vec4& color)
@@ -141,7 +148,20 @@ namespace NL
 
 		}
 
+		inline static int GetDrawFramebuffer()
+		{
+			return s_RendererAPI->GetDrawFramebuffer();
+		}
+
+		inline static void BindFramebuffer(uint32_t framebufferID)
+		{
+			s_RendererAPI->BindFramebuffer(framebufferID);
+		}
+
 #pragma endregion
+
+	public:
+		static Ref<Framebuffer> s_LightFBO;
 
 	private:
 		// static Scope<SceneData> s_SceneData;

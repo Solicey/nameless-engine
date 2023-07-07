@@ -130,19 +130,19 @@ namespace NL
             }
 
             // WARNING: index should be changed accordingly
-            Renderer::BindCustomShaderProperties(mat, 7);
+            Renderer::BindCustomShaderProperties(mat, 8);
 
             if (shader->CheckTag(ShaderTag::Skybox))
             {
-                shader->SetUniformInt("u_Skybox", 6);
-                m_SkyboxTextureCubemap->Bind(6);
+                shader->SetUniformInt("u_Skybox", 7);
+                m_SkyboxTextureCubemap->Bind(7);
             }
 
             if (shader->CheckTag(ShaderTag::SrcColor))
             {
-                shader->SetUniformInt("u_SrcColorTex", 5);
+                shader->SetUniformInt("u_SrcColorTex", 6);
                 uint32_t srcTex = srcFramebuffer->GetColorAttachmentRendererID(0);
-                glActiveTexture(GL_TEXTURE5);
+                glActiveTexture(GL_TEXTURE6);
                 glBindTexture(GL_TEXTURE_2D, srcTex);
             }
 
@@ -150,8 +150,8 @@ namespace NL
             // TODO: Check Shader Tag
             if (shader->CheckTag(ShaderTag::SSAO))
             {
-                shader->SetUniformInt("u_NoiseTex", 4);
-                m_SSAONoiseTex->Bind(4);
+                shader->SetUniformInt("u_NoiseTex", 5);
+                m_SSAONoiseTex->Bind(5);
                 for (int i = 0; i < SSAO_SAMPLE_COUNT; i++)
                 {
                     shader->SetUniformFloat3("u_Samples[" + std::to_string(i) + "]", m_SSAOKernel[i]);
@@ -166,8 +166,8 @@ namespace NL
             {
                 // Bind normal tex
                 uint32_t normalTex = srcFramebuffer->GetColorAttachmentRendererID(3);
-                shader->SetUniformInt("u_NormalTex", 3);
-                glActiveTexture(GL_TEXTURE3);
+                shader->SetUniformInt("u_NormalTex", 4);
+                glActiveTexture(GL_TEXTURE4);
                 glBindTexture(GL_TEXTURE_2D, normalTex);
                 //NL_ENGINE_INFO("Normal Tex");
             }
@@ -175,33 +175,39 @@ namespace NL
             {
                 // Bind position tex
                 uint32_t positionTex = srcFramebuffer->GetColorAttachmentRendererID(2);
-                shader->SetUniformInt("u_PositionDepthTex", 2);
-                glActiveTexture(GL_TEXTURE2);
+                shader->SetUniformInt("u_PositionDepthTex", 3);
+                glActiveTexture(GL_TEXTURE3);
                 glBindTexture(GL_TEXTURE_2D, positionTex);
             }
             case 2:
             {
                 // Bind entity tex
                 uint32_t entityIDTex = srcFramebuffer->GetColorAttachmentRendererID(1);
-                shader->SetUniformInt("u_EntityTex", 1);
-                glActiveTexture(GL_TEXTURE1);
+                shader->SetUniformInt("u_EntityTex", 2);
+                glActiveTexture(GL_TEXTURE2);
                 glBindTexture(GL_TEXTURE_2D, entityIDTex);
             }
             case 1:
             {
                 // Bind color tex
-                shader->SetUniformInt("u_ColorTex", 0);
-                glActiveTexture(GL_TEXTURE0);
+                shader->SetUniformInt("u_ColorTex", 1);
+                glActiveTexture(GL_TEXTURE1);
                 glBindTexture(GL_TEXTURE_2D, srcTex);
             }
             default:
                 break;
             }
 
+            if (shader->CheckTag(ShaderTag::Shadow))
+            {
+                shader->SetUniformInt("u_ShadowMaps", 0);
+                Renderer::s_LightFBO->BindTex3D(0);
+            }
+
             m_QuadVAO->Bind();
             Renderer::DrawIndices(m_QuadVAO);
             m_QuadVAO->Unbind();
-
+            
             shader->Unbind();
             m_FBO->Unbind();
             glEnable(GL_DEPTH_TEST);

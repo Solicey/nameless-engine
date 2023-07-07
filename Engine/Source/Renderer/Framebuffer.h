@@ -21,7 +21,7 @@ namespace NL
 
 		// Depth/stencil
 		Depth24Stencil8,
-		Depth32F,
+		Depth32F3D,
 
 		// Defaults
 		Depth = Depth24Stencil8
@@ -59,9 +59,11 @@ namespace NL
 		virtual ~Framebuffer() = default;
 
 		virtual void Bind() = 0;
+		virtual void BindTex3D(uint32_t slot) = 0;
 		// For post-processing
 		virtual void BindOneColorOnly(uint32_t attachmentIndex) = 0;
 		virtual void Unbind() = 0;
+		virtual void UnbindTex3D(uint32_t slot) = 0;
 		virtual void Resize(uint32_t width, uint32_t height) = 0;
 		virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) = 0;
 

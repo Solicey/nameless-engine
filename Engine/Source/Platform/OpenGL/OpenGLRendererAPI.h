@@ -38,5 +38,9 @@ namespace NL
 		virtual void BlendFunc(BlendFactor srcFactor, BlendFactor dstFactor) override;
 
 		virtual void EnableBlend(bool enable) override;
+
+		virtual int GetDrawFramebuffer() override;
+
+		virtual void BindFramebuffer(uint32_t) override;
 	};
 }

@@ -10,6 +10,7 @@ sampler2D u_Diffuse;
 float u_UseSpecular;
 sampler2D u_Specular;
 sampler2D u_Normals;
+float u_EnableSRGBCorrection;
 
 #end
 
@@ -95,12 +96,18 @@ uniform sampler2D u_Specular;
 uniform sampler2D u_Normals;
 uniform mat4 u_Transform;
 uniform float u_UseSpecular;
+uniform float u_EnableSRGBCorrection;
 	
 void main()
 {
 	vec4 diffuseFactor = texture(u_Diffuse, v_TexCoord).rgba;
 	if (diffuseFactor.a <= 0.05) discard;
 	vec3 diffuseColor = diffuseFactor.rgb;
+
+	if (u_EnableSRGBCorrection != 0)
+	{
+		diffuseColor = pow(diffuseColor, vec3(2.2));
+	}
 
 	vec4 specularFactor = texture(u_Specular, v_TexCoord).rgba;
 
