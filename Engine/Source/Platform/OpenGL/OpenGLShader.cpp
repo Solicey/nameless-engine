@@ -92,6 +92,12 @@ namespace NL
 		glUniformMatrix4fv(GetUniformLocation(name), values.size(), GL_FALSE, (float*)values.data());
 	}
 
+	void OpenGLShader::SetUniformBool(const std::string& name, bool value)
+	{
+		float f = value ? 1.0f : 0.0f;
+		glUniform1f(GetUniformLocation(name), f);
+	}
+
 	void OpenGLShader::Reload()
 	{
 		if (m_RendererID)

@@ -9,7 +9,7 @@ sampler2D u_Diffuse;
 sampler2D u_Normals;
 float u_Roughness;
 float u_Metallic;
-float u_EnableSRGBCorrection;
+bool u_EnableSRGBCorrection;
 
 #end
 
@@ -92,7 +92,7 @@ uniform int u_EntityId;
 uniform sampler2D u_Diffuse;
 uniform sampler2D u_Normals;
 uniform mat4 u_Transform;
-uniform float u_EnableSRGBCorrection;
+uniform bool u_EnableSRGBCorrection;
 uniform float u_Roughness;
 uniform float u_Metallic;
 	
@@ -102,7 +102,7 @@ void main()
 	if (diffuseFactor.a <= 0.05) discard;
 	vec3 diffuseColor = diffuseFactor.rgb;
 
-	if (u_EnableSRGBCorrection != 0)
+	if (u_EnableSRGBCorrection)
 	{
 		diffuseColor = pow(diffuseColor, vec3(2.2));
 	}

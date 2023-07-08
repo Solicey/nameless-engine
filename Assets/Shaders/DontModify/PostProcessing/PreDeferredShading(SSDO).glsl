@@ -6,10 +6,10 @@
 #tag shadow;src;
 
 #prop
-float u_EnableShadow;
+bool u_EnableShadow;
 float u_ShadowBiasModifier;
-float u_EnableSRGBCorrection;
 color3 u_AmbientColor;
+bool u_EnableSRGBCorrection;
 #end
 
 #type vertex
@@ -39,9 +39,9 @@ uniform sampler2D u_PositionDepthTex;
 uniform sampler2D u_NormalTex;
 uniform sampler2D u_SrcColorTex;
 uniform sampler2DArray u_ShadowMaps;
-uniform float u_EnableShadow;
+uniform bool u_EnableShadow;
 uniform float u_ShadowBiasModifier;
-uniform float u_EnableSRGBCorrection;
+uniform bool u_EnableSRGBCorrection;
 uniform vec3 u_AmbientColor;
 
 #define MAX_LIGHT_COUNT 4
@@ -159,14 +159,14 @@ void main()
 	vec3 result = vec3(0, 0, 0);
 	float shadow = ShadowCaster(fragPos, vec3(inverse(u_View) * vec4(fragPos, 1.0)), normal);
 
-	float hasCastShadow = 0;
+	bool hasCastShadow = false;
 	for (int i = 0; i < MAX_LIGHT_COUNT; i++)
 	{
 		if (u_DirLights[i].Color.r >= 0)
 		{
 			DirLight light = u_DirLights[i];
 			vec3 lightColor = light.Color;
-			if (u_EnableSRGBCorrection != 0)
+			if (u_EnableSRGBCorrection)
 			{
 				lightColor = pow(lightColor, vec3(2.2));
 			}
@@ -182,9 +182,9 @@ void main()
 
 			vec3 ds = diffuse + specular;
 
-			if (hasCastShadow == 0.0 && u_EnableShadow != 0.0)
+			if (!hasCastShadow && u_EnableShadow)
 			{
-				hasCastShadow = 1.0;
+				hasCastShadow = true;
 				ds = ds * (1.0 - shadow);
 			}
 
@@ -195,7 +195,7 @@ void main()
 		{
 			PointLight light = u_PointLights[i];
 			vec3 lightColor = light.Color;
-			if (u_EnableSRGBCorrection != 0)
+			if (u_EnableSRGBCorrection)
 			{
 				lightColor = pow(lightColor, vec3(2.2));
 			}

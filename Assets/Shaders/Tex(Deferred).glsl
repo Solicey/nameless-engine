@@ -7,10 +7,10 @@
 color3 u_Color;
 float u_SpecularStrength;
 sampler2D u_Diffuse;
-float u_UseSpecular;
+bool u_UseSpecular;
 sampler2D u_Specular;
 sampler2D u_Normals;
-float u_EnableSRGBCorrection;
+bool u_EnableSRGBCorrection;
 
 #end
 
@@ -95,8 +95,8 @@ uniform sampler2D u_Diffuse;
 uniform sampler2D u_Specular;
 uniform sampler2D u_Normals;
 uniform mat4 u_Transform;
-uniform float u_UseSpecular;
-uniform float u_EnableSRGBCorrection;
+uniform bool u_UseSpecular;
+uniform bool u_EnableSRGBCorrection;
 	
 void main()
 {
@@ -104,7 +104,7 @@ void main()
 	if (diffuseFactor.a <= 0.05) discard;
 	vec3 diffuseColor = diffuseFactor.rgb;
 
-	if (u_EnableSRGBCorrection != 0)
+	if (u_EnableSRGBCorrection)
 	{
 		diffuseColor = pow(diffuseColor, vec3(2.2));
 	}
@@ -127,7 +127,7 @@ void main()
 
 	f_AlbedoSpec.rgb = diffuseColor;
 	f_AlbedoSpec.a = u_SpecularStrength;
-	if (u_UseSpecular != 0.0)
+	if (u_UseSpecular)
 		f_AlbedoSpec.a *= specularFactor.r;
 	f_EntityId = u_EntityId;
 	f_Position = vec4(v_Position, LinearizeDepth(gl_FragCoord.z, u_Near, u_Far));

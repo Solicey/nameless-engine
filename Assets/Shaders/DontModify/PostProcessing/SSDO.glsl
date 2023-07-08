@@ -11,10 +11,10 @@
 int u_KernelSize;
 float u_Radius;
 float u_Bias;
-float u_EnableSRGBCorrection;
 float u_DirectLightWeight;
 float u_IndirectLightWeight;
 color3 u_AmbientColor;
+bool u_EnableSRGBCorrection;
 #end
 
 
@@ -56,7 +56,7 @@ uniform vec3 u_Samples[SSAO_SAMPLE_COUNT];
 uniform float u_Radius;
 uniform int u_KernelSize;
 uniform float u_Bias;
-uniform float u_EnableSRGBCorrection;
+uniform bool u_EnableSRGBCorrection;
 uniform float u_DirectLightWeight;
 uniform float u_IndirectLightWeight;
 uniform vec3 u_AmbientColor;
@@ -133,7 +133,7 @@ void main()
 	occlusion = 1.0 - (occlusion / kernelSize);
 
 	vec3 ambient = u_AmbientColor;
-	if (u_EnableSRGBCorrection != 0)
+	if (u_EnableSRGBCorrection)
 	{
 		ambient = pow(ambient, vec3(2.2));
 	}

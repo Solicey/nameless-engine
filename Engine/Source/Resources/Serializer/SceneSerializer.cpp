@@ -700,6 +700,7 @@ namespace NL
 			WRITE_SHADER_PROP(1)	// nlm::vec3
 			WRITE_SHADER_PROP(2)	// float
 			WRITE_SHADER_PROP(3)	// int
+			WRITE_SHADER_PROP(4)	// bool
 			default:
 				break;
 			}
@@ -735,6 +736,7 @@ namespace NL
 			READ_SHADER_PROP(Color3, nlm::vec3)
 			READ_SHADER_PROP(Float, float)
 			READ_SHADER_PROP(Int, int)
+			READ_SHADER_PROP(Bool, bool)
 			
 			default:
 				break;

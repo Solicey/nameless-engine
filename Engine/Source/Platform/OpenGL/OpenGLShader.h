@@ -28,6 +28,7 @@ namespace NL
 		virtual void SetUniformMat3(const std::string& name, const nlm::mat3& value) override;
 		virtual void SetUniformMat4(const std::string& name, const nlm::mat4& value) override;
 		virtual void SetUniformMat4Array(const std::string& name, const std::vector<nlm::mat4>& values) override;
+		virtual void SetUniformBool(const std::string& name, bool value) override;
 		virtual void Reload() override;
 
 	private:

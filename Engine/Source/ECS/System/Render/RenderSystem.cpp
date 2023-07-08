@@ -151,6 +151,27 @@ namespace NL
 		m_Scene->PackUpLightDatas();
 		Renderer::SetUniformBuffer(camera._Camera, camTransform.GetTransform(), camTransform.GetTranslation());
 
+		// Update Light FBO
+		if (camera._Camera->GetProjectionType() == Camera::ProjectionType::Perspective)
+		{
+			auto view = m_Scene->Registry.view<TransformComponent, LightComponent>();
+			for (auto& e : view)
+			{
+				auto [transform, light] = view.get<TransformComponent, LightComponent>(e);
+				if (light.Type == LightType::Directional)
+				{
+					float nearClip = camera._Camera->GetPerspectiveNear();
+					float farClip = camera._Camera->GetPerspectiveFar();
+					float fov = camera._Camera->GetPerspectiveFOV();
+					float aspect = camera._Camera->GetAspectRatio();
+					nlm::mat4 ViewMatrix = nlm::inverse(camTransform.GetTransform());
+					const nlm::mat4& viewMat = ViewMatrix;
+					UpdateLightFBO(nearClip, farClip, fov, aspect, viewMat, light, transform);
+					break;
+				}
+			}
+		}
+
 		// Render Models (Opaque)
 		{
 			// Renderer::EnableCullFace(false);

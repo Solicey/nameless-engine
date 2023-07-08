@@ -9,8 +9,8 @@
 int u_KernelSize;
 float u_Radius;
 float u_Bias;
-float u_EnableSRGBCorrection;
 float u_DirectLightWeight;
+bool u_EnableSRGBCorrection;
 color3 u_AmbientColor;
 #end
 
@@ -51,7 +51,7 @@ uniform vec3 u_Samples[SSAO_SAMPLE_COUNT];
 uniform float u_Radius;
 uniform int u_KernelSize;
 uniform float u_Bias;
-uniform float u_EnableSRGBCorrection;
+uniform bool u_EnableSRGBCorrection;
 uniform samplerCube u_Skybox;
 uniform float u_DirectLightWeight;
 uniform vec3 u_AmbientColor;
@@ -118,7 +118,7 @@ void main()
 	//color = vec4(u_DirectLightWeight * dirLight, 1);
 
 	vec3 ambient = u_AmbientColor;
-	if (u_EnableSRGBCorrection != 0)
+	if (u_EnableSRGBCorrection)
 	{
 		ambient = pow(ambient, vec3(2.2));
 	}

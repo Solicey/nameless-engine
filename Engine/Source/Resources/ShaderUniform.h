@@ -19,7 +19,7 @@ namespace NL
 		Sampler2D, SamplerCube
 	};
 
-	typedef std::variant<std::string, nlm::vec3, float, int> ShaderPropValue;
+	typedef std::variant<std::string, nlm::vec3, float, int, bool> ShaderPropValue;
 	// variant TODO in SceneSerializer.cpp, HierarchyPanel.cpp, Material.cpp, Renderer.cpp
 	struct ShaderProperty
 	{

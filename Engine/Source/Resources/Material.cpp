@@ -149,6 +149,10 @@ namespace NL
 				prop.Value = 0;
 				break;
 
+			case ShaderUniformType::Bool:
+				prop.Value = false;
+				break;
+
 			default:
 				break;
 			}

@@ -6,11 +6,11 @@
 #tag shadow;src;
 
 #prop
-float u_EnableShadow;
-float u_ShadowBiasModifier;
-float u_EnableSRGBCorrection;
-float u_EnableGammaCorrection;
+bool u_EnableShadow;
 float u_ShadowMaxLength;
+float u_ShadowBiasModifier;
+bool u_EnableSRGBCorrection;
+bool u_EnableGammaCorrection;
 #end
 
 #type vertex
@@ -40,10 +40,10 @@ uniform sampler2D u_PositionDepthTex;
 uniform sampler2D u_NormalTex;
 uniform sampler2D u_SrcColorTex;
 uniform sampler2DArray u_ShadowMaps;
-uniform float u_EnableShadow;
+uniform bool u_EnableShadow;
 uniform float u_ShadowBiasModifier;
-uniform float u_EnableSRGBCorrection;
-uniform float u_EnableGammaCorrection;
+uniform bool u_EnableSRGBCorrection;
+uniform bool u_EnableGammaCorrection;
 uniform float u_ShadowMaxLength;
 
 #define MAX_LIGHT_COUNT 4
@@ -120,7 +120,8 @@ float ShadowCaster(vec3 fragPosVS, vec3 fragPosWS, vec3 normalVS)
 		//return 1.0;
 	//return 0.0;
 	
-	float bias = max(0.05 * (1.0 - dot(normalVS, -u_LightDir)), 0.005);
+	vec3 lightDirVS = vec3(u_View * vec4(u_LightDir, 0.0));
+	float bias = max(0.05 * (1.0 - dot(normalVS, -lightDirVS)), 0.005);
 	if (layer == u_CascadeLevelCount)
 	{
 		bias *= 1 / (u_FarClip * u_ShadowBiasModifier);
@@ -143,6 +144,31 @@ float ShadowCaster(vec3 fragPosVS, vec3 fragPosWS, vec3 normalVS)
 		}
 	}
 	shadow /= 25.0;
+
+	/*if (u_EnableShadowCorrection && shadow < 0.5)
+	{
+		int sampleCount = min(u_ShadowCorrectionSamples, 16);
+		vec3 unit = normalize(-lightDirVS) * bias / sampleCount;
+		vec3 point = fragPosVS;
+		for (int i = 0; i < sampleCount; i++)
+		{
+			point += unit;
+			vec4 offset = vec4(point, 1.0);
+			offset = u_Projection * offset; // 观察->裁剪空间
+			offset.xyz /= offset.w; // 透视除法
+			offset.xyz = offset.xyz * 0.5 + 0.5;
+
+			float sampleDepth = -texture(u_PositionDepthTex, offset.xy).w;
+
+			// occlusion
+			if (sampleDepth < 0 && sampleDepth > fragPosVS.z + u_ShadowCorrectionBias)
+			{
+				shadow = 1.0;
+				break;
+			}
+		}
+	}*/
+
 	return shadow;
 }
 
@@ -213,7 +239,7 @@ void main()
 
 	float shadow = ShadowCaster(fragPos, vec3(inverse(u_View) * vec4(fragPos, 1.0)), normal);
 
-	float hasCastShadow = 0;
+	bool hasCastShadow = false;
 	for (int i = 0; i < MAX_LIGHT_COUNT; i++)
 	{
 		if (u_DirLights[i].Color.r >= 0)
@@ -221,7 +247,7 @@ void main()
 			DirLight light = u_DirLights[i];
 			vec3 lightColor = light.Color;
 			vec3 lightDir = light.Direction;
-			if (u_EnableSRGBCorrection != 0)
+			if (u_EnableSRGBCorrection)
 			{
 				lightColor = pow(lightColor, vec3(2.2));
 			}
@@ -253,9 +279,9 @@ void main()
 			float spec = pow(max(dot(normal, halfwayDir), 0.0), 32);
 			vec3 specular = lightColor * spec * specStrength;*/
 
-			if (hasCastShadow == 0.0 && u_EnableShadow != 0.0)
+			if (!hasCastShadow && u_EnableShadow)
 			{
-				hasCastShadow = 1.0;
+				hasCastShadow = true;
 				ds = ds * (1.0 - shadow);
 			}
 
@@ -269,7 +295,7 @@ void main()
 			vec3 lightPos = light.Position;
 			vec3 lightAtten = light.Attenuation;
 
-			if (u_EnableSRGBCorrection != 0)
+			if (u_EnableSRGBCorrection)
 			{
 				lightColor = pow(lightColor, vec3(2.2));
 			}
@@ -317,7 +343,7 @@ void main()
 	vec3 color = Lo + albedo * ssdo;
 
 	// Gamma Correction
-	if (u_EnableGammaCorrection != 0)
+	if (u_EnableGammaCorrection)
 	{
 		color = pow(color, vec3(1.0 / 2.2));
 	}

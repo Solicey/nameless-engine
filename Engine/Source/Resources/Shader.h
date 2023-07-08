@@ -51,6 +51,7 @@ namespace NL
 		virtual void SetUniformMat3(const std::string& name, const nlm::mat3& value) = 0;
 		virtual void SetUniformMat4(const std::string& name, const nlm::mat4& value) = 0;
 		virtual void SetUniformMat4Array(const std::string& name, const std::vector<nlm::mat4>& values) = 0;
+		virtual void SetUniformBool(const std::string& name, bool value) = 0;
 		virtual void Reload() = 0;
 
 		const std::vector<ShaderProperty>& GetShaderProperties() const { return m_Properties; }

@@ -703,6 +703,7 @@ namespace NL
 				std::string name = std::to_string(i) + "." + mat->GetShaderNameNoSuffix();
 				if (ImGui::BeginTabItem(name.c_str(), &open, ImGuiTabItemFlags_None))
 				{
+					ImGui::Checkbox("Enabled", mat->GetEnabled());
 					//ImGui::Text("This is the %d tab!", i);
 					DrawShaderCombo<PostProcessingComponent>(mat, mat->GetName(), shaderSelectClick, [](auto& comp, const std::string& shaderName)
 						{
@@ -1141,6 +1142,15 @@ namespace NL
 				if (Utils::DragIntStyle1(prop.Name, RIGHT_COLUMN_WIDTH, i))
 				{
 					prop.Value = i;
+				}
+				break;
+			}
+			case ShaderUniformType::Bool:
+			{
+				bool b = std::get<bool>(prop.Value);
+				if (Utils::CheckBoxStyle1(prop.Name, RIGHT_COLUMN_WIDTH, b))
+				{
+					prop.Value = b;
 				}
 				break;
 			}

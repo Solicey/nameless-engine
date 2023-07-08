@@ -4,8 +4,8 @@
 color3 u_Color;
 float u_Roughness;
 float u_Metallic;
-float u_EnableSRGBCorrection;
-float u_EnableGammaCorrection;
+bool u_EnableSRGBCorrection;
+bool u_EnableGammaCorrection;
 #end
 
 // For Defer Usage
@@ -63,8 +63,8 @@ uniform vec3 u_Color;
 uniform float u_Roughness;
 uniform float u_Metallic;
 uniform int u_EntityId;
-uniform float u_EnableSRGBCorrection;
-uniform float u_EnableGammaCorrection;
+uniform bool u_EnableSRGBCorrection;
+uniform bool u_EnableGammaCorrection;
 
 layout (std140, binding = 0) uniform Camera
 {
@@ -84,7 +84,7 @@ float LinearizeDepth(float depth, float near, float far)
 void main()
 {
 	vec3 color = u_Color;
-	if (u_EnableSRGBCorrection != 0.0)
+	if (u_EnableSRGBCorrection)
 	{
 		color = pow(color, vec3(2.2));
 	}
@@ -94,7 +94,7 @@ void main()
 	f_PositionDepth = vec4(v_Position, LinearizeDepth(gl_FragCoord.z, u_Near, u_Far));//LinearizeDepth(depth, u_Near, u_Far));
 	f_Normal = vec4(v_Normal, u_Metallic);
 
-	if (u_EnableGammaCorrection != 0.0)
+	if (u_EnableGammaCorrection)
 	{
 		color = pow(color, vec3(1.0 / 2.2));
 	}

@@ -97,6 +97,10 @@ namespace NL
 				shader->SetUniformInt(prop.Name.c_str(), std::get<int>(prop.Value));
 				break;
 
+			case ShaderUniformType::Bool:
+				shader->SetUniformBool(prop.Name.c_str(), std::get<bool>(prop.Value));
+				break;
+
 			default:
 				break;
 			}
